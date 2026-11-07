@@ -16,5 +16,122 @@
     "ru": "Живые результаты контестов для вас и ваших друзей.\n\n• Таблица результатов обновляется в одном сообщении\n• Напоминания перед каждым контестом в вашем часовом поясе\n• Уведомления, когда друзья решают задачи\n• Работает в личных чатах и группах\n\nИсточники: сейчас Codeforces, затем kep.uz.\nНажмите Start и выберите язык.",
     "uz": "Siz va do'stlaringiz uchun contestlarning jonli natijalari.\n\n• Natijalar bitta xabarda yangilanib turadi\n• Har bir contestdan oldin eslatma, o'zingizning vaqt zonangizda\n• Do'stlaringiz masala yechganda xabar\n• Shaxsiy chatda ham, guruhda ham ishlaydi\n\nManbalar: hozir Codeforces, keyin kep.uz.\nStart ni bosing va tilni tanlang.",
     "": "Live contest standings for you and your friends.\n\n• Standings update in one message\n• Reminders before every contest, in your timezone\n• Alerts when friends solve problems\n• Works in private chats and groups\n\nSources: Codeforces now, kep.uz next.\nPress Start and pick your language."
+  },
+  "commands": {
+    "defs": {
+      "standings": {
+        "command": "standings",
+        "desc": {
+          "en": "Live standings of your friends",
+          "ru": "Живая таблица ваших друзей",
+          "uz": "Do'stlaringizning jonli natijalari"
+        }
+      },
+      "group_standings": {
+        "command": "standings",
+        "desc": {
+          "en": "Group standings for the live contest",
+          "ru": "Таблица группы по идущему контесту",
+          "uz": "Joriy contest bo'yicha guruh natijalari"
+        }
+      },
+      "upcoming": {
+        "command": "upcoming",
+        "desc": {
+          "en": "Upcoming contests",
+          "ru": "Ближайшие контесты",
+          "uz": "Yaqinlashayotgan contestlar"
+        }
+      },
+      "friends": {
+        "command": "friends",
+        "desc": {
+          "en": "Manage your friends",
+          "ru": "Управление друзьями",
+          "uz": "Do'stlarni boshqarish"
+        }
+      },
+      "rating": {
+        "command": "rating",
+        "desc": {
+          "en": "Rating of any handle",
+          "ru": "Рейтинг любого хендла",
+          "uz": "Istalgan handle reytingi"
+        }
+      },
+      "settings": {
+        "command": "settings",
+        "desc": {
+          "en": "Language, timezone, reminders",
+          "ru": "Язык, часовой пояс, напоминания",
+          "uz": "Til, vaqt zonasi, eslatmalar"
+        }
+      },
+      "group_settings": {
+        "command": "settings",
+        "desc": {
+          "en": "Group language, timezone, reminders",
+          "ru": "Язык, часовой пояс и напоминания группы",
+          "uz": "Guruh tili, vaqt zonasi, eslatmalar"
+        }
+      },
+      "help": {
+        "command": "help",
+        "desc": {
+          "en": "What this bot can do",
+          "ru": "Что умеет этот бот",
+          "uz": "Bot nimalar qila oladi"
+        }
+      },
+      "rank": {
+        "command": "rank",
+        "is_ephemeral": true,
+        "desc": {
+          "en": "Your rank (only you see it)",
+          "ru": "Ваше место (видите только вы)",
+          "uz": "Sizning o'rningiz (faqat o'zingizga ko'rinadi)"
+        }
+      },
+      "track": {
+        "command": "track",
+        "desc": {
+          "en": "Choose handles and contests to track",
+          "ru": "Выбрать хендлы и контесты для отслеживания",
+          "uz": "Kuzatiladigan handle va contestlarni tanlash"
+        }
+      }
+    },
+    "menus": {
+      "default": [
+        "standings",
+        "upcoming",
+        "friends",
+        "rating",
+        "settings",
+        "help"
+      ],
+      "private": [
+        "standings",
+        "upcoming",
+        "friends",
+        "rating",
+        "settings",
+        "help"
+      ],
+      "group": [
+        "group_standings",
+        "upcoming",
+        "rank",
+        "help"
+      ],
+      "admins": [
+        "group_standings",
+        "upcoming",
+        "rank",
+        "track",
+        "group_settings",
+        "help"
+      ]
+    }
   }
 }

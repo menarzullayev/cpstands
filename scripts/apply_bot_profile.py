@@ -47,6 +47,47 @@ FIELDS = {
 }
 
 
+SCOPES = {
+    "default": {"type": "default"},
+    "private": {"type": "all_private_chats"},
+    "group": {"type": "all_group_chats"},
+    "admins": {"type": "all_chat_administrators"},
+}
+LANGS = ["", "en", "ru", "uz"]  # "" = fallback for every other language (English text)
+
+
+def build_menu(spec: dict, menu: str, lang: str):
+    out = []
+    for cid in spec["menus"][menu]:
+        d = spec["defs"][cid]
+        item = {"command": d["command"], "description": d["desc"][lang or "en"]}
+        if d.get("is_ephemeral"):
+            item["is_ephemeral"] = True
+        out.append(item)
+    return out
+
+
+def apply_commands(spec: dict, check_only: bool) -> int:
+    bad = 0
+    for menu, scope in SCOPES.items():
+        for lang in LANGS:
+            want = build_menu(spec, menu, lang)
+            if not check_only:
+                res = call("setMyCommands", commands=want, scope=scope, language_code=lang)
+                if not res.get("ok"):
+                    print(f"FAIL set commands[{menu}/{lang or 'default'}]: {res.get('description')}")
+                    bad += 1
+                    continue
+            got = call("getMyCommands", scope=scope, language_code=lang).get("result", [])
+            same = [(g["command"], g["description"], bool(g.get("is_ephemeral"))) for g in got] == [
+                (w["command"], w["description"], bool(w.get("is_ephemeral"))) for w in want
+            ]
+            if not same:
+                bad += 1
+            print(f"{'ok' if same else 'MISMATCH'}: commands[{menu}/{lang or 'default'}] = {[g['command'] for g in got]}")
+    return bad
+
+
 def main(check_only: bool) -> int:
     profile = json.loads((ROOT / "config" / "bot_profile.json").read_text(encoding="utf-8"))
     bad = 0
@@ -64,6 +105,8 @@ def main(check_only: bool) -> int:
             if status != "ok":
                 bad += 1
             print(f"{status}: {key}[{lang or 'default'}] = {actual!r}")
+    if "commands" in profile:
+        bad += apply_commands(profile["commands"], check_only)
     return 1 if bad else 0
 
 
