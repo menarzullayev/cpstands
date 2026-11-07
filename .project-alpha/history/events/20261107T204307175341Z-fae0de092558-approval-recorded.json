@@ -1,0 +1,9 @@
+{
+  "event_id": "fae0de092558",
+  "event_type": "approval.recorded",
+  "timestamp": "2026-11-07T20:43:07+00:00",
+  "stage": "04-prd",
+  "decision": "PASS",
+  "approver": "Saidakbar Narzullayev",
+  "reason": "Owner approved PRD scope, release split, non-functional targets and default tone"
+}

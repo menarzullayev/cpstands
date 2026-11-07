@@ -1,0 +1,9 @@
+{
+  "event_id": "7f56a6ce6c3d",
+  "event_type": "stage.passed",
+  "timestamp": "2026-11-07T20:43:07+00:00",
+  "stage": "04-prd",
+  "from_status": "REVIEW",
+  "to_status": "PASSED",
+  "reason": "Owner approved PRD scope, release split, non-functional targets and default tone"
+}

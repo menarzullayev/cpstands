@@ -1,10 +1,9 @@
 # Cross-Stage Semantic Consistency Audit
 
 - Status: PASS
-- Semantic IDs: 40
+- Semantic IDs: 108
 
 ## Findings
-- traceability warning 04-prd: no PROB-* semantic IDs found for required link to 02-problem-discovery
 - traceability warning 05-domain-model: no REQ-* semantic IDs found for required link to 04-prd
 - traceability warning 06-architecture: no REQ-* semantic IDs found for required link to 04-prd
 - traceability warning 07-adr: no REQ-* semantic IDs found for required link to 04-prd

@@ -1,0 +1,19 @@
+{
+  "event_id": "bf50efc44701",
+  "event_type": "decision.recorded",
+  "timestamp": "2026-11-07T20:43:06+00:00",
+  "path": ".project-alpha\\decisions\\DEC-005.md",
+  "stage": "04-prd",
+  "title": "Approve PRD scope, release split and requirements",
+  "risk": "MEDIUM",
+  "decision_id": "DEC-005",
+  "decision": "R1 is group-first (FEAT-001 to 006, 011, 012); R2 and R3 as listed; no paid features or API-key import; non-functional targets accepted; playful alert tone by default with per-chat neutral switch",
+  "context": "Community demand is strongest in groups; owner wants private use too but accepts it in R2; humor was a loved trait of the incumbent",
+  "chosen_option": "R1 group-first scope with playful default tone",
+  "rationale": "Fastest path to the core promise with production quality; keeps the data model single-purpose in R1",
+  "impact": "High",
+  "reversibility": "Medium",
+  "evidence": "EVID-004,EVID-007,EVID-008",
+  "approval_required": "yes",
+  "approval_status": "approved"
+}

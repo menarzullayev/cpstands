@@ -1,7 +1,7 @@
 # Global Audit
 
 - Framework version: 1.0.0
-- Executed at: 2026-11-07T20:40:41+00:00
+- Executed at: 2026-11-07T20:43:07+00:00
 - Status: BLOCKED
 - Recovery audit: PASS
 - Schema audit: PASS
@@ -9,9 +9,6 @@
 - Semantic audit: PASS
 
 ## Findings
-- BLOCK: 04-prd: status is NOT_STARTED, expected PASSED
-- BLOCK: 04-prd: OUTPUT.md is unchanged from TEMPLATE.md: docs\04-prd\OUTPUT.md
-- BLOCK: missing handoff: .project-alpha\handoffs\04-prd__to__05-domain-model.md
 - BLOCK: 05-domain-model: status is NOT_STARTED, expected PASSED
 - BLOCK: 05-domain-model: OUTPUT.md is unchanged from TEMPLATE.md: docs\05-domain-model\OUTPUT.md
 - BLOCK: missing handoff: .project-alpha\handoffs\05-domain-model__to__06-architecture.md
@@ -33,10 +30,12 @@
 - BLOCK: integrity: decision DEC-002 is approved but has no Approval ID
 - BLOCK: integrity: decision DEC-003 is approved but has no Approval ID
 - BLOCK: integrity: decision DEC-004 is approved but has no Approval ID
+- BLOCK: integrity: decision DEC-005 is approved but has no Approval ID
 - BLOCK: integrity: approval APR-001 missing Decision
 - BLOCK: integrity: approval APR-002 missing Decision
 - BLOCK: integrity: approval APR-003 missing Decision
 - BLOCK: integrity: approval APR-004 missing Decision
+- BLOCK: integrity: approval APR-005 missing Decision
 
 ## Gate
 Resolve all findings and rerun the global audit.

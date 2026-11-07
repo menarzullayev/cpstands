@@ -50,3 +50,9 @@
 - Approver: Saidakbar Narzullayev
 - Timestamp: 2026-11-07T20:40:40+00:00
 - Reason: Owner approved positioning and pricing direction
+
+## Approval — 04-prd
+- Decision: PASS
+- Approver: Saidakbar Narzullayev
+- Timestamp: 2026-11-07T20:43:07+00:00
+- Reason: Owner approved PRD scope, release split, non-functional targets and default tone
