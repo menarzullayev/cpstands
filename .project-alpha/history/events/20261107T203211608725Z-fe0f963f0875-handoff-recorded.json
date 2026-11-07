@@ -1,0 +1,7 @@
+{
+  "event_id": "fe0f963f0875",
+  "event_type": "handoff.recorded",
+  "timestamp": "2026-11-07T20:32:11+00:00",
+  "action": "project.initialized",
+  "framework_version": "1.0.0"
+}
