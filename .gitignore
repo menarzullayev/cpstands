@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
 .venv/
+# secrets: never commit real env files
 .env
 .env.*
 !.env.example
