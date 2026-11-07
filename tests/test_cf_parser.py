@@ -244,18 +244,29 @@ def test_user_info_unknown_handle_error_carries_the_handle() -> None:
     assert info.value.handle == "zzz_not_real"
 
 
-def test_largest_observed_payload_meets_the_performance_targets() -> None:
-    """NFR-002: a ~7 MB body (9 743 rows) parses in under 3 s using far less than 256 MB."""
+def test_largest_observed_payload_parses_fast() -> None:
+    """NFR-002 (time): a ~7 MB body (9 743 rows) parses in under 3 s; it takes about 0.2 s in practice."""
     body = synthesize_standings(9743)
     assert len(body) > 5_000_000
     watched = frozenset({handle_for(i) for i in range(1, 201)})
-    tracemalloc.start()
     started = time.perf_counter()
     snapshot = parse_standings(body, watched)
     elapsed = time.perf_counter() - started
-    _, peak = tracemalloc.get_traced_memory()
-    tracemalloc.stop()
     assert snapshot.rows_scanned == 9743
     assert len(snapshot.results) == 200
     assert elapsed < 3.0
+
+
+def test_largest_observed_payload_uses_little_memory() -> None:
+    """NFR-002 (memory): rows are streamed, so Python allocations stay far below 256 MB.
+
+    tracemalloc slows the code down, so timing is measured in a separate test.
+    """
+    body = synthesize_standings(9743)
+    watched = frozenset({handle_for(i) for i in range(1, 201)})
+    tracemalloc.start()
+    snapshot = parse_standings(body, watched)
+    _, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    assert len(snapshot.results) == 200
     assert peak < 64 * 1024 * 1024
