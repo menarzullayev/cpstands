@@ -2,8 +2,8 @@
 
 framework_version: 1.0.0
 current_stage: GLOBAL_AUDIT
-lifecycle: REVIEW
-global_audit_status: READY
+lifecycle: PRODUCTION_READY
+global_audit_status: APPROVED
 blocked_stage:
 blocked_reason:
 

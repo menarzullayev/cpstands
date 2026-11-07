@@ -31,3 +31,7 @@ Approve the documentation as production-ready for the start of implementation (m
 
 ## Escalation
 HUMAN_APPROVAL_REQUIRED: the final Production Ready approval of the documentation set.
+
+## Resolution after the owner's answers (2026-11-08)
+- The kep.uz wording inconsistency was fixed: the short descriptions in uz, ru and en now say that Codeforces works now and kep.uz comes later (verified through the Bot API).
+- The owner approved the documentation set as Production Ready; the approval is recorded by the global audit.

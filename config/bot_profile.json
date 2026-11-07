@@ -6,10 +6,10 @@
     "uz": "cpstands · Contest natijalari"
   },
   "short_description": {
-    "en": "Live contest standings, reminders and solve alerts for you and your friends. Codeforces + kep.uz.",
-    "ru": "Живые результаты, напоминания и уведомления о решениях для вас и друзей. Codeforces + kep.uz.",
-    "uz": "Contestlar jonli natijalari, eslatmalar va do'stlaringiz yechgan masalalar haqida xabarlar. Codeforces + kep.uz.",
-    "": "Live contest standings, reminders and solve alerts for you and your friends. Codeforces + kep.uz."
+    "en": "Live contest standings, reminders and solve alerts for you and your friends. Codeforces now, kep.uz soon.",
+    "ru": "Живые результаты, напоминания и уведомления о решениях для вас и друзей. Сейчас Codeforces, скоро kep.uz.",
+    "uz": "Contestlar jonli natijalari, eslatmalar va do'stlar yechgan masalalar haqida xabarlar. Hozir Codeforces, keyin kep.uz.",
+    "": "Live contest standings, reminders and solve alerts for you and your friends. Codeforces now, kep.uz soon."
   },
   "description": {
     "en": "Live contest standings for you and your friends.\n\n• Standings update in one message\n• Reminders before every contest, in your timezone\n• Alerts when friends solve problems\n• Works in private chats and groups\n\nSources: Codeforces now, kep.uz next.\nPress Start and pick your language.",
