@@ -1,0 +1,9 @@
+{
+  "event_id": "df7b27fcc3c0",
+  "event_type": "stage.reviewed",
+  "timestamp": "2026-11-07T21:07:50+00:00",
+  "stage": "09-development-plan",
+  "from_status": "IN_PROGRESS",
+  "to_status": "REVIEW",
+  "reason": null
+}

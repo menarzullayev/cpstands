@@ -1,0 +1,9 @@
+{
+  "event_id": "7efe8688e1f8",
+  "event_type": "stage.started",
+  "timestamp": "2026-11-07T21:07:50+00:00",
+  "stage": "09-development-plan",
+  "from_status": "NOT_STARTED",
+  "to_status": "IN_PROGRESS",
+  "reason": null
+}
