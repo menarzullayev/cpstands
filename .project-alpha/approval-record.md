@@ -56,3 +56,9 @@
 - Approver: Saidakbar Narzullayev
 - Timestamp: 2026-11-07T20:43:07+00:00
 - Reason: Owner approved PRD scope, release split, non-functional targets and default tone
+
+## Approval — 06-architecture
+- Decision: PASS
+- Approver: Saidakbar Narzullayev
+- Timestamp: 2026-11-07T20:52:28+00:00
+- Reason: Owner approved the architecture and the home-hosting best-effort amendment

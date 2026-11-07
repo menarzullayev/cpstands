@@ -1,0 +1,9 @@
+{
+  "event_id": "7a5ca64545f0",
+  "event_type": "stage.reviewed",
+  "timestamp": "2026-11-07T20:49:09+00:00",
+  "stage": "06-architecture",
+  "from_status": "IN_PROGRESS",
+  "to_status": "REVIEW",
+  "reason": null
+}

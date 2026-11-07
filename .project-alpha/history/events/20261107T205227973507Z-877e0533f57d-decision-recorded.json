@@ -1,0 +1,19 @@
+{
+  "event_id": "877e0533f57d",
+  "event_type": "decision.recorded",
+  "timestamp": "2026-11-07T20:52:27+00:00",
+  "path": ".project-alpha\\decisions\\DEC-007.md",
+  "stage": "06-architecture",
+  "title": "Amend availability target to best effort on the home PC",
+  "risk": "MEDIUM",
+  "decision_id": "DEC-007",
+  "decision": "Stay on the maintainer's home PC for the beta and the first public release; adopt no formal availability target; publish measured availability; keep 99.9 percent as the target for a future dedicated host",
+  "context": "The owner chose home hosting; a home PC cannot honestly promise 99.9 percent",
+  "chosen_option": "Best effort with published measurements",
+  "rationale": "Honest commitment aligned with the actual host; no extra hosting cost now",
+  "impact": "Medium",
+  "reversibility": "High",
+  "evidence": "EVID-015",
+  "approval_required": "yes",
+  "approval_status": "approved"
+}

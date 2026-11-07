@@ -1,0 +1,9 @@
+{
+  "event_id": "cc6badd7afb1",
+  "event_type": "approval.recorded",
+  "timestamp": "2026-11-07T20:52:28+00:00",
+  "stage": "06-architecture",
+  "decision": "PASS",
+  "approver": "Saidakbar Narzullayev",
+  "reason": "Owner approved the architecture and the home-hosting best-effort amendment"
+}

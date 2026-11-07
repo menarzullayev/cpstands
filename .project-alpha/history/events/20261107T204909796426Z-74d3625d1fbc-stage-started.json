@@ -1,0 +1,9 @@
+{
+  "event_id": "74d3625d1fbc",
+  "event_type": "stage.started",
+  "timestamp": "2026-11-07T20:49:09+00:00",
+  "stage": "06-architecture",
+  "from_status": "NOT_STARTED",
+  "to_status": "IN_PROGRESS",
+  "reason": null
+}

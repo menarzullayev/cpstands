@@ -1,0 +1,14 @@
+{
+  "event_id": "4166678e41a6",
+  "event_type": "evidence.recorded",
+  "timestamp": "2026-11-07T20:48:23+00:00",
+  "path": "docs\\evidence\\EVID-015.md",
+  "stage": "03-market-research",
+  "claim": "Telegram Serverless (documented 2026-10-06) runs JavaScript handlers in V8 isolates that react to Telegram updates and Mini App endpoint calls, with an SQLite database without foreign keys and outbound HTTP capped at 30 MB per response; the page documents no scheduler, cron, timer, CPU or duration limits, and no pricing.",
+  "source": "https://core.telegram.org/bots/serverless (read 2026-11-08)",
+  "date": "2026-11-08",
+  "confidence": "high",
+  "type": "FACT",
+  "risk": "MEDIUM",
+  "evidence_id": "EVID-015"
+}

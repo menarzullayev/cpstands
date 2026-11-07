@@ -1,0 +1,19 @@
+{
+  "event_id": "0888b34629c4",
+  "event_type": "decision.recorded",
+  "timestamp": "2026-11-07T20:52:27+00:00",
+  "path": ".project-alpha\\decisions\\DEC-006.md",
+  "stage": "06-architecture",
+  "title": "Approve the system architecture",
+  "risk": "MEDIUM",
+  "decision_id": "DEC-006",
+  "decision": "Python 3.13 with aiogram 3.31; modular monolith in one image; PostgreSQL as store and queue without Redis; shared full-standings fetch with local filtering; edit-in-place with coalescing; long polling on the home PC; Telegram Serverless not used as the backend",
+  "context": "Bot API 10.3 library support measured; Codeforces forbids server-side filtering; Serverless lacks a scheduler; one maintainer",
+  "chosen_option": "Architecture as drafted in docs/06-architecture/OUTPUT.md",
+  "rationale": "Smallest set of moving parts that meets the functional requirements and the latency targets",
+  "impact": "High",
+  "reversibility": "Medium",
+  "evidence": "EVID-002,EVID-003,EVID-008,EVID-009,EVID-014,EVID-015",
+  "approval_required": "yes",
+  "approval_status": "approved"
+}

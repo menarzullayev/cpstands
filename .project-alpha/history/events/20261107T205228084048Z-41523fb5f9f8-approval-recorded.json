@@ -1,0 +1,11 @@
+{
+  "event_id": "41523fb5f9f8",
+  "event_type": "approval.recorded",
+  "timestamp": "2026-11-07T20:52:28+00:00",
+  "path": ".project-alpha\\approvals\\APR-007.md",
+  "stage": "06-architecture",
+  "decision_id": "DEC-007",
+  "approval_id": "APR-007",
+  "approver": "Saidakbar Narzullayev",
+  "status": "approved"
+}

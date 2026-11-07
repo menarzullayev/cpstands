@@ -82,7 +82,7 @@ Non-functional requirements use REQ identifiers prefixed N; measurable targets r
 | REQ-N01 | Standings freshness during a contest | p95 data age at most 60 s (METRIC-001) |
 | REQ-N02 | Reminder reliability | at least 99.5 percent within 60 s of schedule (METRIC-002) |
 | REQ-N03 | Solve alert latency | p95 at most 120 s from verdict to message (METRIC-003) |
-| REQ-N04 | Availability inside contest windows | at least 99.9 percent per month (METRIC-004) |
+| REQ-N04 | Availability inside contest windows | measured and published monthly; no formal target on the interim home host (best effort); at least 99.9 percent per month on a dedicated always-on host (METRIC-004, amended 2026-11-08) |
 | REQ-N05 | Scalability | 500 active chats and 20 000 watched handles without redesign (METRIC-005 growth) |
 | REQ-N06 | Privacy | data minimization, deletion within 24 h of request, no secrets collected (METRIC-006) |
 | REQ-N07 | Upstream respect | stay within documented Codeforces and Telegram limits; never exceed one Codeforces request per 2 s per instance |

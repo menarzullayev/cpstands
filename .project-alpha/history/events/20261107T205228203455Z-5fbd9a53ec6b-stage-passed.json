@@ -1,0 +1,9 @@
+{
+  "event_id": "5fbd9a53ec6b",
+  "event_type": "stage.passed",
+  "timestamp": "2026-11-07T20:52:28+00:00",
+  "stage": "06-architecture",
+  "from_status": "REVIEW",
+  "to_status": "PASSED",
+  "reason": "Owner approved the architecture and the home-hosting best-effort amendment"
+}

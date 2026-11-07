@@ -14,7 +14,7 @@ blocked_reason:
 - 03-market-research: PASSED
 - 04-prd: PASSED
 - 05-domain-model: PASSED
-- 06-architecture: NOT_STARTED
+- 06-architecture: PASSED
 - 07-adr: NOT_STARTED
 - 08-technical-spec: NOT_STARTED
 - 09-development-plan: NOT_STARTED

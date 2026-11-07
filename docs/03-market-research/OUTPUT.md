@@ -79,6 +79,8 @@ Telegram documents an extra fee tied to Star purchases for threaded bots; a free
 | EVID-011 | kep.uz owner verbally approved cooperation | ASSUMPTION | low | owner statement relayed |
 | EVID-012 | Codeforces API: about 1 request per 2 s; signed requests use SHA-512 | FACT | medium | API help via web archive |
 | EVID-013 | Alternatives: TLE (Discord), ContestMate (Telegram), clist.by (10 requests per minute) | FACT | medium | public repositories and docs |
+| EVID-014 | Library support for Bot API 10.3: aiogram 3.31.0, telego 1.12.0, TelegramBots 10.3.0 yes; python-telegram-bot 22.8 older; telegraf stale since 2024 (added 2026-11-08 during stage 06) | FACT | high | GitHub releases |
+| EVID-015 | Telegram Serverless: JavaScript V8 handlers triggered by updates and Mini App calls; SQLite without foreign keys; 30 MB outbound response cap; no documented scheduler, limits or pricing (added 2026-11-08 during stage 06) | FACT | high | Telegram Serverless documentation |
 
 ## Assumptions
 

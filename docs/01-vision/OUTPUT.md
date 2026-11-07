@@ -27,7 +27,7 @@ Measurable strategic targets (to be validated and refined in stage 02 and 04):
 - METRIC-001: Live standings freshness: p95 age of the data in the edited standings message at most 60 seconds during a contest.
 - METRIC-002: Reminder reliability: at least 99.5 percent of reminders delivered within 60 seconds of their scheduled time.
 - METRIC-003: Solve alert latency: p95 at most 120 seconds from the submission verdict to the Telegram message.
-- METRIC-004: Availability: at least 99.9 percent per month measured inside contest windows.
+- METRIC-004: Availability inside contest windows is measured and published every month. Amended 2026-11-08 by owner decision: while the bot runs on a single home machine there is no formal target (best effort); a target of at least 99.9 percent per month applies once a dedicated always-on host is used.
 - METRIC-005: Adoption: 50 active chats within 3 months of launch and 500 within 12 months (planning target, not a measured fact).
 - METRIC-006: Privacy: zero personal-data incidents; deletion of a chat's data completed within 24 hours of request.
 
