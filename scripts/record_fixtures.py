@@ -24,7 +24,9 @@ RAW = ROOT / "fixtures" / "raw"
 async def record(contests: list[int]) -> None:
     RAW.mkdir(parents=True, exist_ok=True)
     client = CodeforcesClient(
-        ClientConfig(user_agent="cpstands-fixture-recorder/0.1 (+https://github.com/menarzullayev/cpstands)")
+        ClientConfig(
+            user_agent="cpstands-fixture-recorder/0.1 (+https://github.com/menarzullayev/cpstands)"
+        )
     )
     try:
         listing = await client.fetch("contest.list", {"gym": "false"})
