@@ -1,7 +1,7 @@
 # Global Audit
 
 - Framework version: 1.0.0
-- Executed at: 2026-11-07T20:43:07+00:00
+- Executed at: 2026-11-07T20:43:53+00:00
 - Status: BLOCKED
 - Recovery audit: PASS
 - Schema audit: PASS
@@ -9,9 +9,6 @@
 - Semantic audit: PASS
 
 ## Findings
-- BLOCK: 05-domain-model: status is NOT_STARTED, expected PASSED
-- BLOCK: 05-domain-model: OUTPUT.md is unchanged from TEMPLATE.md: docs\05-domain-model\OUTPUT.md
-- BLOCK: missing handoff: .project-alpha\handoffs\05-domain-model__to__06-architecture.md
 - BLOCK: 06-architecture: status is NOT_STARTED, expected PASSED
 - BLOCK: 06-architecture: OUTPUT.md is unchanged from TEMPLATE.md: docs\06-architecture\OUTPUT.md
 - BLOCK: missing handoff: .project-alpha\handoffs\06-architecture__to__07-adr.md

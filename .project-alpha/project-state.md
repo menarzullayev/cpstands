@@ -13,7 +13,7 @@ blocked_reason:
 - 02-problem-discovery: PASSED
 - 03-market-research: PASSED
 - 04-prd: PASSED
-- 05-domain-model: NOT_STARTED
+- 05-domain-model: PASSED
 - 06-architecture: NOT_STARTED
 - 07-adr: NOT_STARTED
 - 08-technical-spec: NOT_STARTED

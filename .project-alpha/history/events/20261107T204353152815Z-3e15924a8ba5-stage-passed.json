@@ -1,0 +1,9 @@
+{
+  "event_id": "3e15924a8ba5",
+  "event_type": "stage.passed",
+  "timestamp": "2026-11-07T20:43:53+00:00",
+  "stage": "05-domain-model",
+  "from_status": "REVIEW",
+  "to_status": "PASSED",
+  "reason": "Domain model traceable to PRD; reversible pre-launch design; no high-impact boundary"
+}
