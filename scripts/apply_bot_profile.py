@@ -1,7 +1,8 @@
 """Apply config/bot_profile.json to the bot through the Bot API.
 
 Reads TELEGRAM_BOT_TOKEN from .env and never prints it. Standard library only.
-Usage: python scripts/apply_bot_profile.py [--check]
+Usage: python scripts/apply_bot_profile.py [--check] [--photo]
+  --photo  re-upload the profile photo even if one is already set
   --check  only read back the current values (getMyName, ...) and compare.
 """
 import json
@@ -9,6 +10,7 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+import uuid
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -39,6 +41,49 @@ def call(method: str, **params):
         return json.load(e)
 
 
+CRLF = "\r\n"
+
+
+def call_multipart(method: str, fields: dict, file_field: str, path: Path):
+    boundary = "----cpstands" + uuid.uuid4().hex
+    body = b""
+    for k, v in fields.items():
+        body += f'--{boundary}{CRLF}Content-Disposition: form-data; name="{k}"{CRLF}{CRLF}{v}{CRLF}'.encode()
+    body += (
+        f'--{boundary}{CRLF}Content-Disposition: form-data; name="{file_field}"; filename="{path.name}"{CRLF}'
+        f"Content-Type: image/jpeg{CRLF}{CRLF}"
+    ).encode()
+    body += path.read_bytes() + CRLF.encode() + f"--{boundary}--{CRLF}".encode()
+    req = urllib.request.Request(
+        f"https://api.telegram.org/bot{TOKEN}/{method}",
+        data=body,
+        headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            return json.load(r)
+    except urllib.error.HTTPError as e:
+        return json.load(e)
+
+
+def apply_photo(rel_path: str, force: bool, check_only: bool) -> int:
+    me = call("getMe")["result"]
+    count = call("getUserProfilePhotos", user_id=me["id"], limit=1)["result"]["total_count"]
+    if not check_only and (force or count == 0):
+        res = call_multipart(
+            "setMyProfilePhoto",
+            {"photo": json.dumps({"type": "static", "photo": "attach://avatar"})},
+            "avatar",
+            ROOT / rel_path,
+        )
+        if not res.get("ok"):
+            print(f"FAIL set profile photo: {res.get('description')}")
+            return 1
+        count = call("getUserProfilePhotos", user_id=me["id"], limit=1)["result"]["total_count"]
+    print(f"{'ok' if count >= 1 else 'MISSING'}: profile_photo count = {count}")
+    return 0 if count >= 1 else 1
+
+
 # profile key -> (setter, getter, setter param, getter result key)
 FIELDS = {
     "name": ("setMyName", "getMyName", "name", "name"),
@@ -67,21 +112,25 @@ def build_menu(spec: dict, menu: str, lang: str):
     return out
 
 
+def _same_commands(got, want) -> bool:
+    key = lambda c: (c["command"], c["description"], bool(c.get("is_ephemeral")))
+    return [key(g) for g in got] == [key(w) for w in want]
+
+
 def apply_commands(spec: dict, check_only: bool) -> int:
     bad = 0
     for menu, scope in SCOPES.items():
         for lang in LANGS:
             want = build_menu(spec, menu, lang)
-            if not check_only:
+            got = call("getMyCommands", scope=scope, language_code=lang).get("result", [])
+            if not check_only and not _same_commands(got, want):
                 res = call("setMyCommands", commands=want, scope=scope, language_code=lang)
                 if not res.get("ok"):
                     print(f"FAIL set commands[{menu}/{lang or 'default'}]: {res.get('description')}")
                     bad += 1
                     continue
-            got = call("getMyCommands", scope=scope, language_code=lang).get("result", [])
-            same = [(g["command"], g["description"], bool(g.get("is_ephemeral"))) for g in got] == [
-                (w["command"], w["description"], bool(w.get("is_ephemeral"))) for w in want
-            ]
+                got = call("getMyCommands", scope=scope, language_code=lang).get("result", [])
+            same = _same_commands(got, want)
             if not same:
                 bad += 1
             print(f"{'ok' if same else 'MISMATCH'}: commands[{menu}/{lang or 'default'}] = {[g['command'] for g in got]}")
@@ -93,20 +142,23 @@ def main(check_only: bool) -> int:
     bad = 0
     for key, (setter, getter, param, rkey) in FIELDS.items():
         for lang, value in profile.get(key, {}).items():
-            if not check_only:
+            actual = call(getter, language_code=lang).get("result", {}).get(rkey)
+            # Only write when different: Telegram rate-limits setMyName (about 24 h of "retry after").
+            if not check_only and actual != value:
                 res = call(setter, **{param: value}, language_code=lang)
                 if not res.get("ok"):
                     print(f"FAIL set {key}[{lang or 'default'}]: {res.get('description')}")
                     bad += 1
                     continue
-            got = call(getter, language_code=lang)
-            actual = got.get("result", {}).get(rkey)
+                actual = call(getter, language_code=lang).get("result", {}).get(rkey)
             status = "ok" if actual == value else "MISMATCH"
             if status != "ok":
                 bad += 1
             print(f"{status}: {key}[{lang or 'default'}] = {actual!r}")
     if "commands" in profile:
         bad += apply_commands(profile["commands"], check_only)
+    if "profile_photo" in profile:
+        bad += apply_photo(profile["profile_photo"], "--photo" in sys.argv, check_only)
     return 1 if bad else 0
 
 

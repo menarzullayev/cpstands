@@ -133,5 +133,6 @@
         "help"
       ]
     }
-  }
+  },
+  "profile_photo": "assets/avatar.jpg"
 }
