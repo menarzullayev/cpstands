@@ -1,0 +1,20 @@
+"""Everything a handler needs, passed through the dispatcher's workflow data."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
+from cpstands.i18n import I18n
+from cpstands.services.admin import AdminChecker
+from cpstands.services.watchlist import WatchlistService
+
+
+@dataclass(slots=True)
+class Deps:
+    i18n: I18n
+    sessions: async_sessionmaker[AsyncSession]
+    watchlist: WatchlistService
+    admin: AdminChecker
+    owner_id: int | None = None

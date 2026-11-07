@@ -5,6 +5,7 @@ import secrets
 from collections.abc import AsyncIterator, Iterator
 
 import pytest
+import structlog
 from alembic import command
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -20,6 +21,13 @@ def _clear_settings_cache() -> Iterator[None]:
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
+
+
+@pytest.fixture(autouse=True)
+def _reset_structlog() -> Iterator[None]:
+    """Tests that configure logging must not leave a closed stream behind for later tests."""
+    yield
+    structlog.reset_defaults()
 
 
 def _admin_url() -> str:

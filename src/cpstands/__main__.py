@@ -78,6 +78,19 @@ def cmd_db_check(_args: argparse.Namespace, settings: Settings) -> int:
     return 0
 
 
+def cmd_run(_args: argparse.Namespace, settings: Settings) -> int:
+    from cpstands.bot.app import run_bot
+
+    asyncio.run(run_bot(settings))
+    return 0
+
+
+def cmd_i18n_check(_args: argparse.Namespace, _settings: Settings) -> int:
+    from cpstands.i18n.check import main as check_main
+
+    return check_main()
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="cpstands", description="cpstands operations")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -90,6 +103,10 @@ def build_parser() -> argparse.ArgumentParser:
     )
     sub.add_parser("db-check", help="verify the database is reachable and at head").set_defaults(
         func=cmd_db_check
+    )
+    sub.add_parser("run", help="run the bot with long polling").set_defaults(func=cmd_run)
+    sub.add_parser("i18n-check", help="verify the message catalogs agree").set_defaults(
+        func=cmd_i18n_check
     )
     return parser
 
