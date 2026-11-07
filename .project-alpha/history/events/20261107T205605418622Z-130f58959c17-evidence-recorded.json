@@ -1,0 +1,14 @@
+{
+  "event_id": "130f58959c17",
+  "event_type": "evidence.recorded",
+  "timestamp": "2026-11-07T20:56:05+00:00",
+  "path": "docs\\evidence\\EVID-017.md",
+  "stage": "03-market-research",
+  "claim": "Cloudflare R2 free tier includes 10 GB-month storage, 1 million Class A and 10 million Class B operations per month with free egress; Backblaze B2 gives the first 10 GB of storage free.",
+  "source": "https://developers.cloudflare.com/r2/pricing/ and https://www.backblaze.com/cloud-storage/pricing (read 2026-11-08)",
+  "date": "2026-11-08",
+  "confidence": "high",
+  "type": "FACT",
+  "risk": "LOW",
+  "evidence_id": "EVID-017"
+}

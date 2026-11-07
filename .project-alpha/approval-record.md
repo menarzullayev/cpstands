@@ -62,3 +62,9 @@
 - Approver: Saidakbar Narzullayev
 - Timestamp: 2026-11-07T20:52:28+00:00
 - Reason: Owner approved the architecture and the home-hosting best-effort amendment
+
+## Approval — 07-adr
+- Decision: PASS
+- Approver: Saidakbar Narzullayev
+- Timestamp: 2026-11-07T21:01:59+00:00
+- Reason: Owner approved the ADR set and decided heartbeat and backup policy

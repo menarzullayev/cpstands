@@ -1,0 +1,9 @@
+{
+  "event_id": "1e8f1d57d0e6",
+  "event_type": "handoff.recorded",
+  "timestamp": "2026-11-07T21:01:59+00:00",
+  "from_stage": "07-adr",
+  "to_stage": "08-technical-spec",
+  "path": ".project-alpha\\handoffs\\07-adr__to__08-technical-spec.md",
+  "status": "READY"
+}

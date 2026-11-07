@@ -1,0 +1,14 @@
+{
+  "event_id": "76894e7e7816",
+  "event_type": "evidence.recorded",
+  "timestamp": "2026-11-07T20:56:05+00:00",
+  "path": "docs\\evidence\\EVID-016.md",
+  "stage": "03-market-research",
+  "claim": "Healthchecks.io Hobbyist plan costs 0 USD per month and monitors 20 jobs; open-source projects can get the Business plan free.",
+  "source": "https://healthchecks.io/pricing/ (read 2026-11-08)",
+  "date": "2026-11-08",
+  "confidence": "high",
+  "type": "FACT",
+  "risk": "LOW",
+  "evidence_id": "EVID-016"
+}

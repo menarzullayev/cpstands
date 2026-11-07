@@ -1,0 +1,19 @@
+{
+  "event_id": "11b5b2118a6c",
+  "event_type": "decision.recorded",
+  "timestamp": "2026-11-07T21:01:59+00:00",
+  "path": ".project-alpha\\decisions\\DEC-008.md",
+  "stage": "07-adr",
+  "title": "Approve the ADR set; no external heartbeat; manual backups",
+  "risk": "MEDIUM",
+  "decision_id": "DEC-008",
+  "decision": "Accept ADR-001 to ADR-014; observability is logs, metrics and in-app owner alerts without an external heartbeat; backups are manual dumps by the owner with no automated off-site copy",
+  "context": "Hobby project on the owner's daily-use PC; data is easy to recreate and its loss is acceptable to the owner",
+  "chosen_option": "Minimal operations: in-app observability only and manual backups",
+  "rationale": "Simplicity and zero vendor dependency fit the stakes; residual risks are explicit and owned by the owner",
+  "impact": "Medium",
+  "reversibility": "High",
+  "evidence": "EVID-015,EVID-016,EVID-017",
+  "approval_required": "yes",
+  "approval_status": "approved"
+}

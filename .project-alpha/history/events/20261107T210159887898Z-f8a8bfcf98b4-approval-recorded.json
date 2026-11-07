@@ -1,0 +1,9 @@
+{
+  "event_id": "f8a8bfcf98b4",
+  "event_type": "approval.recorded",
+  "timestamp": "2026-11-07T21:01:59+00:00",
+  "stage": "07-adr",
+  "decision": "PASS",
+  "approver": "Saidakbar Narzullayev",
+  "reason": "Owner approved the ADR set and decided heartbeat and backup policy"
+}
