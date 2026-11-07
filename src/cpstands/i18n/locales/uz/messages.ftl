@@ -58,6 +58,10 @@ settings-summary =
         [neutral] neytral
        *[playful] qiziqarli
     }</b>
+    🔔 Eslatmalar: <b>{ $reminders ->
+        [off] o'chiq
+       *[on] yoqilgan
+    }</b>
     👥 Kuzatilmoqda: <b>{ $count ->
         [one] { $count } ta handle
        *[other] { $count } ta handle
@@ -137,3 +141,40 @@ standings-not-found = ❌ <b>{ $id }</b> raqamli contest Codeforces'da topilmadi
 standings-not-started = ⏰ <b>{ $name }</b> hali boshlanmagan. Jadval boshlanganda paydo bo'ladi.
 standings-source-error = ⚠️ Codeforces hozir javob bermayapti. Bir daqiqadan keyin qayta urinib ko'ring.
 button-refresh = Yangilash
+
+reminder =
+    ⏰ <b>{ $name }</b>
+    { $left ->
+        [day] 24 soatdan keyin boshlanadi
+        [hour] 1 soatdan keyin boshlanadi
+       *[minutes] { $minutes } daqiqadan keyin boshlanadi
+    }
+    🕐 { $start }
+reminder-neutral =
+    <b>{ $name }</b>
+    { $left ->
+        [day] 24 soatdan keyin boshlanadi
+        [hour] 1 soatdan keyin boshlanadi
+       *[minutes] { $minutes } daqiqadan keyin boshlanadi
+    }
+    { $start }
+reminder-moved =
+    🔄 <b>{ $name }</b> vaqti o'zgardi.
+    🕐 { $start }
+reminder-moved-neutral =
+    <b>{ $name }</b> vaqti o'zgardi.
+    { $start }
+reminder-cancelled = ❌ <b>{ $name }</b> bekor qilindi.
+reminder-cancelled-neutral = <b>{ $name }</b> bekor qilindi.
+button-register = Ro'yxatdan o'tish
+button-contest = Contest sahifasi
+button-reminders = { $state ->
+        [off] Eslatmalar: o'chiq
+       *[on] Eslatmalar: yoqilgan
+    }
+upcoming-header = 🏆 <b>Yaqin contestlar</b>
+upcoming-line =
+    { $name }
+    🕐 { $start } · ⏱ { $duration }
+upcoming-empty = Keyingi ikki hafta uchun contest rejalashtirilmagan.
+upcoming-source-error = ⚠️ Codeforces hozir javob bermayapti. Bir daqiqadan keyin qayta urinib ko'ring.

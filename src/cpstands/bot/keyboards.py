@@ -19,6 +19,7 @@ MAX_CALLBACK_BYTES = 64
 LANG_PREFIX = "set:lang:"
 TZ_PREFIX = "tz:set:"
 TONE_PREFIX = "set:tone:"
+REMINDERS_PREFIX = "set:rem:"
 MENU_LANG = "set:menu:lang"
 MENU_TZ = "set:menu:tz"
 HELP_SETTINGS = "help:settings"
@@ -42,6 +43,19 @@ def button(
     return InlineKeyboardButton(
         text=label, callback_data=data, style=style, icon_custom_emoji_id=icon
     )
+
+
+def link(
+    text: str,
+    url: str,
+    *,
+    emoji: str | None = None,
+    style: Style | None = None,
+    icons: bool = False,
+) -> InlineKeyboardButton:
+    icon = custom_emoji_id(emoji) if emoji and icons else None
+    label = text if icon or not emoji else f"{emoji} {text}"
+    return InlineKeyboardButton(text=label, url=url, style=style, icon_custom_emoji_id=icon)
 
 
 def language_keyboard(current: str | None = None, *, icons: bool = False) -> InlineKeyboardMarkup:
@@ -70,13 +84,25 @@ def timezone_keyboard(
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
-def settings_keyboard(say: Translator, tone: str, *, icons: bool = False) -> InlineKeyboardMarkup:
+def settings_keyboard(
+    say: Translator, tone: str, *, icons: bool = False, reminders_on: bool = True
+) -> InlineKeyboardMarkup:
     other = "neutral" if tone == "playful" else "playful"
+    state = "on" if reminders_on else "off"
+    next_state = "off" if reminders_on else "on"
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 button(say("button-language"), MENU_LANG, emoji="🌍", icons=icons),
                 button(say("button-timezone"), MENU_TZ, emoji="🧭", icons=icons),
+            ],
+            [
+                button(
+                    say("button-reminders", state=state),
+                    f"{REMINDERS_PREFIX}{next_state}",
+                    emoji="🔔",
+                    icons=icons,
+                )
             ],
             [
                 button(

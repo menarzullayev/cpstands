@@ -28,6 +28,12 @@ SAMPLE_ARGS: dict[str, str | int] = {
     "from_problem": "A1",
     "to_problem": "D2",
     "id": "1970",
+    "reminders": "on",
+    "state": "on",
+    "left": "day",
+    "minutes": 10,
+    "start": "21.11 19:35",
+    "duration": "2:00",
     "name": "Round",
 }
 
@@ -212,7 +218,7 @@ def test_custom_emoji_wraps_known_emoji_and_leaves_others() -> None:
     assert custom.endswith("Give me a moment.")
     # Emoji without a custom twin are left exactly as they are.
     assert "⚙️" in I18n(custom_emoji=True).t(
-        "en", "settings-summary", language="x", zone="y", mood="playful", count=1
+        "en", "settings-summary", language="x", zone="y", mood="playful", reminders="on", count=1
     )
 
 

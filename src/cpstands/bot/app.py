@@ -14,10 +14,13 @@ from cpstands.bot.deps import Deps
 from cpstands.bot.handlers import create_router
 from cpstands.bot.live import LiveUpdater
 from cpstands.bot.ratelimit import RateLimiter, RateLimitMiddleware
+from cpstands.bot.reminders import ReminderSender
+from cpstands.bot.scheduler import Scheduler
 from cpstands.config import Settings
 from cpstands.db.engine import create_engine, create_session_factory
 from cpstands.i18n import I18n
 from cpstands.services.admin import AdminChecker
+from cpstands.services.contests import ContestService
 from cpstands.services.standings import StandingsService
 from cpstands.services.watchlist import WatchlistService
 from cpstands.sources.codeforces.client import ClientConfig, CodeforcesClient
@@ -76,25 +79,31 @@ async def run_bot(settings: Settings) -> None:
     )
     sessions = create_session_factory(engine)
     source = CodeforcesSource(client)
+    contests = ContestService(sessions, source)
     deps = Deps(
         i18n=I18n(custom_emoji=settings.custom_emoji),
         sessions=sessions,
         watchlist=WatchlistService(sessions, source),
         admin=make_admin_checker(bot),
         standings=StandingsService(source),
+        contests=contests,
         owner_id=settings.telegram_owner_id,
         icons=settings.button_icons,
     )
     dispatcher = build_dispatcher(deps)
     updater = LiveUpdater(bot, sessions, deps.standings, deps.i18n, icons=deps.icons)
     live_task = asyncio.create_task(updater.run(), name="live-standings")
+    sender = ReminderSender(bot, sessions, deps.i18n, icons=deps.icons)
+    scheduler = Scheduler(sessions, contests, sender)
+    scheduler_task = asyncio.create_task(scheduler.run(), name="scheduler")
     try:
         me = await bot.get_me()
         log.info("bot_started", username=me.username)
         await dispatcher.start_polling(bot, allowed_updates=ALLOWED_UPDATES)
     finally:
         live_task.cancel()
-        await asyncio.gather(live_task, return_exceptions=True)
+        scheduler_task.cancel()
+        await asyncio.gather(live_task, scheduler_task, return_exceptions=True)
         await bot.session.close()
         await client.aclose()
         await engine.dispose()

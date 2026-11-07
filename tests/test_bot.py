@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from aiogram import Bot, Dispatcher
@@ -16,9 +17,10 @@ from cpstands.bot.deps import Deps
 from cpstands.bot.ratelimit import RateLimiter
 from cpstands.db import repos
 from cpstands.db.engine import create_engine, create_session_factory
-from cpstands.domain.contest import ContestPhase
+from cpstands.domain.contest import Contest, ContestPhase
 from cpstands.i18n import I18n
 from cpstands.services import timezone as tzs
+from cpstands.services.contests import ContestService
 from cpstands.services.standings import StandingsService
 from cpstands.services.watchlist import WatchlistService
 from tests.support.sources import FakeSource, make_standings
@@ -71,6 +73,11 @@ class Harness:
             return await repos.get_chat(session, chat_id)
 
 
+def _contest(cid: int, name: str, days: int) -> Contest:
+    start = datetime.now(UTC) + timedelta(days=days)
+    return Contest("codeforces", cid, name, ContestPhase.BEFORE, "CF", start, 7200)
+
+
 @pytest.fixture
 async def harness(migrated_database: str) -> AsyncIterator[Harness]:
     engine = create_engine(migrated_database, pool_size=3)
@@ -87,6 +94,11 @@ async def harness(migrated_database: str) -> AsyncIterator[Harness]:
             1972: make_standings(contest_id=1972, rows=3, problems=5, kind="CF"),
             1973: make_standings(contest_id=1973, phase=ContestPhase.CODING, rows=60, problems=21),
         },
+        contests=[
+            _contest(2287, "Codeforces Round <1> & co", 3),
+            _contest(2288, "Codeforces Round (Div. 2)", 4),
+            _contest(2299, "Far Away Round", 40),
+        ],
     )
     deps = Deps(
         i18n=I18N,
@@ -94,6 +106,7 @@ async def harness(migrated_database: str) -> AsyncIterator[Harness]:
         watchlist=WatchlistService(sessions, source),  # type: ignore[arg-type]
         admin=make_admin_checker(bot),
         standings=StandingsService(source),  # type: ignore[arg-type]
+        contests=ContestService(sessions, source),  # type: ignore[arg-type]
     )
     yield Harness(build_dispatcher(deps, RateLimiter()), bot, fake, sessions, source)
     await engine.dispose()
@@ -242,7 +255,7 @@ async def test_settings_shows_summary_and_menu_buttons(harness: Harness) -> None
 
 
 async def test_unfinished_commands_answer_coming_soon(harness: Harness) -> None:
-    for command in ("/upcoming", "/rank", "/privacy", "/delete"):
+    for command in ("/rank", "/privacy", "/delete"):
         await harness.say(PRIVATE, PRIVATE, command)
         assert harness.session.last_text() == I18N.t(None, "coming-soon")
 
@@ -279,6 +292,7 @@ async def test_rate_limit_answers_once_then_stays_quiet(migrated_database: str) 
         watchlist=WatchlistService(sessions, FakeSource([])),  # type: ignore[arg-type]
         admin=make_admin_checker(bot),
         standings=StandingsService(FakeSource([])),  # type: ignore[arg-type]
+        contests=ContestService(sessions, FakeSource([])),  # type: ignore[arg-type]
     )
     harness = Harness(
         build_dispatcher(deps, RateLimiter(per_user=3)), bot, fake, sessions, FakeSource([])
@@ -560,3 +574,82 @@ async def test_replies_stay_in_the_topic_thread(harness: Harness) -> None:
     whisper = harness.session.sent()[-1]
     assert whisper["message_thread_id"] == 5
     assert whisper["ephemeral_message_parameters"] == {"receiver_user_id": MEMBER}
+
+
+async def test_upcoming_lists_the_next_two_weeks_with_links_and_times(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/upcoming")
+    text = harness.session.last_text()
+    assert I18N.t(None, "upcoming-header") in text
+    assert (
+        '<a href="https://codeforces.com/contests/2287">Codeforces Round &lt;1&gt; &amp; co</a>'
+        in text
+    )
+    assert "Codeforces Round (Div. 2)" in text
+    assert "Far Away Round" not in text  # beyond two weeks
+    assert text.count("<tg-time") == 4  # absolute and relative time for two contests
+    assert "2:00" in text
+    sent = harness.session.sent()[-1]
+    assert sent["link_preview_options"]["is_disabled"] is True
+
+
+async def test_upcoming_failures_and_empty_list(harness: Harness) -> None:
+    harness.source.fail = True
+    await harness.say(PRIVATE, PRIVATE, "/upcoming")
+    assert harness.session.last_text() == I18N.t(None, "upcoming-source-error")
+    harness.source.fail = False
+    harness.source.contests.clear()
+    await harness.say(PRIVATE, PRIVATE, "/upcoming")
+    assert harness.session.last_text() == I18N.t(None, "upcoming-empty")
+
+
+async def _reminder_states(harness: Harness) -> list[str]:
+    from sqlalchemy import text
+
+    async with harness.sessions() as session:
+        result = await session.execute(
+            text("select state from reminders order by contest_id, offset_min")
+        )
+        return [str(r[0]) for r in result.all()]
+
+
+async def test_finishing_setup_plans_reminders_for_the_known_contests(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/upcoming")  # stores the contests
+    assert await _reminder_states(harness) == []  # nobody is set up yet
+    await harness.say(PRIVATE, PRIVATE, "/start")
+    await harness.tap(PRIVATE, PRIVATE, "set:lang:en")
+    await harness.tap(PRIVATE, PRIVATE, "tz:set:Asia/Tashkent")
+    assert await _reminder_states(harness) == ["scheduled"] * 6  # three offsets, two contests
+
+
+async def test_reminders_can_be_switched_off_and_on_by_an_admin(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/upcoming")
+    await harness.say(PRIVATE, PRIVATE, "/start")
+    await harness.tap(PRIVATE, PRIVATE, "set:lang:en")
+    await harness.tap(PRIVATE, PRIVATE, "tz:set:Asia/Tashkent")
+
+    await harness.tap(PRIVATE, PRIVATE, "set:rem:off")
+    chat = await harness.chat(PRIVATE)
+    assert chat is not None
+    assert chat.reminder_offsets == ()
+    assert "Reminders: <b>off</b>" in harness.session.sent("EditMessageText")[-1]["text"]
+    assert set(await _reminder_states(harness)) == {"cancelled"}
+
+    await harness.tap(PRIVATE, PRIVATE, "set:rem:on")
+    chat = await harness.chat(PRIVATE)
+    assert chat is not None
+    assert chat.reminder_offsets == (1440, 60, 10)
+    assert set(await _reminder_states(harness)) == {"scheduled"}
+
+    await harness.tap(PRIVATE, PRIVATE, "set:rem:maybe")
+    chat = await harness.chat(PRIVATE)
+    assert chat is not None
+    assert chat.reminder_offsets == (1440, 60, 10)
+
+
+async def test_members_cannot_switch_reminders(harness: Harness) -> None:
+    await harness.say(GROUP, ADMIN, "/settings")
+    await harness.tap(GROUP, MEMBER, "set:rem:off")
+    assert harness.session.alerts()[-1]["text"] == I18N.t(None, "not-admin")
+    chat = await harness.chat(GROUP)
+    assert chat is not None
+    assert chat.reminder_offsets == (1440, 60, 10)

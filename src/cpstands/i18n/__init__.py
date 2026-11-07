@@ -32,6 +32,10 @@ log = structlog.get_logger(__name__)
 type FluentValue = str | int | float
 
 
+class Markup(str):
+    """Text that is already valid Telegram HTML; it is inserted without escaping."""
+
+
 class I18n:
     """Loads every catalog once and renders messages with a safe fallback.
 
@@ -76,7 +80,10 @@ class I18n:
         """
         language = lang if lang in self._bundles else DEFAULT_LANGUAGE
         safe = {
-            k: html.escape(v, quote=False) if isinstance(v, str) else v for k, v in args.items()
+            k: html.escape(v, quote=False)
+            if isinstance(v, str) and not isinstance(v, Markup)
+            else v
+            for k, v in args.items()
         }
         keys = [key + NEUTRAL_SUFFIX, key] if tone == "neutral" else [key]
         text: str | None = None

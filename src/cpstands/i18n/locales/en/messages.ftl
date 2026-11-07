@@ -58,6 +58,10 @@ settings-summary =
         [neutral] Neutral
        *[playful] Playful
     }</b>
+    🔔 Reminders: <b>{ $reminders ->
+        [off] off
+       *[on] on
+    }</b>
     👥 Following: <b>{ $count ->
         [one] { $count } handle
        *[other] { $count } handles
@@ -137,3 +141,40 @@ standings-not-found = ❌ Contest <b>{ $id }</b> was not found on Codeforces.
 standings-not-started = ⏰ <b>{ $name }</b> has not started yet. The table appears when it does.
 standings-source-error = ⚠️ Codeforces does not answer right now. Try again in a minute.
 button-refresh = Refresh
+
+reminder =
+    ⏰ <b>{ $name }</b>
+    { $left ->
+        [day] starts in 24 hours
+        [hour] starts in 1 hour
+       *[minutes] starts in { $minutes } minutes
+    }
+    🕐 { $start }
+reminder-neutral =
+    <b>{ $name }</b>
+    { $left ->
+        [day] starts in 24 hours
+        [hour] starts in 1 hour
+       *[minutes] starts in { $minutes } minutes
+    }
+    { $start }
+reminder-moved =
+    🔄 <b>{ $name }</b> has been rescheduled.
+    🕐 { $start }
+reminder-moved-neutral =
+    <b>{ $name }</b> has been rescheduled.
+    { $start }
+reminder-cancelled = ❌ <b>{ $name }</b> has been cancelled.
+reminder-cancelled-neutral = <b>{ $name }</b> has been cancelled.
+button-register = Register
+button-contest = Contest page
+button-reminders = { $state ->
+        [off] Reminders: off
+       *[on] Reminders: on
+    }
+upcoming-header = 🏆 <b>Upcoming contests</b>
+upcoming-line =
+    { $name }
+    🕐 { $start } · ⏱ { $duration }
+upcoming-empty = No contests are scheduled for the next two weeks.
+upcoming-source-error = ⚠️ Codeforces does not answer right now. Try again in a minute.

@@ -10,7 +10,7 @@ from sqlalchemy import RowMapping, delete, func, select, text, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from cpstands.db.schema import chats, standings_messages, watched_handles
+from cpstands.db.schema import chats, contests, standings_messages, watched_handles
 
 
 @dataclass(frozen=True, slots=True)
@@ -21,6 +21,7 @@ class ChatRecord:
     time_zone: str | None
     tone: str
     status: str
+    reminder_offsets: tuple[int, ...]
 
 
 _CHAT_COLUMNS = (
@@ -30,6 +31,7 @@ _CHAT_COLUMNS = (
     chats.c.time_zone,
     chats.c.tone,
     chats.c.status,
+    chats.c.reminder_offsets,
 )
 
 
@@ -41,6 +43,7 @@ def _record(row: RowMapping) -> ChatRecord:
         time_zone=row["time_zone"] if isinstance(row["time_zone"], str) else None,
         tone=str(row["tone"]),
         status=str(row["status"]),
+        reminder_offsets=tuple(int(v) for v in row["reminder_offsets"] or ()),
     )
 
 
@@ -92,6 +95,20 @@ async def set_time_zone(session: AsyncSession, chat_id: int, time_zone: str) -> 
 
 async def set_tone(session: AsyncSession, chat_id: int, tone: str) -> bool:
     return await _update_chat(session, chat_id, tone=tone)
+
+
+async def set_reminder_offsets(session: AsyncSession, chat_id: int, offsets: Sequence[int]) -> bool:
+    """Set the reminder offsets in minutes before the start; an empty list turns them off."""
+    ok = await _update_chat(session, chat_id, reminder_offsets=list(offsets))
+    if ok and not offsets:
+        await session.execute(
+            text(
+                "UPDATE reminders SET state = 'cancelled' "
+                "WHERE chat_id = :chat AND state = 'scheduled'"
+            ),
+            {"chat": chat_id},
+        )
+    return ok
 
 
 async def set_status(session: AsyncSession, chat_id: int, status: str) -> bool:
@@ -321,4 +338,286 @@ async def mark_live_message(
             standings_messages.c.message_id == message.message_id,
         )
         .values(**values)
+    )
+
+
+# --- contests ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class ContestRow:
+    contest_id: int
+    name: str
+    phase: str
+    starts_at: datetime | None
+    duration_s: int | None
+
+
+def _contest_row(row: Sequence[object]) -> ContestRow:
+    return ContestRow(
+        contest_id=int(row[0]),  # type: ignore[call-overload]
+        name=str(row[1]),
+        phase=str(row[2]),
+        starts_at=row[3] if isinstance(row[3], datetime) else None,
+        duration_s=int(row[4]) if isinstance(row[4], int) else None,
+    )
+
+
+_CONTEST_COLUMNS = (
+    contests.c.external_id,
+    contests.c.name,
+    contests.c.phase,
+    contests.c.starts_at,
+    contests.c.duration_s,
+)
+
+
+async def get_contest(session: AsyncSession, platform: str, contest_id: int) -> ContestRow | None:
+    row = (
+        await session.execute(
+            select(*_CONTEST_COLUMNS).where(
+                contests.c.platform == platform, contests.c.external_id == contest_id
+            )
+        )
+    ).first()
+    return _contest_row(row) if row else None
+
+
+async def upsert_contest(
+    session: AsyncSession,
+    platform: str,
+    contest_id: int,
+    name: str,
+    phase: str,
+    starts_at: datetime | None,
+    duration_s: int | None,
+) -> ContestRow | None:
+    """Store the contest and return what was stored before (``None`` when it is new)."""
+    previous = await get_contest(session, platform, contest_id)
+    statement = insert(contests).values(
+        platform=platform,
+        external_id=contest_id,
+        name=name,
+        phase=phase,
+        starts_at=starts_at,
+        duration_s=duration_s,
+    )
+    await session.execute(
+        statement.on_conflict_do_update(
+            index_elements=["platform", "external_id"],
+            set_={
+                "name": name,
+                "phase": phase,
+                "starts_at": starts_at,
+                "duration_s": duration_s,
+                "updated_at": func.now(),
+            },
+        )
+    )
+    return previous
+
+
+async def upcoming_contests(
+    session: AsyncSession, platform: str, *, now: datetime, until: datetime, limit: int
+) -> list[ContestRow]:
+    result = await session.execute(
+        select(*_CONTEST_COLUMNS)
+        .where(
+            contests.c.platform == platform,
+            contests.c.phase == "BEFORE",
+            contests.c.starts_at > now,
+            contests.c.starts_at <= until,
+        )
+        .order_by(contests.c.starts_at, contests.c.external_id)
+        .limit(limit)
+    )
+    return [_contest_row(row) for row in result.all()]
+
+
+async def stored_before_contests(session: AsyncSession, platform: str) -> list[ContestRow]:
+    result = await session.execute(
+        select(*_CONTEST_COLUMNS).where(
+            contests.c.platform == platform, contests.c.phase == "BEFORE"
+        )
+    )
+    return [_contest_row(row) for row in result.all()]
+
+
+# --- reminders --------------------------------------------------------------------------
+
+# Offsets below one are not time offsets but notices about a change of the contest.
+NOTICE_MOVED = -1
+NOTICE_CANCELLED = -2
+STALE_AFTER_MIN = 30  # a reminder this late is skipped rather than sent
+
+
+@dataclass(frozen=True, slots=True)
+class ClaimedReminder:
+    chat_id: int
+    contest_id: int
+    offset_min: int
+    attempts: int
+
+
+async def plan_reminders(
+    session: AsyncSession, platform: str, *, now: datetime, horizon_days: int = 30
+) -> int:
+    """Create the missing reminder rows of every active chat; safe to run again and again.
+
+    An offset whose moment has already passed is stored as ``skipped``, so it is never sent late
+    and never planned twice. Rows that were cancelled (reminders switched off and on again)
+    become scheduled again when their moment is still ahead.
+    """
+    result = await session.execute(
+        text(
+            """
+            INSERT INTO reminders (chat_id, platform, contest_id, offset_min, due_at, state)
+            SELECT ch.chat_id, c.platform, c.external_id, off,
+                   c.starts_at - make_interval(mins => off),
+                   CASE WHEN c.starts_at - make_interval(mins => off) <= CAST(:now AS timestamptz)
+                        THEN 'skipped' ELSE 'scheduled' END
+            FROM chats ch
+            JOIN contests c ON c.platform = :platform
+            CROSS JOIN LATERAL unnest(ch.reminder_offsets) AS off
+            WHERE ch.status = 'active'
+              AND c.phase = 'BEFORE'
+              AND c.starts_at > CAST(:now AS timestamptz)
+              AND c.starts_at <= CAST(:now AS timestamptz) + make_interval(days => :days)
+              AND off > 0
+            ON CONFLICT (chat_id, platform, contest_id, offset_min) DO UPDATE
+              SET state = 'scheduled', due_at = EXCLUDED.due_at
+              WHERE reminders.state = 'cancelled' AND EXCLUDED.due_at > CAST(:now AS timestamptz)
+            """
+        ),
+        {"platform": platform, "now": now, "days": horizon_days},
+    )
+    return int(result.rowcount or 0)  # type: ignore[attr-defined]
+
+
+async def reschedule_reminders(
+    session: AsyncSession, platform: str, contest_id: int, starts_at: datetime, *, now: datetime
+) -> list[int]:
+    """Move unsent reminders to the new start time; returns the chats that were already told.
+
+    Reminders that were sent stay sent. Those chats get a notice about the new time.
+    """
+    await session.execute(
+        text(
+            """
+            UPDATE reminders
+            SET due_at = CAST(:start AS timestamptz) - make_interval(mins => offset_min),
+                state = CASE WHEN CAST(:start AS timestamptz) - make_interval(mins => offset_min) <= CAST(:now AS timestamptz)
+                             THEN 'skipped' ELSE 'scheduled' END
+            WHERE platform = :platform AND contest_id = :cid AND offset_min > 0
+              AND state IN ('scheduled', 'skipped')
+            """
+        ),
+        {"platform": platform, "cid": contest_id, "start": starts_at, "now": now},
+    )
+    return await _told_chats(session, platform, contest_id)
+
+
+async def cancel_reminders(session: AsyncSession, platform: str, contest_id: int) -> list[int]:
+    """Withdraw unsent reminders; returns the chats that were already told."""
+    await session.execute(
+        text(
+            "UPDATE reminders SET state = 'cancelled' "
+            "WHERE platform = :platform AND contest_id = :cid "
+            "AND offset_min > 0 AND state = 'scheduled'"
+        ),
+        {"platform": platform, "cid": contest_id},
+    )
+    return await _told_chats(session, platform, contest_id)
+
+
+async def _told_chats(session: AsyncSession, platform: str, contest_id: int) -> list[int]:
+    result = await session.execute(
+        text(
+            "SELECT DISTINCT chat_id FROM reminders "
+            "WHERE platform = :platform AND contest_id = :cid AND offset_min > 0 "
+            "AND state = 'sent'"
+        ),
+        {"platform": platform, "cid": contest_id},
+    )
+    return [int(row[0]) for row in result.all()]
+
+
+async def queue_notice(
+    session: AsyncSession,
+    platform: str,
+    contest_id: int,
+    chat_ids: Sequence[int],
+    kind: int,
+    *,
+    now: datetime,
+) -> None:
+    """Schedule a "moved" or "cancelled" notice for chats that already got a reminder."""
+    for chat_id in chat_ids:
+        await session.execute(
+            text(
+                """
+                INSERT INTO reminders (chat_id, platform, contest_id, offset_min, due_at, state)
+                VALUES (:chat, :platform, :cid, :kind, CAST(:now AS timestamptz), 'scheduled')
+                ON CONFLICT (chat_id, platform, contest_id, offset_min) DO UPDATE
+                  SET state = 'scheduled', due_at = EXCLUDED.due_at, sent_at = NULL, attempts = 0
+                """
+            ),
+            {"chat": chat_id, "platform": platform, "cid": contest_id, "kind": kind, "now": now},
+        )
+
+
+async def claim_due_reminders(
+    session: AsyncSession, platform: str, *, now: datetime, limit: int
+) -> list[ClaimedReminder]:
+    """Take the due reminders and mark them sent *before* sending: at most once per offset.
+
+    ``FOR UPDATE SKIP LOCKED`` lets several workers claim without seeing the same row.
+    Reminders that are more than half an hour late are skipped instead.
+    """
+    await session.execute(
+        text(
+            "UPDATE reminders SET state = 'skipped' "
+            "WHERE platform = :platform AND state = 'scheduled' "
+            "AND due_at < CAST(:now AS timestamptz) - make_interval(mins => :stale)"
+        ),
+        {"platform": platform, "now": now, "stale": STALE_AFTER_MIN},
+    )
+    result = await session.execute(
+        text(
+            """
+            WITH due AS (
+                SELECT chat_id, platform, contest_id, offset_min
+                FROM reminders
+                WHERE platform = :platform AND state = 'scheduled' AND due_at <= CAST(:now AS timestamptz)
+                ORDER BY due_at
+                LIMIT :limit
+                FOR UPDATE SKIP LOCKED
+            )
+            UPDATE reminders r
+            SET state = 'sent', sent_at = CAST(:now AS timestamptz), attempts = r.attempts + 1
+            FROM due
+            WHERE r.chat_id = due.chat_id AND r.platform = due.platform
+              AND r.contest_id = due.contest_id AND r.offset_min = due.offset_min
+            RETURNING r.chat_id, r.contest_id, r.offset_min, r.attempts
+            """
+        ),
+        {"platform": platform, "now": now, "limit": limit},
+    )
+    return [ClaimedReminder(*(int(v) for v in row)) for row in result.all()]
+
+
+async def release_reminder(session: AsyncSession, platform: str, claimed: ClaimedReminder) -> None:
+    """Put a reminder back after a send that surely did not happen (flood control, network)."""
+    await session.execute(
+        text(
+            "UPDATE reminders SET state = 'scheduled', sent_at = NULL "
+            "WHERE chat_id = :chat AND platform = :platform AND contest_id = :cid "
+            "AND offset_min = :off AND state = 'sent'"
+        ),
+        {
+            "chat": claimed.chat_id,
+            "platform": platform,
+            "cid": claimed.contest_id,
+            "off": claimed.offset_min,
+        },
     )

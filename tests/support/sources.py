@@ -8,7 +8,9 @@ from datetime import UTC, datetime
 
 from cpstands.domain.contest import (
     Contest,
+    ContestList,
     ContestPhase,
+    FetchMeta,
     FullStandings,
     HandleResolution,
     Problem,
@@ -32,7 +34,9 @@ class FakeSource:
         fail: bool = False,
         standings: dict[int, FullStandings] | None = None,
         delay_s: float = 0.0,
+        contests: list[Contest] | None = None,
     ) -> None:
+        self.contests: list[Contest] = contests or []
         self.delay_s = delay_s
         self.standings = standings or {}
         self.full_fetches = 0
@@ -51,6 +55,13 @@ class FakeSource:
         }
         unknown = tuple(h for h in handles if handle_key(h) not in self._existing)
         return HandleResolution(known=known, unknown=unknown)
+
+    async def list_contests(self) -> ContestList:
+        if self.fail:
+            raise RetryableSourceError("down")
+        now = datetime.now(UTC)
+        meta = FetchMeta(now, 0.0, 0, 0, None, None)
+        return ContestList(contests=tuple(self.contests), skipped=0, meta=meta)
 
     async def fetch_full_standings(self, contest_id: int) -> FullStandings:
         self.full_fetches += 1

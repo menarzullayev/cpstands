@@ -21,7 +21,7 @@ PLURAL_CATEGORIES: dict[str, frozenset[str]] = {
 
 # Tags Telegram accepts in HTML messages.
 ALLOWED_TAGS = frozenset(
-    {"b", "i", "u", "s", "code", "pre", "a", "blockquote", "tg-emoji", "tg-spoiler"}
+    {"b", "i", "u", "s", "code", "pre", "a", "blockquote", "tg-emoji", "tg-spoiler", "tg-time"}
 )
 _TAG_RE = re.compile(r"<(/?)([A-Za-z][\w-]*)[^<>]*>")
 _BAD_AMP_RE = re.compile(r"&(?!(?:amp|lt|gt|quot);)")

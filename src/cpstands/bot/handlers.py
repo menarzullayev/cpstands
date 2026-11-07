@@ -15,20 +15,24 @@ from aiogram.types import (
     ChatMemberUpdated,
     InlineKeyboardMarkup,
     InputRichMessage,
+    LinkPreviewOptions,
     Message,
 )
 
 from cpstands.bot import keyboards, standings_view
 from cpstands.bot.deps import Deps
 from cpstands.bot.live import MAX_LIVE_PER_CHAT
+from cpstands.bot.reminders import duration_text, tg_time
 from cpstands.db import repos
 from cpstands.domain.contest import ContestPhase, FullStandings
-from cpstands.i18n import LANGUAGE_NAMES, SUPPORTED_LANGUAGES, TONES, Translator
+from cpstands.i18n import LANGUAGE_NAMES, SUPPORTED_LANGUAGES, TONES, Markup, Translator
 from cpstands.services import timezone as tzs
 from cpstands.services.watchlist import INPUT_CAP, PLATFORM
 from cpstands.sources.base import PermanentSourceError, SourceError
 
 log = structlog.get_logger(__name__)
+
+DEFAULT_REMINDER_OFFSETS = (1440, 60, 10)  # minutes before the start
 
 # The party popper effect; Telegram plays it only in private chats.
 CELEBRATE_EFFECT_ID = "5046509860389126442"
@@ -37,7 +41,6 @@ _CHAT_TYPES = {"private": "private", "group": "group", "supergroup": "supergroup
 _JOINED = {ChatMemberStatus.MEMBER, ChatMemberStatus.ADMINISTRATOR}
 _GONE = {ChatMemberStatus.LEFT, ChatMemberStatus.KICKED}
 _PLANNED_COMMANDS = (
-    "upcoming",
     "rank",
     "privacy",
     "delete",
@@ -97,9 +100,13 @@ async def _settings_view(deps: Deps, chat: repos.ChatRecord) -> tuple[str, Inlin
         language=LANGUAGE_NAMES.get(chat.language or "", "-"),
         zone=chat.time_zone or say("settings-timezone-unset"),
         mood=chat.tone,
+        reminders="on" if chat.reminder_offsets else "off",
         count=count,
     )
-    return text, keyboards.settings_keyboard(say, chat.tone, icons=deps.icons)
+    markup = keyboards.settings_keyboard(
+        say, chat.tone, icons=deps.icons, reminders_on=bool(chat.reminder_offsets)
+    )
+    return text, markup
 
 
 def _zone_step(deps: Deps, chat: repos.ChatRecord) -> tuple[str, InlineKeyboardMarkup]:
@@ -165,6 +172,7 @@ async def on_zone_chosen(callback: CallbackQuery, deps: Deps) -> None:
     updated = await _refresh(deps, chat.chat_id)
     say = _say(deps, updated)
     if finishing:
+        await deps.contests.plan()
         language = LANGUAGE_NAMES[updated.language or "uz"]
         await message.edit_text(say("setup-done", language=language, zone=zone))
         if message.chat.type == "private" and updated.tone == "playful":
@@ -269,6 +277,62 @@ async def on_tone_chosen(callback: CallbackQuery, deps: Deps) -> None:
     text, markup = await _settings_view(deps, await _refresh(deps, chat.chat_id))
     await message.edit_text(text, reply_markup=markup)
     await callback.answer()
+
+
+async def on_reminders_chosen(callback: CallbackQuery, deps: Deps) -> None:
+    context = await _tap_context(deps, callback, admin=True)
+    if context is None:
+        return
+    message, chat = context
+    value = (callback.data or "")[len(keyboards.REMINDERS_PREFIX) :]
+    if value not in {"on", "off"}:
+        await callback.answer(_say(deps, chat)("button-expired"), show_alert=True)
+        return
+    offsets = DEFAULT_REMINDER_OFFSETS if value == "on" else ()
+    async with deps.sessions() as session, session.begin():
+        await repos.set_reminder_offsets(session, chat.chat_id, offsets)
+    if offsets:
+        await deps.contests.plan()
+    text, markup = await _settings_view(deps, await _refresh(deps, chat.chat_id))
+    await message.edit_text(text, reply_markup=markup)
+    await callback.answer()
+
+
+# --- upcoming contests -------------------------------------------------------------------
+
+
+async def on_upcoming(message: Message, deps: Deps) -> None:
+    chat = await _ensure_chat(deps, message.chat)
+    if chat is None:
+        return
+    say = _say(deps, chat)
+    try:
+        contests = await deps.contests.upcoming()
+    except SourceError:
+        log.warning("upcoming_source_error", exc_info=True)
+        await deps.whisper.reply(message, say("upcoming-source-error"))
+        return
+    if not contests:
+        await deps.whisper.reply(message, say("upcoming-empty"))
+        return
+    blocks = [say("upcoming-header")]
+    for contest in contests:
+        name = Markup(
+            f'<a href="https://codeforces.com/contests/{contest.contest_id}">'
+            f"{_escape(contest.name)}</a>"
+        )
+        assert contest.starts_at is not None  # upcoming contests always have a start
+        blocks.append(
+            say(
+                "upcoming-line",
+                name=name,
+                start=tg_time(contest.starts_at, chat.time_zone),
+                duration=duration_text(contest.duration_s),
+            )
+        )
+    await message.answer(
+        "\n\n".join(blocks), link_preview_options=LinkPreviewOptions(is_disabled=True)
+    )
 
 
 # --- watch list --------------------------------------------------------------------------
@@ -532,6 +596,10 @@ def create_router() -> Router:
     router.callback_query.register(on_language_chosen, F.data.startswith(keyboards.LANG_PREFIX))
     router.callback_query.register(on_zone_chosen, F.data.startswith(keyboards.TZ_PREFIX))
     router.callback_query.register(on_tone_chosen, F.data.startswith(keyboards.TONE_PREFIX))
+    router.callback_query.register(
+        on_reminders_chosen, F.data.startswith(keyboards.REMINDERS_PREFIX)
+    )
+    router.message.register(on_upcoming, Command("upcoming"))
     router.message.register(on_timezone, Command("timezone"))
     router.message.register(on_settings, Command("settings"))
     router.callback_query.register(on_menu_language, F.data == keyboards.MENU_LANG)

@@ -42,6 +42,8 @@ class FakeSession(BaseSession):
     next_message_id: int = 1000
     refuse_ephemeral: bool = False
     edit_error: Exception | None = None
+    send_error: Exception | None = None
+    send_attempts: int = 0
 
     def __post_init__(self) -> None:
         BaseSession.__init__(self)
@@ -59,6 +61,10 @@ class FakeSession(BaseSession):
         data = method.model_dump(exclude_none=True)
         self.calls.append(Call(name, data))
         result: Any = True
+        if name == "SendMessage":
+            self.send_attempts += 1
+            if self.send_error is not None:
+                raise self.send_error
         if name == "EditMessageText" and self.edit_error is not None:
             raise self.edit_error
         if (

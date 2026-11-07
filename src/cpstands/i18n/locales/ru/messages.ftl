@@ -58,6 +58,10 @@ settings-summary =
         [neutral] нейтральный
        *[playful] игривый
     }</b>
+    🔔 Напоминания: <b>{ $reminders ->
+        [off] выключены
+       *[on] включены
+    }</b>
     👥 Отслеживается: <b>{ $count ->
         [one] { $count } хендл
         [few] { $count } хендла
@@ -143,3 +147,40 @@ standings-not-found = ❌ Контест <b>{ $id }</b> не найден на C
 standings-not-started = ⏰ <b>{ $name }</b> ещё не начался. Таблица появится, когда он начнётся.
 standings-source-error = ⚠️ Codeforces сейчас не отвечает. Попробуйте через минуту.
 button-refresh = Обновить
+
+reminder =
+    ⏰ <b>{ $name }</b>
+    { $left ->
+        [day] начнётся через 24 часа
+        [hour] начнётся через 1 час
+       *[minutes] начнётся через { $minutes } мин
+    }
+    🕐 { $start }
+reminder-neutral =
+    <b>{ $name }</b>
+    { $left ->
+        [day] начнётся через 24 часа
+        [hour] начнётся через 1 час
+       *[minutes] начнётся через { $minutes } мин
+    }
+    { $start }
+reminder-moved =
+    🔄 Время контеста <b>{ $name }</b> изменилось.
+    🕐 { $start }
+reminder-moved-neutral =
+    Время контеста <b>{ $name }</b> изменилось.
+    { $start }
+reminder-cancelled = ❌ Контест <b>{ $name }</b> отменён.
+reminder-cancelled-neutral = Контест <b>{ $name }</b> отменён.
+button-register = Регистрация
+button-contest = Страница контеста
+button-reminders = { $state ->
+        [off] Напоминания: выкл
+       *[on] Напоминания: вкл
+    }
+upcoming-header = 🏆 <b>Ближайшие контесты</b>
+upcoming-line =
+    { $name }
+    🕐 { $start } · ⏱ { $duration }
+upcoming-empty = На ближайшие две недели контестов не запланировано.
+upcoming-source-error = ⚠️ Codeforces сейчас не отвечает. Попробуйте через минуту.
