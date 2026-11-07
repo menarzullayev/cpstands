@@ -1,0 +1,9 @@
+{
+  "event_id": "16a5e03943c3",
+  "event_type": "stage.passed",
+  "timestamp": "2026-11-07T21:10:29+00:00",
+  "stage": "10-operations",
+  "from_status": "REVIEW",
+  "to_status": "PASSED",
+  "reason": "Owner approved operations commitments, launch criteria and confined runner"
+}

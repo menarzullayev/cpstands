@@ -35,12 +35,13 @@ for the handles above. It does not copy private data from those sites.
 - Until you delete it with `/delete` (planned) or remove the bot from a chat.
 - Data of chats where the bot was removed is deleted within 30 days.
 - Server logs contain no message text and are kept for at most 30 days.
+- The maintainer takes backups only by hand and rarely; any such backup is stored protected and deleted within 30 days, and is never restored for a chat that asked for deletion.
 
 ## Sharing
 
 Your data is never sold. It is not shared with third parties, except the services needed to run the bot:
-Telegram (message delivery), the contest sites above (queried by public handle), and the hosting provider
-(to be named here before launch).
+Telegram (message delivery) and the contest sites above (queried by public handle). The bot runs on the maintainer's own computer; no third-party
+hosting provider receives your data, and no analytics or advertising service is used.
 
 ## Your rights
 

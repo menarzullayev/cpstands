@@ -1,0 +1,14 @@
+{
+  "event_id": "81e13f856187",
+  "event_type": "evidence.recorded",
+  "timestamp": "2026-11-07T21:10:24+00:00",
+  "path": "docs\\evidence\\EVID-018.md",
+  "stage": "03-market-research",
+  "claim": "GitHub documents that self-hosted runners should almost never be used for public repositories because any user can open pull requests and compromise the runner environment; they are not ephemeral by default.",
+  "source": "https://docs.github.com/en/actions/reference/security/secure-use (read 2026-11-08)",
+  "date": "2026-11-08",
+  "confidence": "high",
+  "type": "FACT",
+  "risk": "HIGH",
+  "evidence_id": "EVID-018"
+}

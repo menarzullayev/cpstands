@@ -83,6 +83,7 @@ Telegram documents an extra fee tied to Star purchases for threaded bots; a free
 | EVID-015 | Telegram Serverless: JavaScript V8 handlers triggered by updates and Mini App calls; SQLite without foreign keys; 30 MB outbound response cap; no documented scheduler, limits or pricing (added 2026-11-08 during stage 06) | FACT | high | Telegram Serverless documentation |
 | EVID-016 | Healthchecks.io Hobbyist plan: 0 USD per month, 20 jobs; free Business plan for open-source projects (added 2026-11-08 during stage 07) | FACT | high | vendor pricing page |
 | EVID-017 | Cloudflare R2 free tier 10 GB-month with free egress; Backblaze B2 first 10 GB free (added 2026-11-08 during stage 07) | FACT | high | vendor pricing pages |
+| EVID-018 | GitHub: self-hosted runners should almost never be used for public repositories; not ephemeral by default (added 2026-11-08 during stage 10) | FACT | high | GitHub Actions security documentation |
 
 ## Assumptions
 

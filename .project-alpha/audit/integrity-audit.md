@@ -1,30 +1,11 @@
 # Evidence & Decision Integrity Audit
 
-- Run at: 2026-11-07T21:07:50+00:00
-- Evidence records: 17
-- Decision records: 9
+- Run at: 2026-11-07T21:11:27+00:00
+- Evidence records: 18
+- Decision records: 10
 
 ## Result
 
-BLOCK
+PASS
 
-## Findings
-
-- decision DEC-001 is approved but has no Approval ID
-- decision DEC-002 is approved but has no Approval ID
-- decision DEC-003 is approved but has no Approval ID
-- decision DEC-004 is approved but has no Approval ID
-- decision DEC-005 is approved but has no Approval ID
-- decision DEC-006 is approved but has no Approval ID
-- decision DEC-007 is approved but has no Approval ID
-- decision DEC-008 is approved but has no Approval ID
-- decision DEC-009 is approved but has no Approval ID
-- approval APR-001 missing Decision
-- approval APR-002 missing Decision
-- approval APR-003 missing Decision
-- approval APR-004 missing Decision
-- approval APR-005 missing Decision
-- approval APR-006 missing Decision
-- approval APR-007 missing Decision
-- approval APR-008 missing Decision
-- approval APR-009 missing Decision
+No integrity violations found.

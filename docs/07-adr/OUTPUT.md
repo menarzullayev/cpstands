@@ -20,6 +20,7 @@ routine reversible decisions are agent-approved and listed for transparency.
 | ADR-012 | Tooling and CI: uv, ruff, mypy, pytest, pip-audit, GitHub Actions | ACCEPTED | agent (routine, reversible) |
 | ADR-013 | Configuration and secrets handling | ACCEPTED | agent (routine, reversible) |
 | ADR-014 | Backups: manual by the owner, no automated off-site copy | ACCEPTED | owner (DEC-008) |
+| ADR-015 | Deployment through a confined self-hosted GitHub runner (added during stage 10) | ACCEPTED | owner (DEC-010) |
 
 ---
 
@@ -205,6 +206,19 @@ routine reversible decisions are agent-approved and listed for transparency.
 - **Reversibility:** High.
 - **Approval:** owner, 2026-11-08.
 
+## ADR-015 Deployment through a confined self-hosted GitHub runner
+
+- **Decision ID:** ADR-015 (linked decision record DEC-010)
+- **Status:** ACCEPTED (added on 2026-11-08 during stage 10; revisits the delivery approach only, no other decision changes)
+- **Context / problem:** Deliver releases to the home PC with little manual work (REQ-N10) without weakening security (REQ-N09).
+- **Options considered:** manual pull-based deploy script; self-hosted GitHub runner; a pull agent on the PC (for example a registry watcher).
+- **Selected solution:** A self-hosted runner dedicated to one deploy workflow, confined as follows: build and test only on GitHub-hosted runners; deploy workflow triggers only on release tags or owner dispatch; protected environment with required owner approval; approval required for outside contributors' workflows; no pull-request events reach the runner; unprivileged runner account; pinned action SHAs; minimal token permissions; manual script as fallback.
+- **Rationale:** The owner prefers automatic deploys; GitHub warns that self-hosted runners should almost never be used for public repositories (EVID-018), so the design removes every path by which untrusted code could reach the runner.
+- **Consequences:** An account on the owner's PC can run deploy steps after owner-approved events; a misconfiguration would expose the PC, so the confinement is a launch criterion (stage 10, criterion 13) with a negative test; Docker access on the runner host is powerful and must be considered when choosing the account; the manual script avoids all of this and stays available.
+- **Evidence:** EVID-018 (GitHub security documentation)
+- **Reversibility:** High: remove the runner and use the manual script.
+- **Approval:** owner, 2026-11-08, after the documented risk was presented.
+
 ---
 
 ## Traceability to requirements
@@ -220,7 +234,8 @@ routine reversible decisions are agent-approved and listed for transparency.
 | REQ-019, REQ-020, REQ-N08 | ADR-009 |
 | REQ-N04, REQ-N05 | ADR-002, ADR-007, ADR-008 |
 | REQ-N07 | ADR-004 |
-| REQ-N10 | ADR-001, ADR-011, ADR-012 |
+| REQ-N09 | ADR-013, ADR-014, ADR-015 (runner confinement) |
+| REQ-N10 | ADR-001, ADR-011, ADR-012, ADR-015 |
 
 ## Evidence
 

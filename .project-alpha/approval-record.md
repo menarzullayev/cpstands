@@ -74,3 +74,9 @@
 - Approver: Saidakbar Narzullayev
 - Timestamp: 2026-11-07T21:07:01+00:00
 - Reason: Owner approved the specification and 30-day retention
+
+## Approval — 10-operations
+- Decision: PASS
+- Approver: Saidakbar Narzullayev
+- Timestamp: 2026-11-07T21:10:29+00:00
+- Reason: Owner approved operations commitments, launch criteria and confined runner

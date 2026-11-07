@@ -1,0 +1,9 @@
+{
+  "event_id": "639cfd0c17d9",
+  "event_type": "approval.recorded",
+  "timestamp": "2026-11-07T21:10:29+00:00",
+  "stage": "10-operations",
+  "decision": "PASS",
+  "approver": "Saidakbar Narzullayev",
+  "reason": "Owner approved operations commitments, launch criteria and confined runner"
+}

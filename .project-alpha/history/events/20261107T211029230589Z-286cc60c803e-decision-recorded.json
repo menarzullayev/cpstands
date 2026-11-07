@@ -1,0 +1,19 @@
+{
+  "event_id": "286cc60c803e",
+  "event_type": "decision.recorded",
+  "timestamp": "2026-11-07T21:10:29+00:00",
+  "path": ".project-alpha\\decisions\\DEC-010.md",
+  "stage": "10-operations",
+  "title": "Approve operations plan, launch criteria and confined self-hosted runner",
+  "risk": "HIGH",
+  "decision_id": "DEC-010",
+  "decision": "Adopt the operations plan with thirteen launch criteria; best-effort availability, no external alerting, no automated backups; deploy through a confined self-hosted GitHub runner (ADR-015)",
+  "context": "Owner prefers automatic deploys; GitHub warns against self-hosted runners on public repositories; confinement measures and a negative test mitigate the risk",
+  "chosen_option": "Confined self-hosted runner with a manual fallback script",
+  "rationale": "Owner decision with explicit risk acknowledgement and compensating controls recorded as launch criterion 13",
+  "impact": "High",
+  "reversibility": "High",
+  "evidence": "EVID-018,EVID-016,EVID-017",
+  "approval_required": "yes",
+  "approval_status": "approved"
+}
