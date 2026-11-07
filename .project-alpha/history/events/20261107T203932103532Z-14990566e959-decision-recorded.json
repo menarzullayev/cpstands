@@ -1,0 +1,19 @@
+{
+  "event_id": "14990566e959",
+  "event_type": "decision.recorded",
+  "timestamp": "2026-11-07T20:39:32+00:00",
+  "path": ".project-alpha\\decisions\\DEC-003.md",
+  "stage": "02-problem-discovery",
+  "title": "Choose the primary target segment",
+  "risk": "MEDIUM",
+  "decision_id": "DEC-003",
+  "decision": "Primary segment is the community member in Telegram groups; admins are the control surface; private following is a later slice",
+  "context": "Observed demand is strongest in community groups; the owner wants both private and community use",
+  "chosen_option": "S1 community member in groups",
+  "rationale": "Closest to measured demand and widest reach; keeps private use as a planned slice",
+  "impact": "High",
+  "reversibility": "Medium",
+  "evidence": "EVID-004,EVID-007",
+  "approval_required": "yes",
+  "approval_status": "approved"
+}

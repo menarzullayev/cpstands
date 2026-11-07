@@ -1,0 +1,9 @@
+{
+  "event_id": "9255e0ddd7fc",
+  "event_type": "approval.recorded",
+  "timestamp": "2026-11-07T20:39:32+00:00",
+  "stage": "02-problem-discovery",
+  "decision": "PASS",
+  "approver": "Saidakbar Narzullayev",
+  "reason": "Owner approved primary segment S1"
+}

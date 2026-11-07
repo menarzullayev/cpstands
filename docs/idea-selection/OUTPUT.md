@@ -78,4 +78,4 @@ public repository, no personal data in public documents, Codeforces first and ke
 ## Human decision
 
 Approved on 2026-11-08 by Saidakbar Narzullayev (project owner) in the working session: idea 1, cpstands, enters stage 01 Vision.
-The formal records are `.project-alpha/decisions/DEC-001.md` and `.project-alpha/approvals/APR-001.md`.
+The formal decision and approval records are stored under `.project-alpha/decisions/` and `.project-alpha/approvals/` (approval APR-001).

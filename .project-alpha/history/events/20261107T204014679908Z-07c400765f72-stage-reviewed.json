@@ -1,0 +1,9 @@
+{
+  "event_id": "07c400765f72",
+  "event_type": "stage.reviewed",
+  "timestamp": "2026-11-07T20:40:14+00:00",
+  "stage": "03-market-research",
+  "from_status": "IN_PROGRESS",
+  "to_status": "REVIEW",
+  "reason": null
+}

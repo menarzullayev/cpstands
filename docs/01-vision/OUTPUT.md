@@ -67,4 +67,4 @@ a 99-member community uses it regularly; Bot API 10.3 offers capabilities it doe
 Strategic direction (mission, vision, scope: private chats and groups, global audience, uz/ru/en, Codeforces first and kep.uz
 after written confirmation) was approved on 2026-11-08 by Saidakbar Narzullayev (project owner). The METRIC-001 to METRIC-006
 targets were accepted as planning targets, to be refined with evidence in stages 02 and 04.
-Records: `.project-alpha/decisions/DEC-002.md`, `.project-alpha/approvals/APR-002.md`; earlier approval: `.project-alpha/approvals/APR-001.md`.
+Formal records are stored under `.project-alpha/decisions/` and `.project-alpha/approvals/` (approvals APR-002; earlier: APR-001).

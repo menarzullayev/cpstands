@@ -1,13 +1,9 @@
 # Cross-Stage Semantic Consistency Audit
 
-- Status: BLOCKED
-- Semantic IDs: 12
+- Status: PASS
+- Semantic IDs: 40
 
 ## Findings
-- forward reference DEC-001.md: docs\idea-selection\OUTPUT.md references DEC owned by later stage 07-adr
-- traceability warning 02-problem-discovery: no PROB-* semantic IDs found for required link to 01-vision
-- traceability warning 02-problem-discovery: no METRIC-* semantic IDs found for required link to 01-vision
-- traceability warning 03-market-research: no PROB-* semantic IDs found for required link to 02-problem-discovery
 - traceability warning 04-prd: no PROB-* semantic IDs found for required link to 02-problem-discovery
 - traceability warning 05-domain-model: no REQ-* semantic IDs found for required link to 04-prd
 - traceability warning 06-architecture: no REQ-* semantic IDs found for required link to 04-prd

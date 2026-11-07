@@ -1,0 +1,9 @@
+{
+  "event_id": "89ecee5c60c0",
+  "event_type": "stage.passed",
+  "timestamp": "2026-11-07T20:39:32+00:00",
+  "stage": "02-problem-discovery",
+  "from_status": "REVIEW",
+  "to_status": "PASSED",
+  "reason": "Owner approved primary segment S1"
+}
