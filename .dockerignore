@@ -1,0 +1,17 @@
+.git
+.github
+.env
+.env.*
+!.env.example
+.venv
+__pycache__
+*.pyc
+.mypy_cache
+.ruff_cache
+.pytest_cache
+tests
+docs
+assets
+config
+scripts
+.project-alpha

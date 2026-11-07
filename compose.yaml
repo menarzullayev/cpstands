@@ -1,0 +1,37 @@
+# Local development stack. The database listens on 127.0.0.1 only.
+# Usage:  docker compose up -d db        (start PostgreSQL for development and tests)
+#         docker compose --profile tools run --rm migrate   (apply migrations inside the image)
+name: cpstands
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cpstands
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cpstands}
+      POSTGRES_DB: cpstands
+    ports:
+      - "127.0.0.1:${CPSTANDS_DB_PORT:-5440}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cpstands -d cpstands"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  migrate:
+    profiles: ["tools"]
+    build: .
+    command: ["migrate"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://cpstands:${POSTGRES_PASSWORD:-cpstands}@db:5432/cpstands
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # The application service (bot, ingest, scheduler, notifier) is added with the runtime in milestone M1 onward.
+
+volumes:
+  pgdata:

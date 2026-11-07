@@ -5,6 +5,7 @@ Usage: python scripts/apply_bot_profile.py [--check] [--photo]
   --photo  re-upload the profile photo even if one is already set
   --check  only read back the current values (getMyName, ...) and compare.
 """
+
 import json
 import sys
 import urllib.error
@@ -88,7 +89,12 @@ def apply_photo(rel_path: str, force: bool, check_only: bool) -> int:
 FIELDS = {
     "name": ("setMyName", "getMyName", "name", "name"),
     "description": ("setMyDescription", "getMyDescription", "description", "description"),
-    "short_description": ("setMyShortDescription", "getMyShortDescription", "short_description", "short_description"),
+    "short_description": (
+        "setMyShortDescription",
+        "getMyShortDescription",
+        "short_description",
+        "short_description",
+    ),
 }
 
 
@@ -126,14 +132,18 @@ def apply_commands(spec: dict, check_only: bool) -> int:
             if not check_only and not _same_commands(got, want):
                 res = call("setMyCommands", commands=want, scope=scope, language_code=lang)
                 if not res.get("ok"):
-                    print(f"FAIL set commands[{menu}/{lang or 'default'}]: {res.get('description')}")
+                    print(
+                        f"FAIL set commands[{menu}/{lang or 'default'}]: {res.get('description')}"
+                    )
                     bad += 1
                     continue
                 got = call("getMyCommands", scope=scope, language_code=lang).get("result", [])
             same = _same_commands(got, want)
             if not same:
                 bad += 1
-            print(f"{'ok' if same else 'MISMATCH'}: commands[{menu}/{lang or 'default'}] = {[g['command'] for g in got]}")
+            print(
+                f"{'ok' if same else 'MISMATCH'}: commands[{menu}/{lang or 'default'}] = {[g['command'] for g in got]}"
+            )
     return bad
 
 

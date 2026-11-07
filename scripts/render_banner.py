@@ -1,7 +1,9 @@
 """Render assets/description_banner.svg geometry to assets/description_banner.jpg (640x360) with Pillow.
 Mirrors the SVG; update both together. Needs Segoe UI (Windows) or pass FONT_REGULAR/FONT_BOLD env paths."""
+
 import os
 from pathlib import Path
+
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -18,7 +20,9 @@ def rect(x, y, w, h, r, fill):
 
 
 def text(x, baseline, s, size, font, fill, anchor="ls"):
-    d.text((x * S, baseline * S), s, font=ImageFont.truetype(font, size * S), fill=fill, anchor=anchor)
+    d.text(
+        (x * S, baseline * S), s, font=ImageFont.truetype(font, size * S), fill=fill, anchor=anchor
+    )
 
 
 rect(60, 170, 56, 110, 8, "#38bdf8")
@@ -30,5 +34,7 @@ rect(302, 232, 118, 34, 17, "#1e293b")
 text(361, 255, "Codeforces", 16, REG, "#38bdf8", "ms")
 rect(430, 232, 84, 34, 17, "#1e293b")
 text(472, 255, "kep.uz", 16, REG, "#fbbf24", "ms")
-img.resize((W, H), Image.LANCZOS).save(ROOT / "assets" / "description_banner.jpg", "JPEG", quality=95, subsampling=0)
+img.resize((W, H), Image.LANCZOS).save(
+    ROOT / "assets" / "description_banner.jpg", "JPEG", quality=95, subsampling=0
+)
 print("description_banner.jpg written")
