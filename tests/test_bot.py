@@ -58,8 +58,10 @@ class Harness:
         self._next += 1
         return self._next
 
-    async def say(self, chat_id: int, user_id: int, text: str) -> None:
-        await self.feed(message_update(self.uid(), chat_id, user_id, text))
+    async def say(
+        self, chat_id: int, user_id: int, text: str, *, thread_id: int | None = None
+    ) -> None:
+        await self.feed(message_update(self.uid(), chat_id, user_id, text, thread_id))
 
     async def tap(self, chat_id: int, user_id: int, data: str) -> None:
         await self.feed(callback_update(self.uid(), chat_id, user_id, data))
@@ -83,6 +85,7 @@ async def harness(migrated_database: str) -> AsyncIterator[Harness]:
             1970: make_standings(),
             1971: make_standings(contest_id=1971, phase=ContestPhase.BEFORE, rows=0, problems=5),
             1972: make_standings(contest_id=1972, rows=3, problems=5, kind="CF"),
+            1973: make_standings(contest_id=1973, phase=ContestPhase.CODING, rows=60, problems=21),
         },
     )
     deps = Deps(
@@ -505,3 +508,55 @@ async def test_cf_type_contests_show_points_not_times(harness: Harness) -> None:
     html = harness.session.rich()[-1]["html"]
     assert "<td>500</td>" in html
     assert ":" not in html.split("<table>")[1].split("</table>")[0]
+
+
+async def _live_rows(harness: Harness) -> list[tuple[int, int, int, int, str]]:
+    from sqlalchemy import text
+
+    async with harness.sessions() as session:
+        result = await session.execute(
+            text(
+                "select contest_id, message_id, row_page, col_page, state "
+                "from standings_messages order by contest_id"
+            )
+        )
+        return [tuple(int(v) if str(v).isdigit() else str(v) for v in row) for row in result.all()]  # type: ignore[misc]
+
+
+async def test_running_contests_become_live_and_finished_ones_do_not(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/standings 1970")  # finished
+    assert await _live_rows(harness) == []
+    await harness.say(PRIVATE, PRIVATE, "/standings 1973")  # running
+    rows = await _live_rows(harness)
+    assert [(r[0], r[2], r[3], r[4]) for r in rows] == [(1973, 0, 0, "active")]
+
+
+async def test_paging_a_live_message_remembers_the_page(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/standings 1973")
+    message_id = (await _live_rows(harness))[0][1]
+    await harness.feed(callback_update(harness.uid(), PRIVATE, PRIVATE, "st:1973:2:1", message_id))
+    rows = await _live_rows(harness)
+    assert (rows[0][2], rows[0][3]) == (2, 1)
+
+
+async def test_asking_again_moves_the_live_message(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/standings 1973")
+    first = (await _live_rows(harness))[0][1]
+    await harness.say(PRIVATE, PRIVATE, "/standings 1973")
+    rows = await _live_rows(harness)
+    assert len(rows) == 1
+    assert rows[0][1] != first
+
+
+async def test_replies_stay_in_the_topic_thread(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/standings 1970", thread_id=77)
+    rich = [c for c in harness.session.calls if c.method == "SendRichMessage"][-1]
+    assert rich.data["message_thread_id"] == 77
+    await harness.say(PRIVATE, PRIVATE, "/standings 1970")
+    plain = [c for c in harness.session.calls if c.method == "SendRichMessage"][-1]
+    assert "message_thread_id" not in plain.data
+
+    await harness.say(GROUP, MEMBER, "/track add tourist", thread_id=5)
+    whisper = harness.session.sent()[-1]
+    assert whisper["message_thread_id"] == 5
+    assert whisper["ephemeral_message_parameters"] == {"receiver_user_id": MEMBER}

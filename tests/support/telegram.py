@@ -41,6 +41,7 @@ class FakeSession(BaseSession):
     member_status: dict[tuple[int, int], str] = field(default_factory=dict)
     next_message_id: int = 1000
     refuse_ephemeral: bool = False
+    edit_error: Exception | None = None
 
     def __post_init__(self) -> None:
         BaseSession.__init__(self)
@@ -58,6 +59,8 @@ class FakeSession(BaseSession):
         data = method.model_dump(exclude_none=True)
         self.calls.append(Call(name, data))
         result: Any = True
+        if name == "EditMessageText" and self.edit_error is not None:
+            raise self.edit_error
         if (
             name == "SendMessage"
             and data.get("ephemeral_message_parameters")
@@ -149,13 +152,17 @@ def _chat(chat_id: int) -> Chat:
     return Chat(id=chat_id, type="private" if chat_id > 0 else "supergroup", title="G")
 
 
-def message_update(update_id: int, chat_id: int, user_id: int, text: str) -> Update:
+def message_update(
+    update_id: int, chat_id: int, user_id: int, text: str, thread_id: int | None = None
+) -> Update:
     message = Message(
         message_id=update_id,
         date=datetime.now(UTC),
         chat=_chat(chat_id),
         from_user=User(id=user_id, is_bot=False, first_name="U"),
         text=text,
+        message_thread_id=thread_id,
+        is_topic_message=True if thread_id else None,
         entities=(
             [{"type": "bot_command", "offset": 0, "length": len(text.split()[0])}]  # type: ignore[list-item]
             if text.startswith("/")
@@ -165,9 +172,11 @@ def message_update(update_id: int, chat_id: int, user_id: int, text: str) -> Upd
     return Update(update_id=update_id, message=message)
 
 
-def callback_update(update_id: int, chat_id: int, user_id: int, data: str) -> Update:
+def callback_update(
+    update_id: int, chat_id: int, user_id: int, data: str, message_id: int | None = None
+) -> Update:
     message = Message(
-        message_id=update_id + 500,
+        message_id=message_id if message_id is not None else update_id + 500,
         date=datetime.now(UTC),
         chat=_chat(chat_id),
         text="old",

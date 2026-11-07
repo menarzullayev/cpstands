@@ -148,6 +148,8 @@ standings_messages = Table(
     Column("last_hash", Text),
     _ts("last_edit_at"),
     Column("dirty", Boolean, nullable=False, server_default=text("false")),
+    Column("row_page", Integer, nullable=False, server_default=text("0")),
+    Column("col_page", Integer, nullable=False, server_default=text("0")),
     CheckConstraint(
         "state IN ('active','frozen','orphaned')", name="standings_messages_state_check"
     ),

@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from datetime import datetime
 
 from sqlalchemy import RowMapping, delete, func, select, text, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from cpstands.db.schema import chats, watched_handles
+from cpstands.db.schema import chats, standings_messages, watched_handles
 
 
 @dataclass(frozen=True, slots=True)
@@ -157,3 +158,167 @@ async def remove_handles(
         .returning(watched_handles.c.handle_key, watched_handles.c.handle_display)
     )
     return {str(key): str(display) for key, display in result.all()}
+
+
+# --- live standings messages ------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class LiveMessage:
+    chat_id: int
+    contest_id: int
+    message_id: int
+    row_page: int
+    col_page: int
+    last_hash: str | None
+    last_edit_at: datetime | None
+
+
+async def register_live_message(
+    session: AsyncSession,
+    chat_id: int,
+    platform: str,
+    contest_id: int,
+    message_id: int,
+    *,
+    max_live: int,
+) -> None:
+    """Make ``message_id`` the live standings message of this chat and contest.
+
+    An older message of the same contest stops updating. When a chat has more than
+    ``max_live`` live messages, the least recently refreshed ones are frozen.
+    """
+    base = insert(standings_messages).values(
+        chat_id=chat_id,
+        platform=platform,
+        contest_id=contest_id,
+        message_id=message_id,
+        state="active",
+        row_page=0,
+        col_page=0,
+        last_hash=None,
+        last_edit_at=func.now(),
+        dirty=False,
+    )
+    await session.execute(
+        base.on_conflict_do_update(
+            index_elements=["chat_id", "platform", "contest_id"],
+            set_={
+                "message_id": message_id,
+                "state": "active",
+                "row_page": 0,
+                "col_page": 0,
+                "last_hash": None,
+                "last_edit_at": func.now(),
+                "dirty": False,
+            },
+        )
+    )
+    keep = (
+        select(standings_messages.c.contest_id)
+        .where(
+            standings_messages.c.chat_id == chat_id,
+            standings_messages.c.platform == platform,
+            standings_messages.c.state == "active",
+        )
+        .order_by(standings_messages.c.last_edit_at.desc())
+        .limit(max_live)
+    )
+    await session.execute(
+        update(standings_messages)
+        .where(
+            standings_messages.c.chat_id == chat_id,
+            standings_messages.c.platform == platform,
+            standings_messages.c.state == "active",
+            standings_messages.c.contest_id.not_in(keep),
+        )
+        .values(state="frozen")
+    )
+
+
+async def set_live_pages(
+    session: AsyncSession,
+    chat_id: int,
+    platform: str,
+    contest_id: int,
+    message_id: int,
+    row_page: int,
+    col_page: int,
+) -> bool:
+    """Remember the page the reader is on; ignored when another message took over."""
+    result = await session.execute(
+        update(standings_messages)
+        .where(
+            standings_messages.c.chat_id == chat_id,
+            standings_messages.c.platform == platform,
+            standings_messages.c.contest_id == contest_id,
+            standings_messages.c.message_id == message_id,
+        )
+        .values(row_page=row_page, col_page=col_page)
+        .returning(standings_messages.c.chat_id)
+    )
+    return result.first() is not None
+
+
+async def live_contest_ids(session: AsyncSession, platform: str) -> list[int]:
+    result = await session.execute(
+        select(standings_messages.c.contest_id)
+        .join(chats, chats.c.chat_id == standings_messages.c.chat_id)
+        .where(
+            standings_messages.c.platform == platform,
+            standings_messages.c.state == "active",
+            chats.c.status.in_(("onboarding", "active")),
+        )
+        .distinct()
+    )
+    return [int(row[0]) for row in result.all()]
+
+
+async def live_messages(session: AsyncSession, platform: str, contest_id: int) -> list[LiveMessage]:
+    result = await session.execute(
+        select(
+            standings_messages.c.chat_id,
+            standings_messages.c.contest_id,
+            standings_messages.c.message_id,
+            standings_messages.c.row_page,
+            standings_messages.c.col_page,
+            standings_messages.c.last_hash,
+            standings_messages.c.last_edit_at,
+        ).where(
+            standings_messages.c.platform == platform,
+            standings_messages.c.contest_id == contest_id,
+            standings_messages.c.state == "active",
+            standings_messages.c.message_id.is_not(None),
+        )
+    )
+    return [LiveMessage(*row) for row in result.all()]
+
+
+async def mark_live_message(
+    session: AsyncSession,
+    platform: str,
+    message: LiveMessage,
+    *,
+    state: str | None = None,
+    last_hash: str | None = None,
+    edited: bool = False,
+) -> None:
+    values: dict[str, object] = {}
+    if state is not None:
+        values["state"] = state
+    if last_hash is not None:
+        values["last_hash"] = last_hash
+    if edited:
+        values["last_edit_at"] = func.now()
+    if not values:
+        return
+    await session.execute(
+        update(standings_messages)
+        .where(
+            standings_messages.c.chat_id == message.chat_id,
+            standings_messages.c.platform == platform,
+            standings_messages.c.contest_id == message.contest_id,
+            standings_messages.c.message_id == message.message_id,
+        )
+        .values(**values)
+    )

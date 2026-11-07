@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 import structlog
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -10,6 +12,7 @@ from aiogram.types import ErrorEvent
 
 from cpstands.bot.deps import Deps
 from cpstands.bot.handlers import create_router
+from cpstands.bot.live import LiveUpdater
 from cpstands.bot.ratelimit import RateLimiter, RateLimitMiddleware
 from cpstands.config import Settings
 from cpstands.db.engine import create_engine, create_session_factory
@@ -83,11 +86,15 @@ async def run_bot(settings: Settings) -> None:
         icons=settings.button_icons,
     )
     dispatcher = build_dispatcher(deps)
+    updater = LiveUpdater(bot, sessions, deps.standings, deps.i18n, icons=deps.icons)
+    live_task = asyncio.create_task(updater.run(), name="live-standings")
     try:
         me = await bot.get_me()
         log.info("bot_started", username=me.username)
         await dispatcher.start_polling(bot, allowed_updates=ALLOWED_UPDATES)
     finally:
+        live_task.cancel()
+        await asyncio.gather(live_task, return_exceptions=True)
         await bot.session.close()
         await client.aclose()
         await engine.dispose()

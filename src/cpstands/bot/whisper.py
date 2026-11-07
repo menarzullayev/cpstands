@@ -44,6 +44,7 @@ class Whisper:
                 chat.id,
                 text,
                 reply_markup=reply_markup,
+                message_thread_id=message.message_thread_id if message.is_topic_message else None,
                 ephemeral_message_parameters=EphemeralMessageParameters(receiver_user_id=user.id),
             )
         except TelegramBadRequest as exc:

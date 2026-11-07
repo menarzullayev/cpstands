@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import re
 from collections.abc import Sequence
+from dataclasses import replace
 from datetime import UTC, datetime
 
 from cpstands.domain.contest import (
@@ -54,8 +55,10 @@ class CodeforcesSource:
         raw = await self._client.fetch("contest.standings", {"contestId": str(contest_id)})
         fetched_at = datetime.now(UTC)
         if len(raw.body) >= OFFLOAD_THRESHOLD_BYTES:
-            return await asyncio.to_thread(parse_full_standings, raw.body, fetched_at=fetched_at)
-        return parse_full_standings(raw.body, fetched_at=fetched_at)
+            parsed = await asyncio.to_thread(parse_full_standings, raw.body, fetched_at=fetched_at)
+        else:
+            parsed = parse_full_standings(raw.body, fetched_at=fetched_at)
+        return replace(parsed, expires_at=raw.meta.expires_at)
 
     async def resolve_handles(self, handles: Sequence[str]) -> HandleResolution:
         """Validate handles via user.info, dropping unknown ones until the batch succeeds."""

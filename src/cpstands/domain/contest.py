@@ -123,6 +123,7 @@ class FullStandings:
     problems: tuple[Problem, ...]
     rows: tuple[StandingRow, ...]
     fetched_at: datetime
+    expires_at: datetime | None = None  # when the platform's cache for this copy ends
 
 
 @dataclass(frozen=True, slots=True)

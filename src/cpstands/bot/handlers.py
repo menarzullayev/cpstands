@@ -20,6 +20,7 @@ from aiogram.types import (
 
 from cpstands.bot import keyboards, standings_view
 from cpstands.bot.deps import Deps
+from cpstands.bot.live import MAX_LIVE_PER_CHAT
 from cpstands.db import repos
 from cpstands.domain.contest import ContestPhase, FullStandings
 from cpstands.i18n import LANGUAGE_NAMES, SUPPORTED_LANGUAGES, TONES, Translator
@@ -437,9 +438,22 @@ async def on_standings(message: Message, command: CommandObject, deps: Deps) -> 
         return
     text = standings_view.render(standings, 0, 0, say, time_zone=chat.time_zone)
     markup = standings_view.keyboard(standings, 0, 0, say, icons=deps.icons)
-    await message.bot.send_rich_message(  # type: ignore[union-attr]
-        message.chat.id, InputRichMessage(html=text), reply_markup=markup
+    sent = await message.bot.send_rich_message(  # type: ignore[union-attr]
+        message.chat.id,
+        InputRichMessage(html=text),
+        reply_markup=markup,
+        message_thread_id=message.message_thread_id if message.is_topic_message else None,
     )
+    if standings.contest.phase.is_active:
+        async with deps.sessions() as session, session.begin():
+            await repos.register_live_message(
+                session,
+                message.chat.id,
+                PLATFORM,
+                contest_id,
+                sent.message_id,
+                max_live=MAX_LIVE_PER_CHAT,
+            )
 
 
 async def _load_standings(
@@ -479,6 +493,17 @@ async def on_standings_page(callback: CallbackQuery, deps: Deps) -> None:
         return
     text = standings_view.render(standings, row_page, col_page, say, time_zone=chat.time_zone)
     markup = standings_view.keyboard(standings, row_page, col_page, say, icons=deps.icons)
+    if standings.contest.phase.is_active:
+        async with deps.sessions() as session, session.begin():
+            await repos.set_live_pages(
+                session,
+                message.chat.id,
+                PLATFORM,
+                contest_id,
+                message.message_id,
+                row_page,
+                col_page,
+            )
     try:
         await message.bot.edit_message_text(  # type: ignore[union-attr]
             chat_id=message.chat.id,
