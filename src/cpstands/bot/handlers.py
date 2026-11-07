@@ -1,4 +1,4 @@
-"""Handlers for onboarding, settings, time zone, the watch list and chat membership."""
+"""Handlers for onboarding, settings, time zone, the watch list, help and chat membership."""
 
 from __future__ import annotations
 
@@ -11,12 +11,15 @@ from aiogram.types import CallbackQuery, Chat, ChatMemberUpdated, InlineKeyboard
 from cpstands.bot import keyboards
 from cpstands.bot.deps import Deps
 from cpstands.db import repos
-from cpstands.i18n import LANGUAGE_NAMES, SUPPORTED_LANGUAGES
+from cpstands.i18n import LANGUAGE_NAMES, SUPPORTED_LANGUAGES, TONES, Translator
 from cpstands.services import timezone as tzs
 from cpstands.services.watchlist import INPUT_CAP, PLATFORM
 from cpstands.sources.base import SourceError
 
 log = structlog.get_logger(__name__)
+
+# The party popper effect; Telegram plays it only in private chats.
+CELEBRATE_EFFECT_ID = "5046509860389126442"
 
 _CHAT_TYPES = {"private": "private", "group": "group", "supergroup": "supergroup"}
 _JOINED = {ChatMemberStatus.MEMBER, ChatMemberStatus.ADMINISTRATOR}
@@ -34,6 +37,12 @@ _PLANNED_COMMANDS = (
 )
 
 
+def _say(deps: Deps, chat: repos.ChatRecord | None) -> Translator:
+    if chat is None:
+        return deps.i18n.bound(None)
+    return deps.i18n.bound(chat.language, chat.tone)
+
+
 async def _ensure_chat(deps: Deps, chat: Chat) -> repos.ChatRecord | None:
     chat_type = _CHAT_TYPES.get(chat.type)
     if chat_type is None:
@@ -42,29 +51,53 @@ async def _ensure_chat(deps: Deps, chat: Chat) -> repos.ChatRecord | None:
         return await repos.upsert_chat(session, chat.id, chat_type)
 
 
-async def _chat_language(deps: Deps, chat_id: int) -> str | None:
-    async with deps.sessions() as session:
-        record = await repos.get_chat(session, chat_id)
-    return record.language if record else None
-
-
 async def _is_admin(deps: Deps, chat: Chat, user_id: int | None) -> bool:
     if user_id is None:
         return False
     return await deps.admin.is_admin(chat.id, user_id, private=chat.type == "private")
 
 
-async def _guard_callback(deps: Deps, callback: CallbackQuery) -> tuple[Message, str | None] | None:
-    """Return the message and chat language for an allowed admin tap, else answer and stop."""
+async def _tap_context(
+    deps: Deps, callback: CallbackQuery, *, admin: bool
+) -> tuple[Message, repos.ChatRecord] | None:
+    """Resolve the message and chat of a button tap; answer and stop when it is not allowed."""
     message = callback.message
     if not isinstance(message, Message):
         await callback.answer(deps.i18n.t(None, "button-expired"), show_alert=True)
         return None
-    lang = await _chat_language(deps, message.chat.id)
-    if not await _is_admin(deps, message.chat, callback.from_user.id):
-        await callback.answer(deps.i18n.t(lang, "not-admin"), show_alert=True)
+    chat = await _ensure_chat(deps, message.chat)
+    if chat is None:
         return None
-    return message, lang
+    if admin and not await _is_admin(deps, message.chat, callback.from_user.id):
+        await callback.answer(_say(deps, chat)("not-admin"), show_alert=True)
+        return None
+    return message, chat
+
+
+# --- views -------------------------------------------------------------------------------
+
+
+async def _settings_view(deps: Deps, chat: repos.ChatRecord) -> tuple[str, InlineKeyboardMarkup]:
+    async with deps.sessions() as session:
+        count = await repos.count_handles(session, chat.chat_id, PLATFORM)
+    say = _say(deps, chat)
+    text = say(
+        "settings-summary",
+        language=LANGUAGE_NAMES.get(chat.language or "", "-"),
+        zone=chat.time_zone or say("settings-timezone-unset"),
+        mood=chat.tone,
+        count=count,
+    )
+    return text, keyboards.settings_keyboard(say, chat.tone, icons=deps.icons)
+
+
+def _zone_step(deps: Deps, chat: repos.ChatRecord) -> tuple[str, InlineKeyboardMarkup]:
+    say = _say(deps, chat)
+    text = f"{say('onboarding-intro')}\n\n{say('onboarding-pick-timezone')}"
+    markup = keyboards.timezone_keyboard(
+        tzs.popular_zones(chat.language), chat.time_zone, icons=deps.icons
+    )
+    return text, markup
 
 
 # --- onboarding --------------------------------------------------------------------------
@@ -76,133 +109,155 @@ async def on_start(message: Message, deps: Deps) -> None:
         return
     user_id = message.from_user.id if message.from_user else None
     if not await _is_admin(deps, message.chat, user_id):
-        await message.answer(deps.i18n.t(chat.language, "setup-admin-needed"))
+        await deps.whisper.reply(message, _say(deps, chat)("setup-admin-needed"))
         return
     await message.answer(
-        deps.i18n.t(None, "pick-language"), reply_markup=keyboards.language_keyboard()
+        deps.i18n.t(None, "pick-language"),
+        reply_markup=keyboards.language_keyboard(chat.language, icons=deps.icons),
     )
 
 
 async def on_language_chosen(callback: CallbackQuery, deps: Deps) -> None:
-    guarded = await _guard_callback(deps, callback)
-    if guarded is None:
+    context = await _tap_context(deps, callback, admin=True)
+    if context is None:
         return
-    message, lang = guarded
+    message, chat = context
     code = (callback.data or "")[len(keyboards.LANG_PREFIX) :]
     if code not in SUPPORTED_LANGUAGES:
-        await callback.answer(deps.i18n.t(lang, "button-expired"), show_alert=True)
+        await callback.answer(_say(deps, chat)("button-expired"), show_alert=True)
         return
     async with deps.sessions() as session, session.begin():
-        await repos.upsert_chat(
-            session, message.chat.id, _CHAT_TYPES.get(message.chat.type, "group")
-        )
-        await repos.set_language(session, message.chat.id, code)
-    intro = deps.i18n.t(code, "onboarding-intro")
-    pick_zone = deps.i18n.t(code, "onboarding-pick-timezone")
-    text = f"{intro}\n\n{pick_zone}"
-    await message.edit_text(text, reply_markup=keyboards.timezone_keyboard(tzs.popular_zones(code)))
+        await repos.set_language(session, chat.chat_id, code)
+    updated = await _refresh(deps, chat.chat_id)
+    if updated.status == "onboarding":
+        text, markup = _zone_step(deps, updated)
+    else:
+        text, markup = await _settings_view(deps, updated)
+    await message.edit_text(text, reply_markup=markup)
     await callback.answer()
 
 
 async def on_zone_chosen(callback: CallbackQuery, deps: Deps) -> None:
-    guarded = await _guard_callback(deps, callback)
-    if guarded is None:
+    context = await _tap_context(deps, callback, admin=True)
+    if context is None:
         return
-    message, lang = guarded
+    message, chat = context
     zone = (callback.data or "")[len(keyboards.TZ_PREFIX) :]
     if not tzs.is_valid_zone(zone):
-        await callback.answer(deps.i18n.t(lang, "timezone-invalid-button"), show_alert=True)
+        await callback.answer(_say(deps, chat)("timezone-invalid-button"), show_alert=True)
         return
+    finishing = chat.status == "onboarding" and chat.language is not None
     async with deps.sessions() as session, session.begin():
-        await repos.set_time_zone(session, message.chat.id, zone)
-        if lang is not None:
-            await repos.set_status(session, message.chat.id, "active")
-    if lang is None:
-        await message.edit_text(
-            deps.i18n.t(None, "timezone-set", zone=zone, time=tzs.local_time_text(zone))
-        )
+        await repos.set_time_zone(session, chat.chat_id, zone)
+        if finishing:
+            await repos.set_status(session, chat.chat_id, "active")
+    updated = await _refresh(deps, chat.chat_id)
+    say = _say(deps, updated)
+    if finishing:
+        language = LANGUAGE_NAMES[updated.language or "uz"]
+        await message.edit_text(say("setup-done", language=language, zone=zone))
+        if message.chat.type == "private" and updated.tone == "playful":
+            await message.answer(say("setup-celebrate"), message_effect_id=CELEBRATE_EFFECT_ID)
+    elif chat.status == "onboarding":
+        await message.edit_text(say("timezone-set", zone=zone, time=tzs.local_time_text(zone)))
     else:
-        await message.edit_text(
-            deps.i18n.t(lang, "setup-done", language=LANGUAGE_NAMES[lang], zone=zone)
-        )
+        text, markup = await _settings_view(deps, updated)
+        await message.edit_text(text, reply_markup=markup)
     await callback.answer()
 
 
-# --- time zone and settings --------------------------------------------------------------
+async def _refresh(deps: Deps, chat_id: int) -> repos.ChatRecord:
+    async with deps.sessions() as session:
+        record = await repos.get_chat(session, chat_id)
+    assert record is not None  # the chat was upserted a moment ago
+    return record
+
+
+# --- time zone, settings, tone -----------------------------------------------------------
 
 
 async def on_timezone(message: Message, command: CommandObject, deps: Deps) -> None:
     chat = await _ensure_chat(deps, message.chat)
     if chat is None:
         return
+    say = _say(deps, chat)
     user_id = message.from_user.id if message.from_user else None
     if not await _is_admin(deps, message.chat, user_id):
-        await message.answer(deps.i18n.t(chat.language, "not-admin"))
+        await deps.whisper.reply(message, say("not-admin"))
         return
     query = (command.args or "").strip()
     if not query:
         await message.answer(
-            deps.i18n.t(chat.language, "onboarding-pick-timezone"),
-            reply_markup=keyboards.timezone_keyboard(tzs.popular_zones(chat.language)),
+            say("onboarding-pick-timezone"),
+            reply_markup=keyboards.timezone_keyboard(
+                tzs.popular_zones(chat.language), chat.time_zone, icons=deps.icons
+            ),
         )
         return
+    shown = query[: tzs.MAX_QUERY_LENGTH]
     result = tzs.resolve(query)
     if result.kind == "exact":
         zone = result.zones[0]
         async with deps.sessions() as session, session.begin():
             await repos.set_time_zone(session, chat.chat_id, zone)
-        await message.answer(
-            deps.i18n.t(chat.language, "timezone-set", zone=zone, time=tzs.local_time_text(zone))
-        )
+        await message.answer(say("timezone-set", zone=zone, time=tzs.local_time_text(zone)))
     elif result.kind == "choices":
         await message.answer(
-            deps.i18n.t(chat.language, "timezone-choose", query=query[: tzs.MAX_QUERY_LENGTH]),
-            reply_markup=keyboards.timezone_keyboard(result.zones),
+            say("timezone-choose", query=shown),
+            reply_markup=keyboards.timezone_keyboard(result.zones, icons=deps.icons),
         )
     else:
-        await message.answer(
-            deps.i18n.t(chat.language, "timezone-not-found", query=query[: tzs.MAX_QUERY_LENGTH])
-        )
+        await deps.whisper.reply(message, say("timezone-not-found", query=shown))
 
 
 async def on_settings(message: Message, deps: Deps) -> None:
     chat = await _ensure_chat(deps, message.chat)
     if chat is None:
         return
-    async with deps.sessions() as session:
-        count = await repos.count_handles(session, chat.chat_id, PLATFORM)
-    lang = chat.language
-    text = deps.i18n.t(
-        lang,
-        "settings-summary",
-        language=LANGUAGE_NAMES.get(lang or "", "-"),
-        zone=chat.time_zone or deps.i18n.t(lang, "settings-timezone-unset"),
-        count=count,
-    )
-    await message.answer(text, reply_markup=keyboards.settings_keyboard(deps.i18n, lang))
-
-
-async def _show_menu(callback: CallbackQuery, deps: Deps, *, language_menu: bool) -> None:
-    guarded = await _guard_callback(deps, callback)
-    if guarded is None:
-        return
-    message, lang = guarded
-    markup: InlineKeyboardMarkup
-    if language_menu:
-        text, markup = deps.i18n.t(None, "pick-language"), keyboards.language_keyboard()
-    else:
-        text = deps.i18n.t(lang, "onboarding-pick-timezone")
-        markup = keyboards.timezone_keyboard(tzs.popular_zones(lang))
-    await message.edit_text(text, reply_markup=markup)
-    await callback.answer()
+    text, markup = await _settings_view(deps, chat)
+    await message.answer(text, reply_markup=markup)
 
 
 async def on_menu_language(callback: CallbackQuery, deps: Deps) -> None:
-    await _show_menu(callback, deps, language_menu=True)
+    context = await _tap_context(deps, callback, admin=True)
+    if context is None:
+        return
+    message, chat = context
+    await message.edit_text(
+        deps.i18n.t(None, "pick-language"),
+        reply_markup=keyboards.language_keyboard(chat.language, icons=deps.icons),
+    )
+    await callback.answer()
 
 
 async def on_menu_timezone(callback: CallbackQuery, deps: Deps) -> None:
-    await _show_menu(callback, deps, language_menu=False)
+    context = await _tap_context(deps, callback, admin=True)
+    if context is None:
+        return
+    message, chat = context
+    await message.edit_text(
+        _say(deps, chat)("onboarding-pick-timezone"),
+        reply_markup=keyboards.timezone_keyboard(
+            tzs.popular_zones(chat.language), chat.time_zone, icons=deps.icons
+        ),
+    )
+    await callback.answer()
+
+
+async def on_tone_chosen(callback: CallbackQuery, deps: Deps) -> None:
+    context = await _tap_context(deps, callback, admin=True)
+    if context is None:
+        return
+    message, chat = context
+    tone = (callback.data or "")[len(keyboards.TONE_PREFIX) :]
+    if tone not in TONES:
+        await callback.answer(_say(deps, chat)("button-expired"), show_alert=True)
+        return
+    async with deps.sessions() as session, session.begin():
+        await repos.set_tone(session, chat.chat_id, tone)
+    text, markup = await _settings_view(deps, await _refresh(deps, chat.chat_id))
+    await message.edit_text(text, reply_markup=markup)
+    await callback.answer()
 
 
 # --- watch list --------------------------------------------------------------------------
@@ -212,69 +267,69 @@ async def on_track(message: Message, command: CommandObject, deps: Deps) -> None
     chat = await _ensure_chat(deps, message.chat)
     if chat is None:
         return
-    t = deps.i18n.t
-    lang = chat.language
+    say = _say(deps, chat)
     verb, _, rest = (command.args or "").strip().partition(" ")
     verb = verb.lower()
     if verb == "list":
         handles = await deps.watchlist.list(chat.chat_id)
         if not handles:
-            await message.answer(t(lang, "track-list-empty"))
+            await deps.whisper.reply(message, say("track-list-empty"))
         else:
-            header = t(lang, "track-list-header", count=len(handles))
-            await message.answer(f"{header}\n{', '.join(handles)}")
+            header = say("track-list-header", count=len(handles))
+            names = ", ".join(f"<code>{_escape(h)}</code>" for h in handles)
+            await message.answer(f"{header}\n{names}")
         return
     if verb not in {"add", "remove"}:
-        await message.answer(t(lang, "track-usage"))
+        await deps.whisper.reply(message, say("track-usage"))
         return
     user_id = message.from_user.id if message.from_user else None
     if not await _is_admin(deps, message.chat, user_id):
-        await message.answer(t(lang, "not-admin"))
+        await deps.whisper.reply(message, say("not-admin"))
         return
     if not rest.strip():
-        await message.answer(t(lang, "track-nothing"))
+        await deps.whisper.reply(message, say("track-nothing"))
         return
     try:
-        if verb == "add":
-            lines = await _add(deps, chat, rest)
-        else:
-            lines = await _remove(deps, chat, rest)
+        lines = await (_add if verb == "add" else _remove)(deps, chat, rest)
     except SourceError:
         log.warning("track_source_error", exc_info=True)
-        await message.answer(t(lang, "track-source-error"))
+        await deps.whisper.reply(message, say("track-source-error"))
         return
-    await message.answer("\n".join(lines) if lines else t(lang, "track-nothing"))
+    await message.answer("\n".join(lines) if lines else say("track-nothing"))
+
+
+def _escape(text: str) -> str:
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
 async def _add(deps: Deps, chat: repos.ChatRecord, text: str) -> list[str]:
     result = await deps.watchlist.add(chat.chat_id, text)
-    t, lang = deps.i18n.t, chat.language
+    say = _say(deps, chat)
     lines: list[str] = []
     if result.added:
-        lines.append(t(lang, "track-added", handles=", ".join(result.added)))
+        lines.append(say("track-added", handles=", ".join(result.added)))
     if result.already:
-        lines.append(t(lang, "track-already", handles=", ".join(result.already)))
+        lines.append(say("track-already", handles=", ".join(result.already)))
     if result.unknown:
-        lines.append(t(lang, "track-unknown", handles=", ".join(result.unknown)))
+        lines.append(say("track-unknown", handles=", ".join(result.unknown)))
     if result.invalid:
-        lines.append(t(lang, "track-invalid", handles=", ".join(result.invalid)))
+        lines.append(say("track-invalid", handles=", ".join(result.invalid)))
     if result.over_limit:
-        lines.append(
-            t(lang, "track-limit", limit=deps.watchlist.limit, handles=", ".join(result.over_limit))
-        )
+        handles = ", ".join(result.over_limit)
+        lines.append(say("track-limit", limit=deps.watchlist.limit, handles=handles))
     if result.truncated:
-        lines.append(t(lang, "track-truncated", limit=INPUT_CAP))
+        lines.append(say("track-truncated", limit=INPUT_CAP))
     return lines
 
 
 async def _remove(deps: Deps, chat: repos.ChatRecord, text: str) -> list[str]:
     result = await deps.watchlist.remove(chat.chat_id, text)
-    t, lang = deps.i18n.t, chat.language
+    say = _say(deps, chat)
     lines: list[str] = []
     if result.removed:
-        lines.append(t(lang, "track-removed", handles=", ".join(result.removed)))
+        lines.append(say("track-removed", handles=", ".join(result.removed)))
     if result.not_found:
-        lines.append(t(lang, "track-not-found", handles=", ".join(result.not_found)))
+        lines.append(say("track-not-found", handles=", ".join(result.not_found)))
     return lines
 
 
@@ -283,14 +338,37 @@ async def _remove(deps: Deps, chat: repos.ChatRecord, text: str) -> list[str]:
 
 async def on_help(message: Message, deps: Deps) -> None:
     chat = await _ensure_chat(deps, message.chat)
-    if chat is not None:
-        await message.answer(deps.i18n.t(chat.language, "help-text"))
+    if chat is None:
+        return
+    say = _say(deps, chat)
+    await message.answer(
+        say("help-text"), reply_markup=keyboards.help_keyboard(say, icons=deps.icons)
+    )
+
+
+async def on_help_settings(callback: CallbackQuery, deps: Deps) -> None:
+    context = await _tap_context(deps, callback, admin=False)
+    if context is None:
+        return
+    message, chat = context
+    text, markup = await _settings_view(deps, chat)
+    await message.edit_text(text, reply_markup=markup)
+    await callback.answer()
+
+
+async def on_help_track(callback: CallbackQuery, deps: Deps) -> None:
+    context = await _tap_context(deps, callback, admin=False)
+    if context is None:
+        return
+    message, chat = context
+    await message.edit_text(_say(deps, chat)("track-usage"))
+    await callback.answer()
 
 
 async def on_coming_soon(message: Message, deps: Deps) -> None:
     chat = await _ensure_chat(deps, message.chat)
     if chat is not None:
-        await message.answer(deps.i18n.t(chat.language, "coming-soon"))
+        await deps.whisper.reply(message, _say(deps, chat)("coming-soon"))
 
 
 # --- membership --------------------------------------------------------------------------
@@ -305,7 +383,7 @@ async def on_my_chat_member(event: ChatMemberUpdated, deps: Deps) -> None:
         record = await _ensure_chat(deps, chat)
         fresh = event.old_chat_member.status in _GONE
         if record is not None and chat.type != "private" and fresh:
-            await event.answer(deps.i18n.t(record.language, "group-added"))
+            await event.answer(_say(deps, record)("group-added"))
     elif new_status in _GONE:
         async with deps.sessions() as session, session.begin():
             await repos.set_status(session, chat.id, "removed")
@@ -322,10 +400,13 @@ def create_router() -> Router:
     router.message.register(on_start, Command("start"))
     router.callback_query.register(on_language_chosen, F.data.startswith(keyboards.LANG_PREFIX))
     router.callback_query.register(on_zone_chosen, F.data.startswith(keyboards.TZ_PREFIX))
+    router.callback_query.register(on_tone_chosen, F.data.startswith(keyboards.TONE_PREFIX))
     router.message.register(on_timezone, Command("timezone"))
     router.message.register(on_settings, Command("settings"))
     router.callback_query.register(on_menu_language, F.data == keyboards.MENU_LANG)
     router.callback_query.register(on_menu_timezone, F.data == keyboards.MENU_TZ)
+    router.callback_query.register(on_help_settings, F.data == keyboards.HELP_SETTINGS)
+    router.callback_query.register(on_help_track, F.data == keyboards.HELP_TRACK)
     router.message.register(on_track, Command("track", "friends"))
     router.message.register(on_help, Command("help"))
     router.message.register(on_coming_soon, Command(*_PLANNED_COMMANDS))

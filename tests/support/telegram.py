@@ -9,6 +9,7 @@ from typing import Any
 
 from aiogram import Bot
 from aiogram.client.session.base import BaseSession
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.methods import TelegramMethod
 from aiogram.methods.base import TelegramType
 from aiogram.types import (
@@ -39,6 +40,7 @@ class FakeSession(BaseSession):
     calls: list[Call] = field(default_factory=list)
     member_status: dict[tuple[int, int], str] = field(default_factory=dict)
     next_message_id: int = 1000
+    refuse_ephemeral: bool = False
 
     def __post_init__(self) -> None:
         BaseSession.__init__(self)
@@ -56,6 +58,12 @@ class FakeSession(BaseSession):
         data = method.model_dump(exclude_none=True)
         self.calls.append(Call(name, data))
         result: Any = True
+        if (
+            name == "SendMessage"
+            and data.get("ephemeral_message_parameters")
+            and self.refuse_ephemeral
+        ):
+            raise TelegramBadRequest(method=method, message="Bad Request: BOT_NOT_ADMIN")
         if name in {"SendMessage", "EditMessageText"}:
             self.next_message_id += 1
             chat_id = data.get("chat_id", 0)

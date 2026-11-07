@@ -89,6 +89,10 @@ async def set_time_zone(session: AsyncSession, chat_id: int, time_zone: str) -> 
     return await _update_chat(session, chat_id, time_zone=time_zone)
 
 
+async def set_tone(session: AsyncSession, chat_id: int, tone: str) -> bool:
+    return await _update_chat(session, chat_id, tone=tone)
+
+
 async def set_status(session: AsyncSession, chat_id: int, status: str) -> bool:
     return await _update_chat(session, chat_id, status=status)
 

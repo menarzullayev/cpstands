@@ -183,13 +183,13 @@ async def test_timezone_command_exact_choices_and_unknown(harness: Harness) -> N
 async def test_track_add_list_remove(harness: Harness) -> None:
     await harness.say(PRIVATE, PRIVATE, "/track add tourist, jiangly, ghost, bad!")
     text = harness.session.last_text()
-    assert "tourist, jiangly" in text
+    assert "<b>tourist, jiangly</b>" in text
     assert "ghost" in text
     assert "bad!" in text
 
     await harness.say(PRIVATE, PRIVATE, "/track list")
     assert harness.session.last_text() == (
-        f"{I18N.t(None, 'track-list-header', count=2)}\njiangly, tourist"
+        f"{I18N.t(None, 'track-list-header', count=2)}\n<code>jiangly</code>, <code>tourist</code>"
     )
     await harness.say(PRIVATE, PRIVATE, "/friends remove TOURIST")
     assert harness.session.last_text() == I18N.t(None, "track-removed", handles="tourist")
@@ -297,3 +297,130 @@ def test_every_callback_fits_telegrams_limit() -> None:
         keyboards.timezone_keyboard(tzs.popular_zones(language))
     with pytest.raises(ValueError, match="longer than"):
         keyboards.timezone_keyboard(["X" * 80])
+
+
+def _buttons(call: dict[str, object]) -> list[dict[str, object]]:
+    rows = call["reply_markup"]["inline_keyboard"]  # type: ignore[index]
+    return [b for row in rows for b in row]
+
+
+async def test_wizard_steps_celebrate_only_in_private_playful_chats(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/start")
+    await harness.tap(PRIVATE, PRIVATE, "set:lang:en")
+    assert "2/3" in harness.session.last_text()
+    await harness.tap(PRIVATE, PRIVATE, "tz:set:Asia/Tashkent")
+    sent = harness.session.sent()[-1]
+    assert sent["text"] == I18N.t("en", "setup-celebrate")
+    assert sent["message_effect_id"]
+    assert "3/3" in harness.session.sent("EditMessageText")[-1]["text"]
+
+    await harness.say(GROUP, ADMIN, "/start")
+    await harness.tap(GROUP, ADMIN, "set:lang:en")
+    before = len(harness.session.sent())
+    await harness.tap(GROUP, ADMIN, "tz:set:Asia/Tashkent")
+    assert len(harness.session.sent()) == before  # no celebration message in groups
+
+
+async def test_neutral_chats_get_no_celebration(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/settings")
+    await harness.tap(PRIVATE, PRIVATE, "set:tone:neutral")
+    await harness.tap(PRIVATE, PRIVATE, "set:lang:en")
+    before = len(harness.session.sent())
+    await harness.tap(PRIVATE, PRIVATE, "tz:set:UTC")
+    assert len(harness.session.sent()) == before
+    assert "3/3" in harness.session.last_text()
+
+
+async def test_changing_language_of_an_active_chat_returns_to_settings(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/start")
+    await harness.tap(PRIVATE, PRIVATE, "set:lang:uz")
+    await harness.tap(PRIVATE, PRIVATE, "tz:set:Asia/Tashkent")
+    await harness.tap(PRIVATE, PRIVATE, keyboards.MENU_LANG)
+    await harness.tap(PRIVATE, PRIVATE, "set:lang:ru")
+    assert "Настройки" in harness.session.last_text()
+    chat = await harness.chat(PRIVATE)
+    assert chat is not None
+    assert (chat.language, chat.status) == ("ru", "active")
+
+
+async def test_tone_toggle_needs_an_admin_and_a_valid_value(harness: Harness) -> None:
+    await harness.say(GROUP, ADMIN, "/settings")
+    await harness.tap(GROUP, MEMBER, "set:tone:neutral")
+    assert harness.session.alerts()[-1]["text"] == I18N.t(None, "not-admin")
+    await harness.tap(GROUP, ADMIN, "set:tone:grumpy")
+    chat = await harness.chat(GROUP)
+    assert chat is not None
+    assert chat.tone == "playful"
+    await harness.tap(GROUP, ADMIN, "set:tone:neutral")
+    chat = await harness.chat(GROUP)
+    assert chat is not None
+    assert chat.tone == "neutral"
+    assert any(
+        b["callback_data"] == "set:tone:playful"
+        for b in _buttons(harness.session.sent("EditMessageText")[-1])
+    )
+
+
+async def test_buttons_mark_the_current_choice_with_a_color(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/start")
+    await harness.tap(PRIVATE, PRIVATE, "set:lang:ru")
+    await harness.say(PRIVATE, PRIVATE, "/start")
+    languages = _buttons(harness.session.sent()[-1])
+    styles = {b["callback_data"]: b.get("style") for b in languages}
+    assert styles == {"set:lang:uz": None, "set:lang:ru": "primary", "set:lang:en": None}
+
+
+async def test_help_has_working_shortcut_buttons(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/help")
+    callbacks = [b["callback_data"] for b in _buttons(harness.session.sent()[-1])]
+    assert callbacks == [keyboards.HELP_SETTINGS, keyboards.HELP_TRACK]
+    await harness.tap(PRIVATE, PRIVATE, keyboards.HELP_TRACK)
+    assert harness.session.last_text() == I18N.t(None, "track-usage")
+    await harness.tap(PRIVATE, PRIVATE, keyboards.HELP_SETTINGS)
+    assert "Sozlamalar" in harness.session.last_text()
+
+
+def test_button_icons_use_custom_emoji_when_enabled_else_prefix_the_emoji() -> None:
+    with_icon = keyboards.button("Language", "x:y", emoji="🌍", icons=True)
+    assert with_icon.icon_custom_emoji_id
+    assert with_icon.text == "Language"
+    plain = keyboards.button("Language", "x:y", emoji="🌍", icons=False)
+    assert plain.icon_custom_emoji_id is None
+    assert plain.text == "🌍 Language"
+    no_twin = keyboards.button("Settings", "x:y", emoji="⚙️", icons=True)
+    assert no_twin.icon_custom_emoji_id is None
+    assert no_twin.text == "⚙️ Settings"
+
+
+def _ephemeral(call: dict[str, object]) -> dict[str, object] | None:
+    return call.get("ephemeral_message_parameters")  # type: ignore[return-value]
+
+
+async def test_group_helper_replies_are_ephemeral_but_shared_results_are_not(
+    harness: Harness,
+) -> None:
+    await harness.say(GROUP, MEMBER, "/track add tourist")
+    denied = harness.session.sent()[-1]
+    assert denied["text"] == I18N.t(None, "not-admin")
+    assert _ephemeral(denied) == {"receiver_user_id": MEMBER}
+
+    await harness.say(GROUP, ADMIN, "/track add tourist")
+    assert _ephemeral(harness.session.sent()[-1]) is None  # the group should see who was added
+
+
+async def test_private_chats_never_use_ephemeral(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/track")
+    assert _ephemeral(harness.session.sent()[-1]) is None
+
+
+async def test_refused_ephemeral_falls_back_and_is_not_retried(harness: Harness) -> None:
+    harness.session.refuse_ephemeral = True
+    await harness.say(GROUP, MEMBER, "/track add tourist")
+    assert harness.session.last_text() == I18N.t(None, "not-admin")
+    attempts = len([c for c in harness.session.sent() if _ephemeral(c)])
+    assert attempts == 1
+    assert _ephemeral(harness.session.sent()[-1]) is None  # delivered as a normal message
+
+    await harness.say(GROUP, MEMBER, "/track add jiangly")
+    assert len([c for c in harness.session.sent() if _ephemeral(c)]) == attempts
+    assert harness.session.last_text() == I18N.t(None, "not-admin")

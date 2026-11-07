@@ -5,6 +5,7 @@ from __future__ import annotations
 import structlog
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
 from aiogram.types import ErrorEvent
 
 from cpstands.bot.deps import Deps
@@ -65,14 +66,18 @@ async def run_bot(settings: Settings) -> None:
             base_url=settings.cf_api_base, min_interval_s=settings.cf_min_request_interval_seconds
         )
     )
-    bot = Bot(settings.telegram_bot_token.get_secret_value(), default=DefaultBotProperties())
+    bot = Bot(
+        settings.telegram_bot_token.get_secret_value(),
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML),
+    )
     sessions = create_session_factory(engine)
     deps = Deps(
-        i18n=I18n(),
+        i18n=I18n(custom_emoji=settings.custom_emoji),
         sessions=sessions,
         watchlist=WatchlistService(sessions, CodeforcesSource(client)),
         admin=make_admin_checker(bot),
         owner_id=settings.telegram_owner_id,
+        icons=settings.button_icons,
     )
     dispatcher = build_dispatcher(deps)
     try:

@@ -1,59 +1,119 @@
-# O'zbekcha katalog (lotin). Identifikatorlar va o'zgaruvchilar ru va en kataloglariga mos bo'lishi kerak (testlar tekshiradi).
+# O'zbekcha katalog (lotin, Telegram HTML). Identifikatorlar va o'zgaruvchilar ru va en kataloglariga mos.
+# "<id>-neutral" — neytral ohangli chatlar uchun jiddiy variant.
 
-pick-language = Tilni tanlang · Выберите язык · Choose your language
-onboarding-intro = Salom! Men cpstands botiman: contestlarning jonli natijalari, eslatmalar va do'stlaringiz yechgan masalalar haqida xabar beraman.
-onboarding-pick-timezone = Vaqt zonangizni tanlang. Ro'yxatda yo'q bo'lsa, shahar nomini inglizcha yozing: /timezone Tashkent
-setup-done = Tayyor! Til: { $language }, vaqt zonasi: { $zone }. Endi kuzatiladigan handlelarni qo'shing: /track add tourist, jiangly
-setup-admin-needed = Sozlashni faqat chat adminlari yakunlay oladi. Adminga /start yuborishni ayting.
-group-added = Meni qo'shganingiz uchun rahmat! Til va vaqt zonasini tanlash uchun admin /start yuborsin.
+pick-language =
+    🌍 <b>1/3 · Til · Язык · Language</b>
 
-timezone-set = Vaqt zonasi o'rnatildi: { $zone } (u yerda hozir { $time })
-timezone-choose = “{ $query }” uchun bir nechta variant topildi. Birini tanlang:
-timezone-not-found = “{ $query }” uchun vaqt zonasi topilmadi. Shahar nomini inglizcha yozing, masalan: /timezone Tashkent
-timezone-invalid-button = Bu vaqt zonasi yaroqsiz. /timezone yuborib, qayta urinib ko'ring.
+    Tilni tanlang · Выберите язык · Choose your language
+onboarding-intro =
+    👋 <b>Salom, men cpstands!</b>
+    Contestlarning jonli natijalari, eslatmalar va do'stlaringiz masala yechganda xabar. Uch qadamda tayyor bo'lamiz.
+onboarding-intro-neutral =
+    <b>cpstands</b>
+    Contest natijalari, eslatmalar va yechilgan masalalar haqida xabarlar. Sozlash uch qadam.
+onboarding-pick-timezone =
+    🧭 <b>2/3 · Vaqt zonasi</b>
+
+    Quyidan vaqt zonangizni tanlang. Ro'yxatda yo'qmi? Shahar nomini yozing: <code>/timezone Tashkent</code>
+setup-done =
+    ✅ <b>3/3 · Hammasi tayyor!</b>
+
+    🌍 { $language}
+    🧭 { $zone }
+
+    Oxirgi qadam: kimni kuzatishimni ayting.
+    <code>/track add tourist, jiangly</code>
+setup-done-neutral =
+    ✅ <b>3/3 · Sozlash yakunlandi</b>
+
+    🌍 { $language}
+    🧭 { $zone }
+
+    Kuzatiladigan handlelarni qo'shing:
+    <code>/track add tourist, jiangly</code>
+setup-celebrate = 🎉 Xush kelibsiz! Do'stlaringiz natijalari shu yerda chiqadi.
+setup-admin-needed = 🔒 Sozlashni faqat chat adminlari yakunlay oladi. Adminga /start yuborishni ayting.
+group-added =
+    👋 <b>Meni qo'shganingiz uchun rahmat!</b>
+    Til va vaqt zonasini tanlash uchun admin /start yuborsin. O'n soniya vaqt oladi.
+group-added-neutral =
+    <b>cpstands chatga qo'shildi.</b>
+    Til va vaqt zonasini tanlash uchun admin /start yuborsin.
+
+timezone-set =
+    🧭 Vaqt zonasi o'rnatildi: <b>{ $zone }</b>
+    🕐 U yerda hozir <b>{ $time }</b>
+timezone-choose = 🧭 “<b>{ $query }</b>” uchun bir nechta variant topildi. Birini tanlang:
+timezone-not-found =
+    ❌ “<b>{ $query }</b>” uchun vaqt zonasi topilmadi.
+    Shahar nomini inglizcha yozing, masalan: <code>/timezone Tashkent</code>
+timezone-invalid-button = ❌ Bu vaqt zonasi yaroqsiz. /timezone yuborib, qayta urinib ko'ring.
 
 settings-summary =
-    Sozlamalar
-    Til: { $language }
-    Vaqt zonasi: { $zone }
-    Kuzatilmoqda: { $count ->
+    ⚙️ <b>Sozlamalar</b>
+
+    🌍 Til: <b>{ $language }</b>
+    🧭 Vaqt zonasi: <b>{ $zone }</b>
+    🎭 Ohang: <b>{ $mood ->
+        [neutral] neytral
+       *[playful] qiziqarli
+    }</b>
+    👥 Kuzatilmoqda: <b>{ $count ->
         [one] { $count } ta handle
        *[other] { $count } ta handle
-    }
+    }</b>
 settings-timezone-unset = hali tanlanmagan
 button-language = Til
 button-timezone = Vaqt zonasi
+button-tone = { $mood ->
+        [neutral] Ohang: neytral
+       *[playful] Ohang: qiziqarli
+    }
+button-help-settings = Sozlamalar
+button-help-track = Handlelar
 
 track-usage =
-    Kuzatiladigan handlelar:
-    /track add handle1, handle2 - qo'shish
-    /track remove handle - olib tashlash
-    /track list - ro'yxatni ko'rish
-track-list-empty = Ro'yxat bo'sh. Handle qo'shing: /track add tourist, jiangly
-track-list-header = { $count ->
-        [one] Kuzatilmoqda: { $count } ta handle
-       *[other] Kuzatilmoqda: { $count } ta handle
-    }
-track-added = Qo'shildi: { $handles }
-track-already = Allaqachon ro'yxatda: { $handles }
-track-unknown = Codeforces'da topilmadi: { $handles }
-track-invalid = Handle formati noto'g'ri: { $handles }
-track-limit = Ro'yxat { $limit } ta handle bilan cheklangan. Qo'shilmadi: { $handles }
-track-truncated = Bitta xabarda juda ko'p element bor; faqat birinchi { $limit } tasi o'qildi.
-track-removed = Olib tashlandi: { $handles }
-track-not-found = Ro'yxatda yo'q: { $handles }
-track-nothing = Qiladigan ish yo'q. Misol: /track add tourist, jiangly
-track-source-error = Codeforces hozir javob bermayapti. Hech narsa o'zgartirilmadi; bir daqiqadan keyin qayta urinib ko'ring.
+    👥 <b>Kuzatiladigan handlelar</b>
 
-not-admin = Buni faqat chat adminlari qila oladi.
+    <code>/track add handle1, handle2</code> — qo'shish
+    <code>/track remove handle</code> — olib tashlash
+    <code>/track list</code> — ro'yxatni ko'rish
+track-list-empty = 👥 Ro'yxat bo'sh. Handle qo'shing: <code>/track add tourist, jiangly</code>
+track-list-header = { $count ->
+        [one] 👥 <b>Kuzatilmoqda: { $count } ta handle</b>
+       *[other] 👥 <b>Kuzatilmoqda: { $count } ta handle</b>
+    }
+track-added = ✅ Qo'shildi: <b>{ $handles }</b>
+track-added-neutral = Qo'shildi: { $handles }
+track-already = ➖ Allaqachon ro'yxatda: { $handles }
+track-unknown = ❌ Codeforces'da topilmadi: { $handles }
+track-invalid = ❌ Handle formati noto'g'ri: { $handles }
+track-limit = 🔒 Ro'yxat { $limit } ta handle bilan cheklangan. Qo'shilmadi: { $handles }
+track-truncated = ⚠️ Bitta xabarda juda ko'p element bor; faqat birinchi { $limit } tasi o'qildi.
+track-removed = ✅ Olib tashlandi: <b>{ $handles }</b>
+track-not-found = ➖ Ro'yxatda yo'q: { $handles }
+track-nothing = Qiladigan ish yo'q. Misol: <code>/track add tourist, jiangly</code>
+track-source-error = ⚠️ Codeforces hozir javob bermayapti. Hech narsa o'zgartirilmadi; bir daqiqadan keyin qayta urinib ko'ring.
+
+not-admin = 🔒 Buni faqat chat adminlari qila oladi.
 button-expired = Tugma eskirgan. Buyruqni qayta yuboring.
-rate-limited = So'rovlar juda ko'p. Biroz kuting.
-error-generic = Mening tomonimda xatolik yuz berdi. Keyinroq urinib ko'ring.
-coming-soon = Bu buyruq hali mavjud emas. Tez orada qo'shiladi.
+rate-limited = ⏰ Sekinroq, shoshqaloq! Bir zum kuting.
+rate-limited-neutral = So'rovlar juda ko'p. Biroz kuting.
+error-generic = 😵 Mening tomonimda nimadir buzildi. Birozdan keyin qayta urinib ko'ring.
+error-generic-neutral = Xatolik yuz berdi. Keyinroq urinib ko'ring.
+coming-soon = 🚧 Bu buyruq hali ustaxonada. Tez orada tayyor bo'ladi!
+coming-soon-neutral = Bu buyruq hali mavjud emas.
 help-text =
-    Men siz va do'stlaringiz uchun contestlarni kuzataman.
-    /start - til va vaqt zonasini sozlash
-    /track - kuzatiladigan handlelar
-    /timezone - vaqt zonasini o'zgartirish
-    /settings - joriy sozlamalar
-    /help - shu xabar
+    💬 <b>cpstands</b> — siz va do'stlaringiz uchun contestlar
+
+    <b>Sozlash</b>
+    /start — til va vaqt zonasi
+    /timezone — vaqt zonasini o'zgartirish
+    /settings — joriy sozlamalar
+
+    <b>Do'stlar</b>
+    /track — kuzatiladigan handlelar
+    /friends — xuddi shu, shaxsiy chatda
+
+    <b>Contestlar</b> <i>(tez orada)</i>
+    /standings · /upcoming · /rank

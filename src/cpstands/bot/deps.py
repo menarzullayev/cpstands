@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from cpstands.bot.whisper import Whisper
 from cpstands.i18n import I18n
 from cpstands.services.admin import AdminChecker
 from cpstands.services.watchlist import WatchlistService
@@ -18,3 +19,5 @@ class Deps:
     watchlist: WatchlistService
     admin: AdminChecker
     owner_id: int | None = None
+    icons: bool = False
+    whisper: Whisper = field(default_factory=Whisper)

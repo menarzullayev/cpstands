@@ -46,6 +46,10 @@ class Settings(BaseSettings):
     default_language: str = "uz"
     supported_languages: Annotated[list[str], NoDecode] = list(LANGUAGES)
     default_timezone: str = "Asia/Tashkent"
+    # Custom emoji in message text need Telegram Premium on the bot owner (Bot API 9.4).
+    custom_emoji: bool = True
+    # Icons on buttons need extra Fragment usernames on the bot; keep off until verified.
+    button_icons: bool = False
     database_url: SecretStr = SecretStr(
         "postgresql+asyncpg://cpstands:cpstands@127.0.0.1:5440/cpstands"
     )

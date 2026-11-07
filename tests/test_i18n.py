@@ -20,6 +20,7 @@ SAMPLE_ARGS: dict[str, str | int] = {
     "count": 3,
     "handles": "tourist, jiangly",
     "limit": 100,
+    "mood": "playful",
 }
 
 
@@ -51,7 +52,7 @@ def test_every_message_renders_in_every_language() -> None:
     i18n = I18n()
     for lang in SUPPORTED_LANGUAGES:
         for key in _message_ids(lang):
-            text = i18n.t(lang, key, **SAMPLE_ARGS)
+            text = i18n.t(lang, key, **SAMPLE_ARGS)  # type: ignore[arg-type]
             assert text != key, (lang, key)
             assert "{" not in text, (lang, key, text)
             assert "}" not in text, (lang, key, text)
@@ -66,13 +67,13 @@ def test_russian_plural_forms(count: int, expected: str) -> None:
     # The catalog uses "хендл"; the form pattern is what matters, so check the stem and suffix.
     text = I18n().t("ru", "track-list-header", count=count)
     forms = {1: "хендл", 2: "хендла", 5: "хендлов", 11: "хендлов", 21: "хендл"}
-    assert text.endswith(f"{count} {forms[count]}"), (expected, text)
+    assert f"{count} {forms[count]}</b>" in text, (expected, text)
 
 
 def test_english_plural_forms() -> None:
     i18n = I18n()
-    assert i18n.t("en", "track-list-header", count=1).endswith("1 handle")
-    assert i18n.t("en", "track-list-header", count=2).endswith("2 handles")
+    assert i18n.t("en", "track-list-header", count=1).endswith("1 handle</b>")
+    assert i18n.t("en", "track-list-header", count=2).endswith("2 handles</b>")
 
 
 def test_no_unicode_isolation_marks_in_output() -> None:
@@ -103,14 +104,17 @@ def test_checker_catches_missing_message(broken_locales: Path) -> None:
 
 
 def test_checker_catches_variable_mismatch(broken_locales: Path) -> None:
-    _edit(broken_locales, "uz", "Qo'shildi: { $handles }", "Qo'shildi: { $names }")
+    _edit(broken_locales, "uz", "Qo'shildi: <b>{ $handles }</b>", "Qo'shildi: <b>{ $names }</b>")
     problems = check_catalogs(broken_locales)
     assert any("uz: message 'track-added'" in p for p in problems)
 
 
 def test_checker_catches_syntax_error(broken_locales: Path) -> None:
     _edit(
-        broken_locales, "en", "track-removed = Removed: { $handles }", "track-removed = { $handles"
+        broken_locales,
+        "en",
+        "track-removed = ✅ Removed: <b>{ $handles }</b>",
+        "track-removed = { $handles",
     )
     problems = check_catalogs(broken_locales)
     assert any(p.startswith("en: syntax error") for p in problems)
@@ -120,7 +124,7 @@ def test_checker_catches_empty_message(broken_locales: Path) -> None:
     _edit(
         broken_locales,
         "en",
-        "rate-limited = Too many requests. Please wait a moment.",
+        "rate-limited = ⏰ Easy there, speedster! Give me a moment.",
         "rate-limited =",
     )
     problems = check_catalogs(broken_locales)
@@ -139,7 +143,9 @@ def test_checker_catches_missing_catalog_file(broken_locales: Path) -> None:
     assert any("uz: catalog file is missing" in p for p in problems)
 
 
-_KEY_RE = re.compile(r"""\bt\(\s*[^,()]+,\s*["']([a-z0-9-]+)["']""")
+_KEY_RE = re.compile(
+    r"""(?:\b(?:t|say)\(\s*(?:[^,()"']+,\s*)?|_say\([^()]*\)\(\s*)["']([a-z0-9-]+)["']"""
+)
 SRC = Path(__file__).resolve().parents[1] / "src" / "cpstands"
 
 
@@ -159,11 +165,76 @@ def test_every_key_used_in_code_exists_in_the_catalog() -> None:
 
 
 def test_every_catalog_key_is_used_in_code() -> None:
-    assert set(_message_ids("en")) - _code_keys() == set()
+    used = _code_keys()
+    unused = {
+        key
+        for key in set(_message_ids("en")) - used
+        if not (key.endswith("-neutral") and key.removesuffix("-neutral") in used)
+    }
+    assert unused == set()
 
 
 def test_key_scanner_finds_calls_and_ignores_noise() -> None:
-    sample = (
-        'x = deps.i18n.t(lang, "not-admin")\ny = t(None, \'track-usage\')\nz = "plain-string"\n'
-    )
+    sample = 'x = deps.i18n.t(lang, "not-admin")\ny = say(\'track-usage\')\nz = "plain-string"\n'
     assert keys_used_in(sample) == {"not-admin", "track-usage"}
+
+
+def test_user_text_is_html_escaped() -> None:
+    text = I18n().t("en", "track-added", handles="<script>alert(1)</script> & co")
+    assert "<script>" not in text
+    assert "&lt;script&gt;" in text
+    assert "&amp; co" in text
+
+
+def test_neutral_tone_prefers_the_neutral_variant_and_falls_back_to_the_base() -> None:
+    i18n = I18n()
+    playful = i18n.t("en", "rate-limited", tone="playful")
+    neutral = i18n.t("en", "rate-limited", tone="neutral")
+    assert playful != neutral
+    assert neutral == "Too many requests. Please wait a moment."
+    assert i18n.t("en", "not-admin", tone="neutral") == i18n.t("en", "not-admin")
+    assert i18n.bound("ru", "neutral")("coming-soon") == i18n.t("ru", "coming-soon", tone="neutral")
+
+
+def test_custom_emoji_wraps_known_emoji_and_leaves_others() -> None:
+    plain = I18n().t("en", "rate-limited")
+    custom = I18n(custom_emoji=True).t("en", "rate-limited")
+    assert "<tg-emoji" not in plain
+    assert custom.startswith('<tg-emoji emoji-id="')
+    assert custom.endswith("Give me a moment.")
+    # Emoji without a custom twin are left exactly as they are.
+    assert "⚙️" in I18n(custom_emoji=True).t(
+        "en", "settings-summary", language="x", zone="y", mood="playful", count=1
+    )
+
+
+@pytest.mark.parametrize(
+    ("old", "new", "expected"),
+    [
+        ("<b>2/3 · Time zone</b>", "<b>2/3 · Time zone", "unclosed <b>"),
+        ("<b>2/3 · Time zone</b>", "<div>2/3 · Time zone</div>", "tag <div> is not allowed"),
+        ("<b>2/3 · Time zone</b>", "2/3 · Time zone</b>", "unbalanced </b>"),
+        ("Pick your time zone below.", "Pick & choose your time zone below.", "bare '&'"),
+        ("Pick your time zone below.", "Pick a < b time zone below.", "bare '<'"),
+    ],
+)
+def test_checker_catches_broken_html(
+    broken_locales: Path, old: str, new: str, expected: str
+) -> None:
+    _edit(broken_locales, "en", old, new)
+    assert any(expected in p for p in check_catalogs(broken_locales))
+
+
+def test_checker_catches_neutral_variant_problems(broken_locales: Path) -> None:
+    _edit(
+        broken_locales,
+        "en",
+        "rate-limited-neutral = Too many",
+        "rate-limited-neutral = { $x } Too many",
+    )
+    assert any(
+        "rate-limited-neutral" in p and "variables" in p for p in check_catalogs(broken_locales)
+    )
+    _edit(broken_locales, "en", "not-admin = ", "not-admin-gone = ")
+    _edit(broken_locales, "en", "coming-soon-neutral", "no-base-neutral")
+    assert any("'no-base-neutral' has no base message" in p for p in check_catalogs(broken_locales))

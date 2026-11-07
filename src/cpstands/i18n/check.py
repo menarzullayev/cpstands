@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -18,6 +19,35 @@ PLURAL_CATEGORIES: dict[str, frozenset[str]] = {
 }
 
 
+# Tags Telegram accepts in HTML messages.
+ALLOWED_TAGS = frozenset(
+    {"b", "i", "u", "s", "code", "pre", "a", "blockquote", "tg-emoji", "tg-spoiler"}
+)
+_TAG_RE = re.compile(r"<(/?)([A-Za-z][\w-]*)[^<>]*>")
+_BAD_AMP_RE = re.compile(r"&(?!(?:amp|lt|gt|quot);)")
+
+
+def html_problems(text: str) -> list[str]:
+    """Tags must be allowed and balanced; bare ``<`` and ``&`` would be rejected by Telegram."""
+    problems: list[str] = []
+    stack: list[str] = []
+    for match in _TAG_RE.finditer(text):
+        closing, name = match.group(1) == "/", match.group(2).lower()
+        if name not in ALLOWED_TAGS:
+            problems.append(f"tag <{name}> is not allowed")
+        elif not closing:
+            stack.append(name)
+        elif not stack or stack.pop() != name:
+            problems.append(f"unbalanced </{name}>")
+    problems.extend(f"unclosed <{name}>" for name in stack)
+    rest = _TAG_RE.sub("", text)
+    if "<" in rest or ">" in rest:
+        problems.append("bare '<' or '>' (use &lt; and &gt;)")
+    if _BAD_AMP_RE.search(rest):
+        problems.append("bare '&' (use &amp;)")
+    return problems
+
+
 class _Collector(Visitor):
     """Collects the variables of a message and the plural keys of each selector."""
 
@@ -25,13 +55,21 @@ class _Collector(Visitor):
         super().__init__()
         self.variables: set[str] = set()
         self.plural_sets: list[frozenset[str]] = []
+        self.html_issues: list[str] = []
+
+    def visit_Pattern(self, node: ast.Pattern) -> None:  # noqa: N802
+        text = "".join(e.value for e in node.elements if isinstance(e, ast.TextElement))
+        self.html_issues.extend(html_problems(text))
+        self.generic_visit(node)
 
     def visit_VariableReference(self, node: ast.VariableReference) -> None:  # noqa: N802
         self.variables.add(node.id.name)
 
     def visit_SelectExpression(self, node: ast.SelectExpression) -> None:  # noqa: N802
         keys = frozenset(v.key.name for v in node.variants if isinstance(v.key, ast.Identifier))
-        if keys:
+        selector = node.selector
+        is_count = isinstance(selector, ast.VariableReference) and selector.id.name == "count"
+        if keys and is_count:
             self.plural_sets.append(keys)
         self.generic_visit(node)
 
@@ -88,6 +126,17 @@ def check_catalogs(locales_dir: Path = LOCALES_DIR) -> list[str]:
                     f"{lang}: message '{key}' uses variables {sorted(actual)}, "
                     f"expected {sorted(expected)}"
                 )
+    for lang, catalog in catalogs.items():
+        for key, collector in sorted(catalog.messages.items()):
+            problems.extend(f"{lang}: message '{key}': {issue}" for issue in collector.html_issues)
+            if key.endswith("-neutral"):
+                base = catalog.messages.get(key.removesuffix("-neutral"))
+                if base is None:
+                    problems.append(f"{lang}: message '{key}' has no base message")
+                elif base.variables != collector.variables:
+                    problems.append(
+                        f"{lang}: message '{key}' uses different variables than its base"
+                    )
     for lang, catalog in catalogs.items():
         required = PLURAL_CATEGORIES[lang]
         for key, collector in sorted(catalog.messages.items()):
