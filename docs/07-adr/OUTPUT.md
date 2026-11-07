@@ -32,7 +32,7 @@ routine reversible decisions are agent-approved and listed for transparency.
 - **Selected solution:** Python 3.13 with aiogram 3.31 and httpx.
 - **Rationale:** aiogram supports Bot API 10.3 since 2026-08-25, one day after the API; python-telegram-bot 22.8 is older; grammY support for 10.3 is unconfirmed; Go and Java are viable but fit the maintainer less.
 - **Consequences:** Python runtime performance is sufficient for the load (Telegram budgets, not CPU, are the limit); we depend on aiogram's release pace; typing is enforced with mypy.
-- **Evidence:** EVID-014, EVID-008.
+- **Evidence:** EVID-014 (library support) and EVID-008 (new Bot API features)
 - **Reversibility:** Medium: the domain core is framework-free, so only the `bot` adapter would be replaced.
 - **Approval:** owner, 2026-11-08.
 
@@ -71,7 +71,7 @@ routine reversible decisions are agent-approved and listed for transparency.
 - **Selected solution:** One shared anonymous fetch per active contest with an adaptive interval, a streaming parser keeping only watched handles, and per-handle `user.status` only as a limited fallback for upsolves.
 - **Rationale:** Per-handle polling cannot meet freshness within one request per two seconds; scraping is fragile; authenticated requests are rejected for the same parameters.
 - **Consequences:** Bandwidth cost per active contest; need caching and backoff; the interval must be tuned by experiment before the freshness target is promised.
-- **Evidence:** EVID-002, EVID-003, EVID-012.
+- **Evidence:** EVID-002, EVID-003 and EVID-012 (API restriction, payload size, rate limit)
 - **Reversibility:** High (adapter behind `SourcePort`).
 - **Approval:** owner, 2026-11-08.
 
@@ -84,7 +84,7 @@ routine reversible decisions are agent-approved and listed for transparency.
 - **Selected solution:** Mark `(chat, contest)` dirty; a delivery worker renders the latest state and edits once per allowed interval; older pending renders are discarded.
 - **Rationale:** Matches the product principle and the per-chat and per-group budgets.
 - **Consequences:** Intermediate states may be skipped by design; message-gone errors trigger one re-create.
-- **Evidence:** EVID-009.
+- **Evidence:** EVID-009 (Telegram rate limits)
 - **Reversibility:** High.
 - **Approval:** owner, 2026-11-08.
 
@@ -110,7 +110,7 @@ routine reversible decisions are agent-approved and listed for transparency.
 - **Selected solution:** The maintainer's home PC for the beta and the first public release; no formal availability target; availability is measured and published; a dedicated host later.
 - **Rationale:** Owner decision; no extra cost now; an honest commitment matches the host's real reliability.
 - **Consequences:** Outages from power, network or reboots are possible; mitigations: Docker restart policy, sleep disabled, auto-start, recommended UPS, external heartbeat, owner alerts (ADR-009), restore rehearsal (ADR-014); users are told in the README and status messages.
-- **Evidence:** EVID-015 (Serverless unsuitable), PRD amendment of REQ-N04.
+- **Evidence:** EVID-015 (Serverless unsuitable), PRD amendment of REQ-N04 (availability wording)
 - **Reversibility:** High (documented migration to a dedicated host).
 - **Approval:** owner, 2026-11-08.
 
@@ -123,7 +123,7 @@ routine reversible decisions are agent-approved and listed for transparency.
 - **Selected solution:** Not used for R1; revisit for a Mini App backend.
 - **Rationale:** The documentation shows handlers triggered only by Telegram updates and Mini App calls, JavaScript only, no scheduler, no stated CPU or duration limits, no pricing; scheduled polling and reminders cannot run there, and a hybrid would split state and the update stream.
 - **Consequences:** We operate our own host; we may reconsider if Telegram adds timers.
-- **Evidence:** EVID-015.
+- **Evidence:** EVID-015 (Serverless documentation review)
 - **Reversibility:** High.
 - **Approval:** owner, 2026-11-08.
 
@@ -136,7 +136,7 @@ routine reversible decisions are agent-approved and listed for transparency.
 - **Selected solution:** (c). Structured JSON logs without message content; a Prometheus-format metrics endpoint for a local dashboard; in-app alerts delivered to the owner by Telegram direct message for logic failures (stale data, missed reminders, failing sends, source errors); an owner-only status command. No external vendor is used.
 - **Rationale:** The owner uses the host machine daily and checks it personally; the project is a hobby with low stakes; avoiding a vendor keeps the system simple and free of external dependencies.
 - **Consequences:** Total host or network failure produces no automatic alert; the owner accepts this. If the project later adopts a dedicated host or a formal availability target, an external heartbeat (EVID-016) becomes the first addition. The published availability is derived from the bot's own records, which cannot observe full-host outages, so published figures must say so.
-- **Evidence:** EVID-016 (alternative considered, not adopted); REQ-N08.
+- **Evidence:** EVID-016 (alternative considered, not adopted) and REQ-N08 (observability requirement)
 - **Reversibility:** High.
 - **Approval:** owner, 2026-11-08.
 
@@ -147,7 +147,7 @@ routine reversible decisions are agent-approved and listed for transparency.
 - **Context / problem:** uz, ru and en must stay equivalent, including plurals and dates (REQ-014, REQ-015).
 - **Options considered:** gettext; Fluent (`.ftl`); a custom YAML catalog.
 - **Selected solution:** Fluent catalogs, one file set per language, with a CI test that fails when a message ID is missing in any language or arguments differ.
-- **Rationale:** Fluent handles Russian plural forms and message arguments well and is supported by aiogram integrations; the test enforces REQ-015.
+- **Rationale:** Fluent handles Russian plural forms and message arguments well and is supported by aiogram integrations; the test enforces REQ-015 (language completeness)
 - **Consequences:** Translators edit `.ftl` files; dates use `date_time` entities instead of formatted strings where possible (REQ-005).
 - **Evidence:** EVID-008 (`date_time` entity).
 - **Reversibility:** High.
@@ -224,7 +224,7 @@ routine reversible decisions are agent-approved and listed for transparency.
 
 ## Evidence
 
-EVID-008, EVID-009, EVID-012, EVID-014, EVID-015 and the measured API behavior in EVID-002 and EVID-003.
+EVID-008, EVID-009, EVID-012, EVID-014, EVID-015 and the measured API behavior in EVID-002 and EVID-003 (see stage 03 register)
 
 ## Reversibility summary
 
