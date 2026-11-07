@@ -1,0 +1,14 @@
+{
+  "event_id": "42f48f9bc51b",
+  "event_type": "evidence.recorded",
+  "timestamp": "2026-11-07T21:41:56+00:00",
+  "path": "docs\\evidence\\EVID-019.md",
+  "stage": "03-market-research",
+  "claim": "Codeforces answers with gzip: contest.standings of three finished contests transferred 33 KB, 357 KB and 305 KB on the wire for 0.52 MB, 6.25 MB and 7.20 MB decoded (16x to 24x), fetched in 0.27 s to 1.25 s; contest.list is 40 KB on the wire.",
+  "source": "docs/experiments/M1-standings-fetch.md (live measurement, 2026-11-08)",
+  "date": "2026-11-08",
+  "confidence": "high",
+  "type": "FACT",
+  "risk": "LOW",
+  "evidence_id": "EVID-019"
+}

@@ -84,6 +84,9 @@ Telegram documents an extra fee tied to Star purchases for threaded bots; a free
 | EVID-016 | Healthchecks.io Hobbyist plan: 0 USD per month, 20 jobs; free Business plan for open-source projects (added 2026-11-08 during stage 07) | FACT | high | vendor pricing page |
 | EVID-017 | Cloudflare R2 free tier 10 GB-month with free egress; Backblaze B2 first 10 GB free (added 2026-11-08 during stage 07) | FACT | high | vendor pricing pages |
 | EVID-018 | GitHub: self-hosted runners should almost never be used for public repositories; not ephemeral by default (added 2026-11-08 during stage 10) | FACT | high | GitHub Actions security documentation |
+| EVID-019 | Codeforces gzip: standings 33 to 357 KB on the wire for 0.5 to 7.2 MB decoded (16x to 24x), fetch 0.3 to 1.3 s (added 2026-11-08 during M1) | FACT | high | M1 experiment, live measurement |
+| EVID-020 | Codeforces standings are proxy-cached for about 60 s with an Expires header and no ETag; expiry-aligned requests return fresh generations; finished contests only (added 2026-11-08 during M1) | FACT | medium | M1 experiment, cache probe |
+| EVID-021 | ijson parser: 9743 rows in about 0.19 s adding 2 to 7 MB (added 2026-11-08 during M1) | FACT | high | M1 experiment, parse benchmark |
 
 ## Assumptions
 
