@@ -46,6 +46,9 @@ class Settings(BaseSettings):
     default_language: str = "uz"
     supported_languages: Annotated[list[str], NoDecode] = list(LANGUAGES)
     default_timezone: str = "Asia/Tashkent"
+    # Health and metrics endpoints; port 0 turns them off.
+    http_host: str = "127.0.0.1"
+    http_port: int = 8080
     # Custom emoji in message text need Telegram Premium on the bot owner (Bot API 9.4).
     custom_emoji: bool = True
     # Custom-emoji icons on buttons (Bot API 9.4); verified to render in Telegram Desktop 7.4.

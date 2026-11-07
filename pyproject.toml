@@ -51,6 +51,7 @@ ignore = ["S101"]
 "tests/**" = ["S105", "S106", "S608", "S311", "E501", "RUF001"]
 "migrations/**" = ["E501"]
 "src/cpstands/db/repos.py" = ["E501"]  # long SQL strings
+"src/cpstands/services/retention.py" = ["E501"]
 "scripts/**" = ["T201", "S310", "E501", "E731", "RUF001"]
 
 [tool.mypy]

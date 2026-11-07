@@ -21,11 +21,14 @@ from aiogram.exceptions import (
 from aiogram.types import LinkPreviewOptions
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from cpstands import metrics
 from cpstands.bot.live import fetch_delay
 from cpstands.bot.reminders import duration_text
+from cpstands.bot.telemetry import record_send
 from cpstands.db import repos
 from cpstands.i18n import I18n, Markup, Translator
 from cpstands.services.alerts import PLATFORM, AlertService
+from cpstands.services.ops import OpsState
 from cpstands.services.standings import StandingsService
 from cpstands.sources.base import PermanentSourceError, SourceError
 
@@ -179,7 +182,9 @@ class AlertNotifier:
         clock: Callable[[], float] = time.monotonic,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+        ops: OpsState | None = None,
     ) -> None:
+        self._ops = ops
         self._bot = bot
         self._sessions = sessions
         self._i18n = i18n
@@ -224,26 +229,44 @@ class AlertNotifier:
                     chat_id, text, link_preview_options=LinkPreviewOptions(is_disabled=True)
                 )
             except TelegramRetryAfter as exc:
+                record_send("alert", self._ops, error="flood")
                 await self._release(alerts, float(exc.retry_after) + 1.0, "flood control")
                 return delivered
             except TelegramForbiddenError:
+                record_send("alert", self._ops, error="forbidden")
                 async with self._sessions() as session, session.begin():
                     await repos.set_status(session, chat_id, "removed")
                 await self._fail(alerts, "bot was blocked")
                 return delivered
             except TelegramNetworkError:
+                record_send("alert", self._ops, error="network")
                 await self._release(alerts, 10.0, "network")
                 return delivered
             except TelegramBadRequest as exc:
                 log.warning("alert_rejected", chat_id=chat_id, reason=str(exc)[:120])
+                record_send("alert", self._ops, error="bad_request")
                 await self._fail(alerts, str(exc))
                 return delivered
             except TelegramAPIError:
+                record_send("alert", self._ops, error="api")
                 await self._release(alerts, 30.0, "api error")
                 return delivered
+            record_send("alert", self._ops)
+            metrics.ALERTS_SENT.inc()
             self._last_sent[chat_id] = self._clock()
             delivered += 1
+        self._observe_latency(alerts)
         return delivered
+
+    def _observe_latency(self, alerts: list[repos.ClaimedAlert]) -> None:
+        """Seconds from the verdict to the message (REQ-N03)."""
+        now = self._now()
+        for alert in alerts:
+            try:
+                occurred = datetime.fromisoformat(str(alert.payload["at"]))
+            except (KeyError, ValueError):
+                continue
+            metrics.DELIVERY_LATENCY.observe(max((now - occurred).total_seconds(), 0.0))
 
     async def _respect_gap(self, chat_id: int) -> None:
         last = self._last_sent.get(chat_id)

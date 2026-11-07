@@ -40,15 +40,7 @@ CELEBRATE_EFFECT_ID = "5046509860389126442"
 _CHAT_TYPES = {"private": "private", "group": "group", "supergroup": "supergroup"}
 _JOINED = {ChatMemberStatus.MEMBER, ChatMemberStatus.ADMINISTRATOR}
 _GONE = {ChatMemberStatus.LEFT, ChatMemberStatus.KICKED}
-_PLANNED_COMMANDS = (
-    "rank",
-    "privacy",
-    "delete",
-    "status",
-    "pause",
-    "resume",
-    "stats",
-)
+_PLANNED_COMMANDS = ("rank",)
 
 
 def _say(deps: Deps, chat: repos.ChatRecord | None) -> Translator:

@@ -13,6 +13,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from cpstands.bot.reminders import ReminderSender
 from cpstands.db import repos
 from cpstands.services.contests import PLATFORM, ContestService
+from cpstands.services.ops import OpsState
+from cpstands.services.retention import RetentionService
 from cpstands.sources.base import SourceError
 
 log = structlog.get_logger(__name__)
@@ -31,6 +33,8 @@ class Scheduler:
         contests: ContestService,
         sender: ReminderSender,
         *,
+        retention: RetentionService | None = None,
+        ops: OpsState | None = None,
         clock: Callable[[], float] = time.monotonic,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
@@ -38,6 +42,8 @@ class Scheduler:
         self._sessions = sessions
         self._contests = contests
         self._sender = sender
+        self._retention = retention
+        self._ops = ops
         self._clock = clock
         self._now = now
         self._sleep = sleep
@@ -55,6 +61,8 @@ class Scheduler:
 
     async def tick(self) -> int:
         """One pass; returns how many reminders were delivered."""
+        if self._ops is not None:
+            self._ops.beat("scheduler")
         if self._clock() >= self._next_sync:
             try:
                 await self._contests.sync()
@@ -63,6 +71,11 @@ class Scheduler:
                 log.warning("contest_sync_failed", exc_info=True)
                 self._next_sync = self._clock() + SYNC_RETRY_S
         await self._contests.plan()
+        if self._retention is not None:
+            try:
+                await self._retention.run_if_due()
+            except Exception:
+                log.error("retention_failed", exc_info=True)
         delivered = 0
         for _ in range(MAX_BATCHES_PER_TICK):
             async with self._sessions() as session, session.begin():

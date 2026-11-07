@@ -204,3 +204,62 @@ button-alerts = { $state ->
         [off] Alerts: off
        *[on] Alerts: on
     }
+
+privacy-text =
+    🔒 <b>Privacy</b>
+
+    I store only what the bot needs to work:
+    • this chat's id, language, time zone, tone and switches
+    • the public Codeforces handles you follow
+    • contest results of those handles, for 30 days
+
+    I never keep message text, and I never ask for passwords, API keys or tokens.
+    Send /delete to erase everything stored about this chat.
+button-privacy-policy = Privacy policy
+button-delete-data = Delete data
+button-delete-yes = Yes, delete everything
+button-delete-no = Cancel
+delete-confirm =
+    🗑 <b>Delete all data of this chat?</b>
+
+    The followed handles, settings, reminders and live tables will be erased. This cannot be undone.
+delete-done =
+    ✅ Done. Everything stored about this chat is deleted ({ $handles ->
+        [one] { $handles } followed handle
+       *[other] { $handles } followed handles
+    }). Messages already in the chat stay; delete them yourself. Send /start to set up again.
+delete-cancelled = Cancelled. Nothing was deleted.
+delete-nothing = Nothing is stored about this chat.
+delete-expired = ⏰ This confirmation has expired. Send /delete again.
+owner-only = 🔒 Owner only.
+owner-status =
+    📟 <b>Status</b> v{ $version } · up { $uptime }
+
+    <b>Sources</b>
+    { $sources }
+
+    <b>Queues</b>
+    alerts pending { $alerts } · reminders overdue { $overdue }, scheduled { $scheduled }
+    live messages { $live } · running contests { $contests }
+
+    <b>Chats</b> { $chats }
+    <b>Open operator alerts</b> { $open }
+owner-stats =
+    📊 <b>Stats</b>
+
+    Active chats: { $chats }
+    Followed handles: { $handles }
+    Solve events (24 h): { $events }
+    Reminders sent (24 h): { $reminders }
+    Alerts pending: { $pending } · failed (24 h): { $failed }
+owner-pause-usage = Use /pause or /resume alone for the source, or with a chat id.
+owner-paused-source = ⏸ Source <code>{ $source }</code> is paused.
+owner-resumed-source = ▶️ Source <code>{ $source }</code> is running.
+owner-paused-chat = ⏸ Chat <code>{ $id }</code> is paused.
+owner-resumed-chat = ▶️ Chat <code>{ $id }</code> is running.
+owner-chat-unknown = Chat <code>{ $id }</code> was not found in the needed state.
+ops-alert-stale = ⚠️ Standings of contest { $contest } are { $age } s old.
+ops-alert-late = ⚠️ { $count } reminders are more than a minute late.
+ops-alert-sends = ⚠️ { $percent }% of the last { $count } sends failed.
+ops-alert-source = ⚠️ Source <code>{ $source }</code> failed { $count } times in a row.
+ops-alert-resolved = ✅ Resolved: { $rule }

@@ -61,6 +61,11 @@ class StandingsService:
                 return cached[0]
             return await self._fetch_and_store(contest_id, now)
 
+    def age_s(self, contest_id: int) -> float | None:
+        """Seconds since the newest copy of this contest was fetched, if there is one."""
+        cached = self._cache.get(contest_id)
+        return None if cached is None else self._clock() - cached[1]
+
     async def refresh(self, contest_id: int) -> FullStandings:
         """Always fetch; the live updater schedules its own fetches."""
         async with self._lock(contest_id):

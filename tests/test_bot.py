@@ -21,6 +21,7 @@ from cpstands.domain.contest import Contest, ContestPhase
 from cpstands.i18n import I18n
 from cpstands.services import timezone as tzs
 from cpstands.services.contests import ContestService
+from cpstands.services.ops import OpsState
 from cpstands.services.standings import StandingsService
 from cpstands.services.watchlist import WatchlistService
 from tests.support.sources import FakeSource, make_standings
@@ -47,6 +48,7 @@ class Harness:
     session: FakeSession
     sessions: async_sessionmaker[AsyncSession]
     source: FakeSource
+    ops: OpsState
     _next: int = 1
 
     async def feed(self, update: Update) -> None:
@@ -100,6 +102,7 @@ async def harness(migrated_database: str) -> AsyncIterator[Harness]:
             _contest(2299, "Far Away Round", 40),
         ],
     )
+    ops = OpsState()
     deps = Deps(
         i18n=I18N,
         sessions=sessions,
@@ -107,8 +110,10 @@ async def harness(migrated_database: str) -> AsyncIterator[Harness]:
         admin=make_admin_checker(bot),
         standings=StandingsService(source),  # type: ignore[arg-type]
         contests=ContestService(sessions, source),  # type: ignore[arg-type]
+        ops=ops,
+        owner_id=PRIVATE,
     )
-    yield Harness(build_dispatcher(deps, RateLimiter()), bot, fake, sessions, source)
+    yield Harness(build_dispatcher(deps, RateLimiter()), bot, fake, sessions, source, ops)
     await engine.dispose()
 
 
@@ -255,7 +260,7 @@ async def test_settings_shows_summary_and_menu_buttons(harness: Harness) -> None
 
 
 async def test_unfinished_commands_answer_coming_soon(harness: Harness) -> None:
-    for command in ("/rank", "/privacy", "/delete"):
+    for command in ("/rank",):
         await harness.say(PRIVATE, PRIVATE, command)
         assert harness.session.last_text() == I18N.t(None, "coming-soon")
 
@@ -293,9 +298,15 @@ async def test_rate_limit_answers_once_then_stays_quiet(migrated_database: str) 
         admin=make_admin_checker(bot),
         standings=StandingsService(FakeSource([])),  # type: ignore[arg-type]
         contests=ContestService(sessions, FakeSource([])),  # type: ignore[arg-type]
+        ops=OpsState(),
     )
     harness = Harness(
-        build_dispatcher(deps, RateLimiter(per_user=3)), bot, fake, sessions, FakeSource([])
+        build_dispatcher(deps, RateLimiter(per_user=3)),
+        bot,
+        fake,
+        sessions,
+        FakeSource([]),
+        deps.ops,
     )
     for _ in range(3):
         await harness.say(PRIVATE, PRIVATE, "/help")
@@ -678,3 +689,135 @@ async def test_members_cannot_switch_alerts(harness: Harness) -> None:
     chat = await harness.chat(GROUP)
     assert chat is not None
     assert chat.alerts_enabled is True
+
+
+# --- privacy and deletion ---------------------------------------------------------------
+
+
+async def test_privacy_explains_what_is_stored_without_storing_anything(harness: Harness) -> None:
+    await harness.say(88, 88, "/privacy")
+    sent = harness.session.sent()[-1]
+    assert sent["text"] == I18N.t(None, "privacy-text")
+    buttons = [b for row in sent["reply_markup"]["inline_keyboard"] for b in row]
+    assert buttons[0]["url"].endswith("PRIVACY.md")
+    assert buttons[1]["callback_data"] == "del:ask"
+    assert await harness.chat(88) is None  # asking about privacy leaves no record
+
+
+async def _setup_with_handles(harness: Harness, chat_id: int, user_id: int) -> None:
+    await harness.say(chat_id, user_id, "/track add tourist, jiangly")
+
+
+async def test_delete_needs_a_confirmation_and_then_removes_everything(harness: Harness) -> None:
+    await _setup_with_handles(harness, PRIVATE, PRIVATE)
+    await harness.say(PRIVATE, PRIVATE, "/delete")
+    confirm = harness.session.sent()[-1]
+    assert confirm["text"] == I18N.t(None, "delete-confirm")
+    buttons = [b for row in confirm["reply_markup"]["inline_keyboard"] for b in row]
+    yes = next(b for b in buttons if b["callback_data"].startswith("del:yes:"))
+    assert yes["style"] == "danger"
+    assert await harness.chat(PRIVATE) is not None  # nothing happens before the tap
+
+    await harness.tap(PRIVATE, PRIVATE, yes["callback_data"])
+    assert harness.session.last_text() == I18N.t(None, "delete-done", handles=2)
+    assert await harness.chat(PRIVATE) is None
+    await harness.tap(PRIVATE, PRIVATE, yes["callback_data"])  # a second tap finds nothing
+    assert harness.session.last_text() == I18N.t(None, "delete-nothing")
+    assert await harness.chat(PRIVATE) is None  # and it did not re-create the chat
+
+
+async def test_cancelling_a_delete_keeps_the_data(harness: Harness) -> None:
+    await _setup_with_handles(harness, PRIVATE, PRIVATE)
+    await harness.say(PRIVATE, PRIVATE, "/delete")
+    await harness.tap(PRIVATE, PRIVATE, "del:no")
+    assert harness.session.last_text() == I18N.t(None, "delete-cancelled")
+    chat = await harness.chat(PRIVATE)
+    assert chat is not None
+
+
+async def test_an_old_confirmation_does_not_delete(harness: Harness) -> None:
+    import time
+
+    await _setup_with_handles(harness, PRIVATE, PRIVATE)
+    stale = int(time.time() // 60) - 11
+    await harness.tap(PRIVATE, PRIVATE, f"del:yes:{stale}")
+    assert harness.session.last_text() == I18N.t(None, "delete-expired")
+    await harness.tap(PRIVATE, PRIVATE, "del:yes:notanumber")
+    assert harness.session.alerts()[-1]["text"] == I18N.t(None, "button-expired")
+    assert await harness.chat(PRIVATE) is not None
+
+
+async def test_only_group_admins_can_delete_a_groups_data(harness: Harness) -> None:
+    await harness.say(GROUP, ADMIN, "/track add tourist")
+    await harness.say(GROUP, MEMBER, "/delete")
+    assert harness.session.last_text() == I18N.t(None, "not-admin")
+    import time
+
+    await harness.tap(GROUP, MEMBER, f"del:yes:{int(time.time() // 60)}")
+    assert harness.session.alerts()[-1]["text"] == I18N.t(None, "not-admin")
+    assert await harness.chat(GROUP) is not None
+
+    await harness.say(GROUP, ADMIN, "/delete")
+    await harness.tap(GROUP, ADMIN, f"del:yes:{int(time.time() // 60)}")
+    assert harness.session.last_text() == I18N.t(None, "delete-done", handles=1)
+    assert await harness.chat(GROUP) is None
+
+
+# --- owner commands ---------------------------------------------------------------------
+
+
+async def test_owner_commands_refuse_everyone_else(harness: Harness) -> None:
+    for command in ("/status", "/stats", "/pause", "/resume"):
+        await harness.say(88, 88, command)
+        assert harness.session.last_text() == I18N.t(None, "owner-only")
+    await harness.say(GROUP, PRIVATE, "/status")  # the owner, but not in a private chat
+    assert harness.session.last_text() == I18N.t(None, "owner-only")
+    assert not harness.ops.sources
+
+
+async def test_status_and_stats_show_numbers_to_the_owner(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/track add tourist")
+    harness.ops.record_source("codeforces", ok=True)
+    await harness.say(PRIVATE, PRIVATE, "/status")
+    status = harness.session.last_text()
+    assert "<b>Holat</b>" in status
+    assert "codeforces" in status
+    assert "errors in a row 0" in status
+    await harness.say(PRIVATE, PRIVATE, "/stats")
+    stats = harness.session.last_text()
+    assert "Statistika" in stats
+    assert "Kuzatilgan handlelar: 1" in stats
+
+
+async def test_pause_and_resume_the_source(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/pause")
+    assert harness.ops.is_paused("codeforces")
+    assert harness.session.last_text() == I18N.t(None, "owner-paused-source", source="codeforces")
+    async with harness.sessions() as session:
+        from sqlalchemy import text
+
+        saved = (await session.execute(text("select paused from source_health"))).scalar_one()
+    assert saved is True
+    await harness.say(PRIVATE, PRIVATE, "/resume codeforces")
+    assert not harness.ops.is_paused("codeforces")
+    await harness.say(PRIVATE, PRIVATE, "/pause kep.uz")
+    assert harness.session.last_text() == I18N.t(None, "owner-pause-usage")
+
+
+async def test_pause_and_resume_a_chat(harness: Harness) -> None:
+    await harness.say(GROUP, ADMIN, "/track add tourist")
+    await harness.say(GROUP, ADMIN, "/start")
+    await harness.tap(GROUP, ADMIN, "set:lang:en")
+    await harness.tap(GROUP, ADMIN, "tz:set:UTC")
+    await harness.say(PRIVATE, PRIVATE, f"/pause {GROUP}")
+    chat = await harness.chat(GROUP)
+    assert chat is not None
+    assert chat.status == "paused"
+    await harness.say(PRIVATE, PRIVATE, f"/pause {GROUP}")  # already paused
+    assert harness.session.last_text() == I18N.t(None, "owner-chat-unknown", id=str(GROUP))
+    await harness.say(PRIVATE, PRIVATE, f"/resume {GROUP}")
+    chat = await harness.chat(GROUP)
+    assert chat is not None
+    assert chat.status == "active"
+    await harness.say(PRIVATE, PRIVATE, "/pause 123456")  # a chat the bot does not know
+    assert harness.session.last_text() == I18N.t(None, "owner-chat-unknown", id="123456")

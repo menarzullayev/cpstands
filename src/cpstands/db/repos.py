@@ -468,6 +468,7 @@ class ClaimedReminder:
     contest_id: int
     offset_min: int
     attempts: int
+    due_at: datetime
 
 
 async def plan_reminders(
@@ -609,12 +610,12 @@ async def claim_due_reminders(
             FROM due
             WHERE r.chat_id = due.chat_id AND r.platform = due.platform
               AND r.contest_id = due.contest_id AND r.offset_min = due.offset_min
-            RETURNING r.chat_id, r.contest_id, r.offset_min, r.attempts
+            RETURNING r.chat_id, r.contest_id, r.offset_min, r.attempts, r.due_at
             """
         ),
         {"platform": platform, "now": now, "limit": limit},
     )
-    return [ClaimedReminder(*(int(v) for v in row)) for row in result.all()]
+    return [ClaimedReminder(int(r[0]), int(r[1]), int(r[2]), int(r[3]), r[4]) for r in result.all()]
 
 
 async def release_reminder(session: AsyncSession, platform: str, claimed: ClaimedReminder) -> None:

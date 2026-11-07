@@ -24,7 +24,9 @@ from aiogram.exceptions import (
 from aiogram.types import InputRichMessage
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from cpstands import metrics
 from cpstands.bot import standings_view
+from cpstands.bot.telemetry import record_send
 from cpstands.db import repos
 from cpstands.domain.contest import FullStandings
 from cpstands.i18n import I18n
@@ -184,6 +186,8 @@ class LiveUpdater:
             return
         self._last_edit[message.chat_id] = self._clock()
         self._edited_at[key] = self._clock()
+        metrics.LIVE_EDITS.inc()
+        record_send("live", None)
         await self._mark(message, last_hash=digest, edited=True, state="frozen" if final else None)
 
     async def _respect_chat_gap(self, chat_id: int) -> None:

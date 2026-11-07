@@ -204,3 +204,62 @@ button-alerts = { $state ->
         [off] Alertlar: o'chiq
        *[on] Alertlar: yoqilgan
     }
+
+privacy-text =
+    🔒 <b>Maxfiylik</b>
+
+    Men faqat ishlash uchun zarur narsani saqlayman:
+    • shu chatning id si, til, vaqt zonasi, ohang va sozlamalar
+    • siz kuzatadigan ommaviy Codeforces handlelari
+    • o'sha handlelarning contest natijalari, 30 kun
+
+    Xabar matnini saqlamayman va hech qachon parol, API kalit yoki token so'ramayman.
+    Shu chat haqida saqlangan hamma narsani o'chirish uchun /delete yuboring.
+button-privacy-policy = Siyosat
+button-delete-data = Ma'lumotni o'chirish
+button-delete-yes = Ha, hammasini o'chir
+button-delete-no = Bekor qilish
+delete-confirm =
+    🗑 <b>Shu chatning barcha ma'lumoti o'chirilsinmi?</b>
+
+    Kuzatilayotgan handlelar, sozlamalar, eslatmalar va jonli jadvallar o'chadi. Buni qaytarib bo'lmaydi.
+delete-done =
+    ✅ Tayyor. Shu chat haqida saqlangan hamma narsa o'chirildi ({ $handles ->
+        [one] { $handles } ta kuzatilgan handle
+       *[other] { $handles } ta kuzatilgan handle
+    }). Chatdagi xabarlar qoladi, ularni o'zingiz o'chiring. Qayta sozlash uchun /start yuboring.
+delete-cancelled = Bekor qilindi. Hech narsa o'chirilmadi.
+delete-nothing = Shu chat haqida hech narsa saqlanmagan.
+delete-expired = ⏰ Tasdiq eskirgan. /delete ni qayta yuboring.
+owner-only = 🔒 Faqat egasi uchun.
+owner-status =
+    📟 <b>Holat</b> v{ $version } · ishlamoqda { $uptime }
+
+    <b>Manbalar</b>
+    { $sources }
+
+    <b>Navbatlar</b>
+    kutilayotgan alertlar { $alerts } · kechikkan eslatmalar { $overdue }, rejalashtirilgan { $scheduled }
+    jonli xabarlar { $live } · davom etayotgan contestlar { $contests }
+
+    <b>Chatlar</b> { $chats }
+    <b>Ochiq operator ogohlantirishlari</b> { $open }
+owner-stats =
+    📊 <b>Statistika</b>
+
+    Faol chatlar: { $chats }
+    Kuzatilgan handlelar: { $handles }
+    Yechim hodisalari (24 soat): { $events }
+    Yuborilgan eslatmalar (24 soat): { $reminders }
+    Navbatdagi alertlar: { $pending } · muvaffaqiyatsiz (24 soat): { $failed }
+owner-pause-usage = Manba uchun /pause yoki /resume ni argumentsiz, chat uchun id bilan ishlating.
+owner-paused-source = ⏸ <code>{ $source }</code> manbasi to'xtatildi.
+owner-resumed-source = ▶️ <code>{ $source }</code> manbasi ishlayapti.
+owner-paused-chat = ⏸ <code>{ $id }</code> chati to'xtatildi.
+owner-resumed-chat = ▶️ <code>{ $id }</code> chati ishlayapti.
+owner-chat-unknown = <code>{ $id }</code> chati kerakli holatda topilmadi.
+ops-alert-stale = ⚠️ { $contest } contest jadvali { $age } soniya eskirgan.
+ops-alert-late = ⚠️ { $count } ta eslatma bir daqiqadan ko'proq kechikdi.
+ops-alert-sends = ⚠️ Oxirgi { $count } yuborishning { $percent }% i muvaffaqiyatsiz.
+ops-alert-source = ⚠️ <code>{ $source }</code> manbasi ketma-ket { $count } marta xato berdi.
+ops-alert-resolved = ✅ Bartaraf etildi: { $rule }

@@ -17,11 +17,14 @@ from aiogram.exceptions import (
 from aiogram.types import InlineKeyboardMarkup, LinkPreviewOptions
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from cpstands import metrics
 from cpstands.bot import keyboards
+from cpstands.bot.telemetry import record_send
 from cpstands.db import repos
 from cpstands.i18n import I18n, Markup
 from cpstands.services import timezone as tzs
 from cpstands.services.contests import PLATFORM
+from cpstands.services.ops import OpsState
 
 log = structlog.get_logger(__name__)
 
@@ -104,11 +107,13 @@ class ReminderSender:
         i18n: I18n,
         *,
         icons: bool = True,
+        ops: OpsState | None = None,
     ) -> None:
         self._bot = bot
         self._sessions = sessions
         self._i18n = i18n
         self._icons = icons
+        self._ops = ops
 
     async def send(self, claimed: repos.ClaimedReminder) -> bool:
         """Deliver one claimed reminder; returns whether Telegram accepted it."""
@@ -119,9 +124,8 @@ class ReminderSender:
             return False
         text, markup = render_reminder(self._i18n, chat, contest, claimed.offset_min)
         if markup is not None and not self._icons:
-            markup = reminder_keyboard(
-                self._i18n.bound(chat.language, chat.tone), claimed.contest_id, icons=False
-            )
+            say = self._i18n.bound(chat.language, chat.tone)
+            markup = reminder_keyboard(say, claimed.contest_id, icons=False)
         try:
             await self._bot.send_message(
                 claimed.chat_id,
@@ -131,22 +135,32 @@ class ReminderSender:
             )
         except TelegramRetryAfter as exc:
             log.warning("reminder_throttled", chat_id=claimed.chat_id, retry_after=exc.retry_after)
+            record_send("reminder", self._ops, error="flood")
             await self._release(claimed)
             return False
         except TelegramForbiddenError:
+            record_send("reminder", self._ops, error="forbidden")
             async with self._sessions() as session, session.begin():
                 await repos.set_status(session, claimed.chat_id, "removed")
             return False
         except TelegramNetworkError:
+            record_send("reminder", self._ops, error="network")
             await self._release(claimed)
             return False
         except TelegramBadRequest as exc:
             log.warning("reminder_rejected", chat_id=claimed.chat_id, reason=str(exc)[:120])
+            record_send("reminder", self._ops, error="bad_request")
             return False
         except TelegramAPIError:
             log.warning("reminder_failed", chat_id=claimed.chat_id, exc_info=True)
+            record_send("reminder", self._ops, error="api")
             await self._release(claimed)
             return False
+        record_send("reminder", self._ops)
+        if claimed.offset_min > 0:
+            metrics.REMINDERS_SENT.inc()
+            late = (datetime.now(UTC) - claimed.due_at).total_seconds()
+            metrics.REMINDER_LATENESS.observe(max(late, 0.0))
         return True
 
     async def _release(self, claimed: repos.ClaimedReminder) -> None:
