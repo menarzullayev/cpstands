@@ -3,7 +3,8 @@
 Live competitive-programming contest tracker for Telegram: friends' standings, reminders, and solve notifications
 for Codeforces and kep.uz, in Uzbek, Russian, and English.
 
-> Status: **pre-alpha, design phase.** Nothing is deployed yet. Bot handle (planned): `@cpstands_bot`.
+> Status: **pre-alpha.** The design is complete (documentation set approved); implementation is at milestone **M0 done**
+> (project skeleton, CI, container image, database baseline). The bot does not respond to users yet. Bot handle: `@cpstandsbot`.
 
 ## Availability and support
 
@@ -34,3 +35,14 @@ independent rewrite; no code is copied from it.
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE).
+
+## Development
+
+```bash
+uv sync                      # Python 3.13 environment
+docker compose up -d db      # PostgreSQL on 127.0.0.1:5440
+uv run pytest                # tests
+uv run cpstands config-check # configured keys, never secret values
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
