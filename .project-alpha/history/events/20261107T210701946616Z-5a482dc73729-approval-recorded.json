@@ -1,0 +1,9 @@
+{
+  "event_id": "5a482dc73729",
+  "event_type": "approval.recorded",
+  "timestamp": "2026-11-07T21:07:01+00:00",
+  "stage": "08-technical-spec",
+  "decision": "PASS",
+  "approver": "Saidakbar Narzullayev",
+  "reason": "Owner approved the specification and 30-day retention"
+}

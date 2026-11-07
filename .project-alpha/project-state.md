@@ -16,7 +16,7 @@ blocked_reason:
 - 05-domain-model: PASSED
 - 06-architecture: PASSED
 - 07-adr: PASSED
-- 08-technical-spec: NOT_STARTED
+- 08-technical-spec: PASSED
 - 09-development-plan: NOT_STARTED
 - 10-operations: NOT_STARTED
 

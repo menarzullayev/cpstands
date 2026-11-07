@@ -1,0 +1,9 @@
+{
+  "event_id": "436518432c95",
+  "event_type": "stage.passed",
+  "timestamp": "2026-11-07T21:07:01+00:00",
+  "stage": "08-technical-spec",
+  "from_status": "REVIEW",
+  "to_status": "PASSED",
+  "reason": "Owner approved the specification and 30-day retention"
+}

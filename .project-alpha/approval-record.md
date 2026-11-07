@@ -68,3 +68,9 @@
 - Approver: Saidakbar Narzullayev
 - Timestamp: 2026-11-07T21:01:59+00:00
 - Reason: Owner approved the ADR set and decided heartbeat and backup policy
+
+## Approval — 08-technical-spec
+- Decision: PASS
+- Approver: Saidakbar Narzullayev
+- Timestamp: 2026-11-07T21:07:01+00:00
+- Reason: Owner approved the specification and 30-day retention

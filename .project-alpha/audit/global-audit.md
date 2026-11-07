@@ -1,7 +1,7 @@
 # Global Audit
 
 - Framework version: 1.0.0
-- Executed at: 2026-11-07T21:02:20+00:00
+- Executed at: 2026-11-07T21:07:02+00:00
 - Status: BLOCKED
 - Recovery audit: PASS
 - Schema audit: PASS
@@ -9,9 +9,6 @@
 - Semantic audit: PASS
 
 ## Findings
-- BLOCK: 08-technical-spec: status is NOT_STARTED, expected PASSED
-- BLOCK: 08-technical-spec: OUTPUT.md is unchanged from TEMPLATE.md: docs\08-technical-spec\OUTPUT.md
-- BLOCK: missing handoff: .project-alpha\handoffs\08-technical-spec__to__09-development-plan.md
 - BLOCK: 09-development-plan: status is NOT_STARTED, expected PASSED
 - BLOCK: 09-development-plan: OUTPUT.md is unchanged from TEMPLATE.md: docs\09-development-plan\OUTPUT.md
 - BLOCK: missing handoff: .project-alpha\handoffs\09-development-plan__to__10-operations.md
@@ -25,6 +22,7 @@
 - BLOCK: integrity: decision DEC-006 is approved but has no Approval ID
 - BLOCK: integrity: decision DEC-007 is approved but has no Approval ID
 - BLOCK: integrity: decision DEC-008 is approved but has no Approval ID
+- BLOCK: integrity: decision DEC-009 is approved but has no Approval ID
 - BLOCK: integrity: approval APR-001 missing Decision
 - BLOCK: integrity: approval APR-002 missing Decision
 - BLOCK: integrity: approval APR-003 missing Decision
@@ -33,6 +31,7 @@
 - BLOCK: integrity: approval APR-006 missing Decision
 - BLOCK: integrity: approval APR-007 missing Decision
 - BLOCK: integrity: approval APR-008 missing Decision
+- BLOCK: integrity: approval APR-009 missing Decision
 
 ## Gate
 Resolve all findings and rerun the global audit.
