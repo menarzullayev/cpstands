@@ -101,10 +101,15 @@ async def _settings_view(deps: Deps, chat: repos.ChatRecord) -> tuple[str, Inlin
         zone=chat.time_zone or say("settings-timezone-unset"),
         mood=chat.tone,
         reminders="on" if chat.reminder_offsets else "off",
+        alerts="on" if chat.alerts_enabled else "off",
         count=count,
     )
     markup = keyboards.settings_keyboard(
-        say, chat.tone, icons=deps.icons, reminders_on=bool(chat.reminder_offsets)
+        say,
+        chat.tone,
+        icons=deps.icons,
+        reminders_on=bool(chat.reminder_offsets),
+        alerts_on=chat.alerts_enabled,
     )
     return text, markup
 
@@ -293,6 +298,22 @@ async def on_reminders_chosen(callback: CallbackQuery, deps: Deps) -> None:
         await repos.set_reminder_offsets(session, chat.chat_id, offsets)
     if offsets:
         await deps.contests.plan()
+    text, markup = await _settings_view(deps, await _refresh(deps, chat.chat_id))
+    await message.edit_text(text, reply_markup=markup)
+    await callback.answer()
+
+
+async def on_alerts_chosen(callback: CallbackQuery, deps: Deps) -> None:
+    context = await _tap_context(deps, callback, admin=True)
+    if context is None:
+        return
+    message, chat = context
+    value = (callback.data or "")[len(keyboards.ALERTS_PREFIX) :]
+    if value not in {"on", "off"}:
+        await callback.answer(_say(deps, chat)("button-expired"), show_alert=True)
+        return
+    async with deps.sessions() as session, session.begin():
+        await repos.set_alerts_enabled(session, chat.chat_id, value == "on")
     text, markup = await _settings_view(deps, await _refresh(deps, chat.chat_id))
     await message.edit_text(text, reply_markup=markup)
     await callback.answer()
@@ -599,6 +620,7 @@ def create_router() -> Router:
     router.callback_query.register(
         on_reminders_chosen, F.data.startswith(keyboards.REMINDERS_PREFIX)
     )
+    router.callback_query.register(on_alerts_chosen, F.data.startswith(keyboards.ALERTS_PREFIX))
     router.message.register(on_upcoming, Command("upcoming"))
     router.message.register(on_timezone, Command("timezone"))
     router.message.register(on_settings, Command("settings"))

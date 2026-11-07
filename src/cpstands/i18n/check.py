@@ -12,6 +12,15 @@ from fluent.syntax.visitor import Visitor
 from cpstands.i18n import FALLBACK_LANGUAGE, LOCALES_DIR, SUPPORTED_LANGUAGES
 
 # CLDR plural categories that must be written out for each language.
+# Alert texts name real people; they may tease the situation but never the person.
+BANNED_WORDS: dict[str, re.Pattern[str]] = {
+    "en": re.compile(
+        r"\b(?:loser|idiot|stupid|dumb|noob|pathetic|trash|garbage|useless|moron|failure)s?\b"
+    ),
+    "ru": re.compile(r"\b(?:лох|лузер|идиот|тупой|тупица|дурак|дебил|ничтожество|неудачник)\w*\b"),
+    "uz": re.compile(r"\b(?:ahmoq|tentak|nodon|yaramas|laqma|yutqazgan)\w*\b"),
+}
+
 PLURAL_CATEGORIES: dict[str, frozenset[str]] = {
     "uz": frozenset({"one", "other"}),
     "en": frozenset({"one", "other"}),
@@ -56,10 +65,12 @@ class _Collector(Visitor):
         self.variables: set[str] = set()
         self.plural_sets: list[frozenset[str]] = []
         self.html_issues: list[str] = []
+        self.texts: list[str] = []
 
     def visit_Pattern(self, node: ast.Pattern) -> None:  # noqa: N802
         text = "".join(e.value for e in node.elements if isinstance(e, ast.TextElement))
         self.html_issues.extend(html_problems(text))
+        self.texts.append(text)
         self.generic_visit(node)
 
     def visit_VariableReference(self, node: ast.VariableReference) -> None:  # noqa: N802
@@ -129,6 +140,14 @@ def check_catalogs(locales_dir: Path = LOCALES_DIR) -> list[str]:
     for lang, catalog in catalogs.items():
         for key, collector in sorted(catalog.messages.items()):
             problems.extend(f"{lang}: message '{key}': {issue}" for issue in collector.html_issues)
+            if key.startswith("alert-"):
+                for text in collector.texts:
+                    banned = BANNED_WORDS[lang].search(text.lower())
+                    if banned:
+                        problems.append(
+                            f"{lang}: message '{key}' uses the word '{banned.group(0)}', "
+                            "which could insult the person it names"
+                        )
             if key.endswith("-neutral"):
                 base = catalog.messages.get(key.removesuffix("-neutral"))
                 if base is None:

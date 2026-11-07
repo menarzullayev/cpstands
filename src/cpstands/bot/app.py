@@ -10,6 +10,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.types import ErrorEvent
 
+from cpstands.bot.alerts import AlertNotifier, AlertWatcher
 from cpstands.bot.deps import Deps
 from cpstands.bot.handlers import create_router
 from cpstands.bot.live import LiveUpdater
@@ -20,6 +21,7 @@ from cpstands.config import Settings
 from cpstands.db.engine import create_engine, create_session_factory
 from cpstands.i18n import I18n
 from cpstands.services.admin import AdminChecker
+from cpstands.services.alerts import AlertService
 from cpstands.services.contests import ContestService
 from cpstands.services.standings import StandingsService
 from cpstands.services.watchlist import WatchlistService
@@ -96,6 +98,12 @@ async def run_bot(settings: Settings) -> None:
     sender = ReminderSender(bot, sessions, deps.i18n, icons=deps.icons)
     scheduler = Scheduler(sessions, contests, sender)
     scheduler_task = asyncio.create_task(scheduler.run(), name="scheduler")
+    watcher = AlertWatcher(sessions, deps.standings, AlertService(sessions))
+    notifier = AlertNotifier(bot, sessions, deps.i18n)
+    alert_tasks = [
+        asyncio.create_task(watcher.run(), name="alert-watcher"),
+        asyncio.create_task(notifier.run(), name="alert-notifier"),
+    ]
     try:
         me = await bot.get_me()
         log.info("bot_started", username=me.username)
@@ -103,7 +111,9 @@ async def run_bot(settings: Settings) -> None:
     finally:
         live_task.cancel()
         scheduler_task.cancel()
-        await asyncio.gather(live_task, scheduler_task, return_exceptions=True)
+        for task in alert_tasks:
+            task.cancel()
+        await asyncio.gather(live_task, scheduler_task, *alert_tasks, return_exceptions=True)
         await bot.session.close()
         await client.aclose()
         await engine.dispose()

@@ -356,7 +356,7 @@ def test_tg_time_uses_the_reader_zone_for_the_fallback_text() -> None:
 
 def test_reminder_text_variants() -> None:
     i18n = I18n()
-    chat = repos.ChatRecord(1, "private", "en", "UTC", "playful", "active", (1440, 60, 10))
+    chat = repos.ChatRecord(1, "private", "en", "UTC", "playful", "active", (1440, 60, 10), True)
     row = repos.ContestRow(7, "A <b>&</b> B", "BEFORE", START, 7200)
     day, _ = rem.render_reminder(i18n, chat, row, 1440)
     assert "starts in 24 hours" in day

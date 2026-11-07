@@ -15,13 +15,17 @@ from aiogram import Bot
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
+from cpstands.bot.alerts import AlertNotifier, AlertWatcher
 from cpstands.bot.app import ALLOWED_UPDATES, build_dispatcher, make_admin_checker
 from cpstands.bot.deps import Deps
 from cpstands.bot.live import LiveUpdater
 from cpstands.config import get_settings
+from cpstands.db import repos
 from cpstands.db.engine import create_engine, create_session_factory
 from cpstands.domain.contest import ContestPhase, FullStandings, ProblemStatus, StandingRow
 from cpstands.i18n import I18n
+from cpstands.services.alerts import AlertService
+from cpstands.services.contests import ContestService
 from cpstands.services.standings import StandingsService
 from cpstands.services.watchlist import WatchlistService
 from cpstands.sources.codeforces.client import ClientConfig, CodeforcesClient
@@ -30,7 +34,7 @@ from cpstands.sources.codeforces.source import CodeforcesSource
 CONTEST = 1970
 
 
-def frame(full: FullStandings, upto_s: int, *, final: bool) -> FullStandings:
+def frame(full: FullStandings, upto_s: int, *, final: bool, t0: datetime) -> FullStandings:
     """The table as it would have looked ``upto_s`` seconds into the contest."""
     rows: list[StandingRow] = []
     for row in full.rows:
@@ -59,7 +63,7 @@ def frame(full: FullStandings, upto_s: int, *, final: bool) -> FullStandings:
     phase = ContestPhase.FINISHED if final else ContestPhase.CODING
     return replace(
         full,
-        contest=replace(full.contest, phase=phase),
+        contest=replace(full.contest, phase=phase, starts_at=t0),
         rows=ranked,
         fetched_at=datetime.now(UTC),
         expires_at=datetime.now(UTC) + timedelta(seconds=3),
@@ -73,6 +77,7 @@ class ReplaySource(CodeforcesSource):
         self._frames = frames
         self._step_s = step_s
         self._n = 0
+        self.t0 = datetime.now(UTC)
 
     async def fetch_full_standings(self, contest_id: int) -> FullStandings:
         if self._full is None:
@@ -80,7 +85,7 @@ class ReplaySource(CodeforcesSource):
         self._n += 1
         final = self._n > self._frames
         print(f"frame {self._n}/{self._frames}{' (final)' if final else ''}", flush=True)
-        return frame(self._full, self._n * self._step_s, final=final)
+        return frame(self._full, self._n * self._step_s, final=final, t0=self.t0)
 
 
 async def main(frames: int, period: int) -> None:
@@ -101,18 +106,31 @@ async def main(frames: int, period: int) -> None:
         watchlist=WatchlistService(sessions, source),
         admin=make_admin_checker(bot),
         standings=StandingsService(source),
+        contests=ContestService(sessions, source),
         icons=settings.button_icons,
     )
     updater = LiveUpdater(bot, sessions, deps.standings, i18n, icons=settings.button_icons)
-    task = asyncio.create_task(updater.run())
+    async with sessions() as session, session.begin():
+        await repos.upsert_contest(
+            session, "codeforces", CONTEST, "Helvetic Coding Contest 2024 (replay)", "CODING",
+            source.t0, 18000,
+        )  # fmt: skip
+    watcher = AlertWatcher(sessions, deps.standings, AlertService(sessions))
+    notifier = AlertNotifier(bot, sessions, i18n)
+    tasks = [
+        asyncio.create_task(updater.run()),
+        asyncio.create_task(watcher.run()),
+        asyncio.create_task(notifier.run()),
+    ]
     print(
         f"ready: send /standings {CONTEST} to the bot (frame step {step_s // 60} min)", flush=True
     )
     try:
         await build_dispatcher(deps).start_polling(bot, allowed_updates=ALLOWED_UPDATES)
     finally:
-        task.cancel()
-        await asyncio.gather(task, return_exceptions=True)
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
         await bot.session.close()
         await client.aclose()
         await engine.dispose()

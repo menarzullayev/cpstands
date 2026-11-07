@@ -34,6 +34,12 @@ SAMPLE_ARGS: dict[str, str | int] = {
     "minutes": 10,
     "start": "21.11 19:35",
     "duration": "2:00",
+    "alerts": "on",
+    "v": 1,
+    "handle": "tourist",
+    "problem": "A1",
+    "contest": "Round",
+    "title": "Title",
     "name": "Round",
 }
 
@@ -218,7 +224,14 @@ def test_custom_emoji_wraps_known_emoji_and_leaves_others() -> None:
     assert custom.endswith("Give me a moment.")
     # Emoji without a custom twin are left exactly as they are.
     assert "⚙️" in I18n(custom_emoji=True).t(
-        "en", "settings-summary", language="x", zone="y", mood="playful", reminders="on", count=1
+        "en",
+        "settings-summary",
+        language="x",
+        zone="y",
+        mood="playful",
+        reminders="on",
+        alerts="on",
+        count=1,
     )
 
 
@@ -252,3 +265,34 @@ def test_checker_catches_neutral_variant_problems(broken_locales: Path) -> None:
     _edit(broken_locales, "en", "not-admin = ", "not-admin-gone = ")
     _edit(broken_locales, "en", "coming-soon-neutral", "no-base-neutral")
     assert any("'no-base-neutral' has no base message" in p for p in check_catalogs(broken_locales))
+
+
+@pytest.mark.parametrize(
+    ("lang", "old", "new", "word"),
+    [
+        ("en", "It happens to the best!", "What a loser!", "loser"),
+        ("en", "Chin up!", "Total Idiots.", "idiot"),
+        ("ru", "Бывает и у лучших!", "Ты лох!", "лох"),
+        ("ru", "Держимся!", "Неудачник!", "неудачник"),
+        ("uz", "Eng yaxshilarda ham bo'ladi!", "Ahmoq!", "ahmoq"),
+    ],
+)
+def test_content_guard_catches_insulting_alert_texts(
+    broken_locales: Path, lang: str, old: str, new: str, word: str
+) -> None:
+    _edit(broken_locales, lang, old, new)
+    problems = check_catalogs(broken_locales)
+    assert any("alert-systest-fail" in p and word in p.lower() for p in problems)
+
+
+def test_content_guard_ignores_harmless_words_that_contain_a_banned_stem() -> None:
+    from cpstands.i18n.check import BANNED_WORDS
+
+    assert not BANNED_WORDS["ru"].search("плохой день, но не страшно")  # contains "лох" inside
+    assert not BANNED_WORDS["en"].search("a failure-free round".replace("failure", "fine"))
+    assert BANNED_WORDS["en"].search("pure trash")
+
+
+def test_the_guard_only_applies_to_alert_texts(broken_locales: Path) -> None:
+    _edit(broken_locales, "en", "not-admin = 🔒 Only", "not-admin = 🔒 Stupid, only")
+    assert not any("stupid" in p for p in check_catalogs(broken_locales))

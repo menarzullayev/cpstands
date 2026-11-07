@@ -62,6 +62,10 @@ settings-summary =
         [off] o'chiq
        *[on] yoqilgan
     }</b>
+    🔥 Alertlar: <b>{ $alerts ->
+        [off] o'chiq
+       *[on] yoqilgan
+    }</b>
     👥 Kuzatilmoqda: <b>{ $count ->
         [one] { $count } ta handle
        *[other] { $count } ta handle
@@ -178,3 +182,25 @@ upcoming-line =
     🕐 { $start } · ⏱ { $duration }
 upcoming-empty = Keyingi ikki hafta uchun contest rejalashtirilmagan.
 upcoming-source-error = ⚠️ Codeforces hozir javob bermayapti. Bir daqiqadan keyin qayta urinib ko'ring.
+
+alert-contest = 🏆 <b>{ $contest }</b>
+alert-solve = { $v ->
+        [0] 🔥 { $handle } { $problem } masalasini yechdi · { $title } · ⏱ { $time }
+        [1] ⚡ { $handle } { $problem } ni oldi · { $title } · ⏱ { $time }
+       *[2] 🎯 { $handle } { $problem } ni uddaladi · { $title } · ⏱ { $time }
+    }
+alert-solve-neutral = { $v ->
+       *[other] { $handle } { $problem } masalasini yechdi ({ $title }), { $time }.
+    }
+alert-systest-fail = { $v ->
+        [0] 💥 { $handle } ning { $problem } yechimi system testdan o'tmadi. Eng yaxshilarda ham bo'ladi! { $title } { $time }
+        [1] 🧪 System testlar { $handle } ning { $problem } yechimini qabul qilmadi. Keyingisida omad! { $title } { $time }
+       *[2] 😬 { $handle } ning { $problem } yechimi system testda yiqildi. Ruhni tushirmang! { $title } { $time }
+    }
+alert-systest-fail-neutral = { $v ->
+       *[other] System test o'tilmadi: { $handle }, { $problem } masalasi ({ $title }, { $time }).
+    }
+button-alerts = { $state ->
+        [off] Alertlar: o'chiq
+       *[on] Alertlar: yoqilgan
+    }

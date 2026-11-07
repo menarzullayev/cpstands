@@ -62,6 +62,10 @@ settings-summary =
         [off] выключены
        *[on] включены
     }</b>
+    🔥 Оповещения: <b>{ $alerts ->
+        [off] выключены
+       *[on] включены
+    }</b>
     👥 Отслеживается: <b>{ $count ->
         [one] { $count } хендл
         [few] { $count } хендла
@@ -184,3 +188,25 @@ upcoming-line =
     🕐 { $start } · ⏱ { $duration }
 upcoming-empty = На ближайшие две недели контестов не запланировано.
 upcoming-source-error = ⚠️ Codeforces сейчас не отвечает. Попробуйте через минуту.
+
+alert-contest = 🏆 <b>{ $contest }</b>
+alert-solve = { $v ->
+        [0] 🔥 { $handle }: { $problem } решена! · { $title } · ⏱ { $time }
+        [1] ⚡ Есть! { $handle } закрывает { $problem } · { $title } · ⏱ { $time }
+       *[2] 🎯 { $handle } забирает { $problem } · { $title } · ⏱ { $time }
+    }
+alert-solve-neutral = { $v ->
+       *[other] { $handle }: задача { $problem } решена ({ $title }), { $time }.
+    }
+alert-systest-fail = { $v ->
+        [0] 💥 { $problem } у { $handle } не прошла системные тесты. Бывает и у лучших! { $title } { $time }
+        [1] 🧪 Системные тесты оказались строже: { $problem } у { $handle } не засчитана. В следующий раз повезёт! { $title } { $time }
+       *[2] 😬 { $problem } у { $handle } споткнулась о системные тесты. Держимся! { $title } { $time }
+    }
+alert-systest-fail-neutral = { $v ->
+       *[other] Системные тесты не пройдены: { $handle }, задача { $problem } ({ $title }, { $time }).
+    }
+button-alerts = { $state ->
+        [off] Оповещения: выкл
+       *[on] Оповещения: вкл
+    }

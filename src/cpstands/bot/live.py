@@ -42,6 +42,7 @@ MAX_FETCH_DELAY_S = 120.0
 ERROR_BACKOFF_START_S = 30.0
 ERROR_BACKOFF_MAX_S = 300.0
 MAX_LIVE_PER_CHAT = 3
+SHARE_S = 20.0  # a copy fetched this recently is shared with the alert watcher
 
 _STATUS_RE = re.compile(r"<p>.*?</p>", re.DOTALL)
 
@@ -108,7 +109,7 @@ class LiveUpdater:
 
     async def _update_contest(self, contest_id: int) -> None:
         try:
-            standings = await self._standings.refresh(contest_id)
+            standings = await self._standings.get_shared(contest_id, max_age_s=SHARE_S)
         except PermanentSourceError:
             log.warning("live_contest_gone", contest_id=contest_id)
             await self._freeze_all(contest_id)

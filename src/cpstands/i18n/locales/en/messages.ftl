@@ -62,6 +62,10 @@ settings-summary =
         [off] off
        *[on] on
     }</b>
+    🔥 Alerts: <b>{ $alerts ->
+        [off] off
+       *[on] on
+    }</b>
     👥 Following: <b>{ $count ->
         [one] { $count } handle
        *[other] { $count } handles
@@ -178,3 +182,25 @@ upcoming-line =
     🕐 { $start } · ⏱ { $duration }
 upcoming-empty = No contests are scheduled for the next two weeks.
 upcoming-source-error = ⚠️ Codeforces does not answer right now. Try again in a minute.
+
+alert-contest = 🏆 <b>{ $contest }</b>
+alert-solve = { $v ->
+        [0] 🔥 { $handle } solved { $problem } · { $title } · ⏱ { $time }
+        [1] ⚡ { $handle } cracked { $problem } · { $title } · ⏱ { $time }
+       *[2] 🎯 { $handle } got { $problem } · { $title } · ⏱ { $time }
+    }
+alert-solve-neutral = { $v ->
+       *[other] { $handle } solved { $problem } ({ $title }) at { $time }.
+    }
+alert-systest-fail = { $v ->
+        [0] 💥 { $handle }'s { $problem } did not survive the system tests. It happens to the best! { $title } { $time }
+        [1] 🧪 System tests had other plans for { $handle }'s { $problem }. Better luck next time! { $title } { $time }
+       *[2] 😬 { $handle }'s { $problem } fell at the final hurdle: the system tests. Chin up! { $title } { $time }
+    }
+alert-systest-fail-neutral = { $v ->
+       *[other] System tests failed: { $handle }, problem { $problem } ({ $title }, { $time }).
+    }
+button-alerts = { $state ->
+        [off] Alerts: off
+       *[on] Alerts: on
+    }

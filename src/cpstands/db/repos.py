@@ -10,7 +10,15 @@ from sqlalchemy import RowMapping, delete, func, select, text, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from cpstands.db.schema import chats, contests, standings_messages, watched_handles
+from cpstands.db.schema import (
+    chats,
+    contests,
+    deliveries,
+    participant_results,
+    solve_events,
+    standings_messages,
+    watched_handles,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -22,6 +30,7 @@ class ChatRecord:
     tone: str
     status: str
     reminder_offsets: tuple[int, ...]
+    alerts_enabled: bool
 
 
 _CHAT_COLUMNS = (
@@ -32,6 +41,7 @@ _CHAT_COLUMNS = (
     chats.c.tone,
     chats.c.status,
     chats.c.reminder_offsets,
+    chats.c.alerts_enabled,
 )
 
 
@@ -44,6 +54,7 @@ def _record(row: RowMapping) -> ChatRecord:
         tone=str(row["tone"]),
         status=str(row["status"]),
         reminder_offsets=tuple(int(v) for v in row["reminder_offsets"] or ()),
+        alerts_enabled=bool(row["alerts_enabled"]),
     )
 
 
@@ -621,3 +632,255 @@ async def release_reminder(session: AsyncSession, platform: str, claimed: Claime
             "off": claimed.offset_min,
         },
     )
+
+
+# --- alerts: snapshots, events, outbox --------------------------------------------------
+
+type Snapshot = list[tuple[str, int, int | None]]  # per problem: (status, rejected, time_s)
+
+
+async def load_snapshots(
+    session: AsyncSession, platform: str, contest_id: int, handle_keys: Sequence[str]
+) -> dict[str, Snapshot]:
+    """The last stored problem results of the given handles in one contest."""
+    if not handle_keys:
+        return {}
+    result = await session.execute(
+        select(participant_results.c.handle_key, participant_results.c.problem_results).where(
+            participant_results.c.platform == platform,
+            participant_results.c.contest_id == contest_id,
+            participant_results.c.handle_key.in_(list(handle_keys)),
+        )
+    )
+    return {
+        str(key): [(str(p[0]), int(p[1]), p[2] if p[2] is None else int(p[2])) for p in problems]
+        for key, problems in result.all()
+    }
+
+
+async def contest_has_snapshots(session: AsyncSession, platform: str, contest_id: int) -> bool:
+    result = await session.execute(
+        select(func.count())
+        .select_from(participant_results)
+        .where(
+            participant_results.c.platform == platform,
+            participant_results.c.contest_id == contest_id,
+        )
+    )
+    return int(result.scalar_one()) > 0
+
+
+async def save_snapshot(
+    session: AsyncSession,
+    platform: str,
+    contest_id: int,
+    handle_key: str,
+    *,
+    rank: int,
+    points: float,
+    penalty: int,
+    official: bool,
+    problems: Snapshot,
+) -> None:
+    statement = insert(participant_results).values(
+        platform=platform,
+        contest_id=contest_id,
+        handle_key=handle_key,
+        rank=rank,
+        points=points,
+        penalty=penalty,
+        problem_results=[list(p) for p in problems],
+        official=official,
+    )
+    await session.execute(
+        statement.on_conflict_do_update(
+            index_elements=["platform", "contest_id", "handle_key"],
+            set_={
+                "rank": rank,
+                "points": points,
+                "penalty": penalty,
+                "problem_results": [list(p) for p in problems],
+                "official": official,
+                "updated_at": func.now(),
+            },
+        )
+    )
+
+
+async def insert_solve_event(
+    session: AsyncSession,
+    *,
+    event_key: str,
+    platform: str,
+    contest_id: int,
+    handle_key: str,
+    problem: str,
+    kind: str,
+    occurred_at: datetime,
+) -> bool:
+    """Record a fact once; returns False when it was already known (a replayed poll)."""
+    result = await session.execute(
+        insert(solve_events)
+        .values(
+            event_key=event_key,
+            platform=platform,
+            contest_id=contest_id,
+            handle_key=handle_key,
+            problem=problem,
+            kind=kind,
+            occurred_at=occurred_at,
+        )
+        .on_conflict_do_nothing()
+        .returning(solve_events.c.event_key)
+    )
+    return result.first() is not None
+
+
+async def watchers_of(
+    session: AsyncSession, platform: str, handle_keys: Sequence[str]
+) -> dict[str, list[int]]:
+    """Active chats with alerts on that follow each handle."""
+    if not handle_keys:
+        return {}
+    result = await session.execute(
+        select(watched_handles.c.handle_key, watched_handles.c.chat_id)
+        .join(chats, chats.c.chat_id == watched_handles.c.chat_id)
+        .where(
+            watched_handles.c.platform == platform,
+            watched_handles.c.handle_key.in_(list(handle_keys)),
+            chats.c.status == "active",
+            chats.c.alerts_enabled.is_(True),
+        )
+    )
+    found: dict[str, list[int]] = {}
+    for key, chat_id in result.all():
+        found.setdefault(str(key), []).append(int(chat_id))
+    return found
+
+
+async def enqueue_alert(
+    session: AsyncSession,
+    chat_id: int,
+    event_key: str,
+    payload: dict[str, object],
+    *,
+    not_before: datetime,
+) -> bool:
+    """Put an alert in the outbox; a chat is told about an event at most once."""
+    result = await session.execute(
+        insert(deliveries)
+        .values(
+            chat_id=chat_id,
+            kind="alert",
+            event_key=event_key,
+            payload=payload,
+            state="pending",
+            not_before=not_before,
+        )
+        .on_conflict_do_nothing(index_elements=["chat_id", "event_key"])
+        .returning(deliveries.c.id)
+    )
+    return result.first() is not None
+
+
+@dataclass(frozen=True, slots=True)
+class ClaimedAlert:
+    id: int
+    chat_id: int
+    event_key: str
+    payload: dict[str, object]
+    attempts: int
+
+
+async def claim_due_alerts(
+    session: AsyncSession, *, now: datetime, limit: int
+) -> list[ClaimedAlert]:
+    """Take due alerts and mark them sent *before* sending: at most once per chat and event."""
+    result = await session.execute(
+        text(
+            """
+            WITH due AS (
+                SELECT id FROM deliveries
+                WHERE kind = 'alert' AND state = 'pending' AND not_before <= CAST(:now AS timestamptz)
+                ORDER BY not_before, id
+                LIMIT :limit
+                FOR UPDATE SKIP LOCKED
+            )
+            UPDATE deliveries d
+            SET state = 'sent', attempts = d.attempts + 1
+            FROM due
+            WHERE d.id = due.id
+            RETURNING d.id, d.chat_id, d.event_key, d.payload, d.attempts
+            """
+        ),
+        {"now": now, "limit": limit},
+    )
+    return [
+        ClaimedAlert(int(r[0]), int(r[1]), str(r[2]), dict(r[3]), int(r[4])) for r in result.all()
+    ]
+
+
+async def release_alerts(
+    session: AsyncSession, alerts: Sequence[ClaimedAlert], *, not_before: datetime, error: str
+) -> None:
+    """Put alerts back after a send that surely did not happen."""
+    await session.execute(
+        update(deliveries)
+        .where(deliveries.c.id.in_([a.id for a in alerts]), deliveries.c.state == "sent")
+        .values(state="pending", not_before=not_before, last_error=error[:200])
+    )
+
+
+async def fail_alerts(session: AsyncSession, alerts: Sequence[ClaimedAlert], *, error: str) -> None:
+    await session.execute(
+        update(deliveries)
+        .where(deliveries.c.id.in_([a.id for a in alerts]))
+        .values(state="failed", last_error=error[:200])
+    )
+
+
+async def active_contests_to_watch(session: AsyncSession, platform: str) -> list[int]:
+    """Running contests that at least one chat with alerts on is waiting for."""
+    result = await session.execute(
+        text(
+            """
+            SELECT c.external_id FROM contests c
+            WHERE c.platform = :platform
+              AND c.phase IN ('CODING', 'PENDING_SYSTEM_TEST', 'SYSTEM_TEST')
+              AND EXISTS (
+                SELECT 1 FROM watched_handles w JOIN chats ch ON ch.chat_id = w.chat_id
+                WHERE w.platform = c.platform AND ch.status = 'active' AND ch.alerts_enabled
+              )
+            ORDER BY c.external_id
+            """
+        ),
+        {"platform": platform},
+    )
+    return [int(row[0]) for row in result.all()]
+
+
+async def watched_keys_of_active_chats(session: AsyncSession, platform: str) -> set[str]:
+    result = await session.execute(
+        select(watched_handles.c.handle_key)
+        .join(chats, chats.c.chat_id == watched_handles.c.chat_id)
+        .where(
+            watched_handles.c.platform == platform,
+            chats.c.status == "active",
+            chats.c.alerts_enabled.is_(True),
+        )
+        .distinct()
+    )
+    return {str(row[0]) for row in result.all()}
+
+
+async def set_alerts_enabled(session: AsyncSession, chat_id: int, enabled: bool) -> bool:
+    ok = await _update_chat(session, chat_id, alerts_enabled=enabled)
+    if ok and not enabled:
+        await session.execute(
+            text(
+                "UPDATE deliveries SET state = 'failed', last_error = 'alerts switched off' "
+                "WHERE chat_id = :chat AND kind = 'alert' AND state = 'pending'"
+            ),
+            {"chat": chat_id},
+        )
+    return ok

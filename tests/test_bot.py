@@ -653,3 +653,28 @@ async def test_members_cannot_switch_reminders(harness: Harness) -> None:
     chat = await harness.chat(GROUP)
     assert chat is not None
     assert chat.reminder_offsets == (1440, 60, 10)
+
+
+async def test_alerts_can_be_switched_off_and_on_by_an_admin(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/settings")
+    await harness.tap(PRIVATE, PRIVATE, "set:alr:off")
+    chat = await harness.chat(PRIVATE)
+    assert chat is not None
+    assert chat.alerts_enabled is False
+    assert "Alertlar: <b>o'chiq</b>" in harness.session.sent("EditMessageText")[-1]["text"]
+    await harness.tap(PRIVATE, PRIVATE, "set:alr:on")
+    chat = await harness.chat(PRIVATE)
+    assert chat is not None
+    assert chat.alerts_enabled is True
+    before = len(harness.session.alerts())
+    await harness.tap(PRIVATE, PRIVATE, "set:alr:maybe")
+    assert len(harness.session.alerts()) == before + 1
+
+
+async def test_members_cannot_switch_alerts(harness: Harness) -> None:
+    await harness.say(GROUP, ADMIN, "/settings")
+    await harness.tap(GROUP, MEMBER, "set:alr:off")
+    assert harness.session.alerts()[-1]["text"] == I18N.t(None, "not-admin")
+    chat = await harness.chat(GROUP)
+    assert chat is not None
+    assert chat.alerts_enabled is True

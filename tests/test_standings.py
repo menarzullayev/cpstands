@@ -87,7 +87,7 @@ def test_names_are_clipped_and_escaped() -> None:
 def test_out_of_range_pages_are_clamped_and_empty_tables_say_so() -> None:
     standings = make_standings(rows=30, problems=3)
     last = view.render(standings, 99, 99, SAY, time_zone=None)
-    assert "Rows 26–30 of 30" in last  # noqa: RUF001
+    assert "Rows 26–30 of 30" in last
     empty = view.render(make_standings(rows=0, problems=3), 0, 0, SAY, time_zone=None)
     assert "<table>" not in empty
     assert "No rows yet." in empty

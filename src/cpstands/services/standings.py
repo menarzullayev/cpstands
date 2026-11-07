@@ -52,6 +52,15 @@ class StandingsService:
                     return standings
             return await self._fetch_and_store(contest_id, now)
 
+    async def get_shared(self, contest_id: int, *, max_age_s: float) -> FullStandings:
+        """A copy at most ``max_age_s`` old, so two consumers on one contest share one fetch."""
+        async with self._lock(contest_id):
+            now = self._clock()
+            cached = self._cache.get(contest_id)
+            if cached is not None and now - cached[1] <= max_age_s:
+                return cached[0]
+            return await self._fetch_and_store(contest_id, now)
+
     async def refresh(self, contest_id: int) -> FullStandings:
         """Always fetch; the live updater schedules its own fetches."""
         async with self._lock(contest_id):
