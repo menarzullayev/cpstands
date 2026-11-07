@@ -1,0 +1,9 @@
+{
+  "event_id": "2c50e365730e",
+  "event_type": "stage.passed",
+  "timestamp": "2026-11-07T20:35:08+00:00",
+  "stage": "idea-selection",
+  "from_status": "REVIEW",
+  "to_status": "PASSED",
+  "reason": "Owner approved idea 1 after review of evidence and scoring"
+}

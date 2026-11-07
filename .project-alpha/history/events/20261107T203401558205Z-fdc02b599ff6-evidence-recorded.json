@@ -1,0 +1,14 @@
+{
+  "event_id": "fdc02b599ff6",
+  "event_type": "evidence.recorded",
+  "timestamp": "2026-11-07T20:34:01+00:00",
+  "path": "docs\\evidence\\EVID-012.md",
+  "stage": "03-market-research",
+  "claim": "The Codeforces public API allows about one request per two seconds; signed requests use apiKey, time and a SHA-512 apiSig.",
+  "source": "https://codeforces.com/apiHelp (via web archive copy, 2026-11-08)",
+  "date": "2026-11-08",
+  "confidence": "medium",
+  "type": "FACT",
+  "risk": "MEDIUM",
+  "evidence_id": "EVID-012"
+}

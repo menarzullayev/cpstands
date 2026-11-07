@@ -1,0 +1,14 @@
+{
+  "event_id": "fdd56f8eaeb4",
+  "event_type": "evidence.recorded",
+  "timestamp": "2026-11-07T20:34:01+00:00",
+  "path": "docs\\evidence\\EVID-010.md",
+  "stage": "03-market-research",
+  "claim": "kep.uz serves unauthenticated JSON endpoints for contests, standings (contestants), ratings and rating changes, but publishes no API documentation, rate limits or terms.",
+  "source": "https://kep.uz/api/ (measured by research agent, 2026-11-08)",
+  "date": "2026-11-08",
+  "confidence": "medium",
+  "type": "FACT",
+  "risk": "MEDIUM",
+  "evidence_id": "EVID-010"
+}

@@ -1,0 +1,14 @@
+{
+  "event_id": "28f8b0987273",
+  "event_type": "evidence.recorded",
+  "timestamp": "2026-11-07T20:34:01+00:00",
+  "path": "docs\\evidence\\EVID-013.md",
+  "stage": "03-market-research",
+  "claim": "Existing alternatives include the TLE Discord bot (about 340 stars, MIT), ContestMate (Telegram, serverless) and clist.by based tools (API key required, 10 requests per minute); none targets live friend standings in Telegram groups with uz/ru/en.",
+  "source": "GitHub, clist.by documentation, research agent summary, 2026-11-08",
+  "date": "2026-11-08",
+  "confidence": "medium",
+  "type": "FACT",
+  "risk": "LOW",
+  "evidence_id": "EVID-013"
+}

@@ -1,0 +1,14 @@
+{
+  "event_id": "b793f8a06059",
+  "event_type": "evidence.recorded",
+  "timestamp": "2026-11-07T20:34:01+00:00",
+  "path": "docs\\evidence\\EVID-008.md",
+  "stage": "03-market-research",
+  "claim": "Telegram Bot API 10.3 (2026-08-24) offers date_time entities, rich messages with tables, ephemeral messages, message drafts, guest mode and button styles that the incumbent bot does not use.",
+  "source": "https://core.telegram.org/bots/api-changelog (read 2026-11-08)",
+  "date": "2026-11-08",
+  "confidence": "high",
+  "type": "FACT",
+  "risk": "LOW",
+  "evidence_id": "EVID-008"
+}

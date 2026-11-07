@@ -1,0 +1,14 @@
+{
+  "event_id": "febd0ac02c1b",
+  "event_type": "evidence.recorded",
+  "timestamp": "2026-11-07T20:34:00+00:00",
+  "path": "docs\\evidence\\EVID-001.md",
+  "stage": "03-market-research",
+  "claim": "The incumbent @codeforces_live_bot (open source, Apache-2.0) has 224 commits: 206 in 2019-2020, 18 in 2021-2026; the last commit on 2026-05-10 is an emergency fix for a Codeforces API change.",
+  "source": "https://github.com/TobxD/codeforces_live_bot (git history, read 2026-11-08)",
+  "date": "2026-11-08",
+  "confidence": "high",
+  "type": "FACT",
+  "risk": "LOW",
+  "evidence_id": "EVID-001"
+}

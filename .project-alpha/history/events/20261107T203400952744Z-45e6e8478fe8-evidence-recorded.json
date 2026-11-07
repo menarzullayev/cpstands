@@ -1,0 +1,14 @@
+{
+  "event_id": "45e6e8478fe8",
+  "event_type": "evidence.recorded",
+  "timestamp": "2026-11-07T20:34:00+00:00",
+  "path": "docs\\evidence\\EVID-006.md",
+  "stage": "03-market-research",
+  "claim": "Solve-notification latency of the incumbent bot, estimated from in-contest timestamps against a per-contest baseline, is about 1 min median, 11 min p90, 93 min p99.",
+  "source": "Maintainer's private bot-chat export, estimation method documented in cfbot analysis, 2026-11-08",
+  "date": "2026-11-08",
+  "confidence": "medium",
+  "type": "INFERENCE",
+  "risk": "LOW",
+  "evidence_id": "EVID-006"
+}

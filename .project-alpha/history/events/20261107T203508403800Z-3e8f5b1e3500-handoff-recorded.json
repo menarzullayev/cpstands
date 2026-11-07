@@ -1,0 +1,9 @@
+{
+  "event_id": "3e8f5b1e3500",
+  "event_type": "handoff.recorded",
+  "timestamp": "2026-11-07T20:35:08+00:00",
+  "from_stage": "idea-selection",
+  "to_stage": "01-vision",
+  "path": ".project-alpha\\handoffs\\idea-selection__to__01-vision.md",
+  "status": "READY"
+}

@@ -1,0 +1,9 @@
+{
+  "event_id": "85d6773cceec",
+  "event_type": "approval.recorded",
+  "timestamp": "2026-11-07T20:35:08+00:00",
+  "stage": "idea-selection",
+  "decision": "PASS",
+  "approver": "Saidakbar Narzullayev",
+  "reason": "Owner approved idea 1 after review of evidence and scoring"
+}

@@ -1,0 +1,14 @@
+{
+  "event_id": "2c706cf36525",
+  "event_type": "evidence.recorded",
+  "timestamp": "2026-11-07T20:34:01+00:00",
+  "path": "docs\\evidence\\EVID-011.md",
+  "stage": "03-market-research",
+  "claim": "The kep.uz owner has verbally approved use of the platform data by this project and welcomes a demo; written terms are not yet recorded.",
+  "source": "Verbal confirmation relayed by the project owner, 2026-11-08",
+  "date": "2026-11-08",
+  "confidence": "low",
+  "type": "ASSUMPTION",
+  "risk": "MEDIUM",
+  "evidence_id": "EVID-011"
+}

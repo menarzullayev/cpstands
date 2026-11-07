@@ -1,0 +1,19 @@
+{
+  "event_id": "b52195f2bba7",
+  "event_type": "decision.recorded",
+  "timestamp": "2026-11-07T20:35:08+00:00",
+  "path": ".project-alpha\\decisions\\DEC-001.md",
+  "stage": "idea-selection",
+  "title": "Select cpstands as the product idea",
+  "risk": "MEDIUM",
+  "decision_id": "DEC-001",
+  "decision": "Build cpstands, a new multi-source contest tracker for Telegram",
+  "context": "Five candidates compared against seven criteria; the incumbent bot is unmaintained and its standings design is broken by a Codeforces API change",
+  "chosen_option": "Idea 1: cpstands",
+  "rationale": "Highest score (31 of 35), addresses measured failures, fits founder advantages, contains the reminder and kep.uz ideas as later slices",
+  "impact": "High",
+  "reversibility": "Medium",
+  "evidence": "EVID-001,EVID-004,EVID-007",
+  "approval_required": "yes",
+  "approval_status": "approved"
+}

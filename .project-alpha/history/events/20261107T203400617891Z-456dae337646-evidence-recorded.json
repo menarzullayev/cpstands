@@ -1,0 +1,14 @@
+{
+  "event_id": "456dae337646",
+  "event_type": "evidence.recorded",
+  "timestamp": "2026-11-07T20:34:00+00:00",
+  "path": "docs\\evidence\\EVID-003.md",
+  "stage": "03-market-research",
+  "claim": "A full anonymous contest.standings response is large: about 0.5 MB for 670 rows and 6-7 MB for roughly 9000 rows.",
+  "source": "https://codeforces.com/api/contest.standings?contestId=2249,2250,2260 (measured 2026-11-08)",
+  "date": "2026-11-08",
+  "confidence": "high",
+  "type": "FACT",
+  "risk": "MEDIUM",
+  "evidence_id": "EVID-003"
+}

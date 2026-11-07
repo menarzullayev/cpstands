@@ -1,0 +1,14 @@
+{
+  "event_id": "8f09a0ea277b",
+  "event_type": "evidence.recorded",
+  "timestamp": "2026-11-07T20:34:01+00:00",
+  "path": "docs\\evidence\\EVID-009.md",
+  "stage": "03-market-research",
+  "claim": "Telegram Bot API limits relevant to live standings: about 1 message per second per chat, about 20 messages per minute per group, about 30 per second overall, 4096 characters per message.",
+  "source": "https://core.telegram.org/bots/faq (reported by research agent; verify before load design)",
+  "date": "2026-11-08",
+  "confidence": "medium",
+  "type": "FACT",
+  "risk": "MEDIUM",
+  "evidence_id": "EVID-009"
+}

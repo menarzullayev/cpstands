@@ -1,0 +1,14 @@
+{
+  "event_id": "04da06e6cdbc",
+  "event_type": "evidence.recorded",
+  "timestamp": "2026-11-07T20:34:01+00:00",
+  "path": "docs\\evidence\\EVID-007.md",
+  "stage": "03-market-research",
+  "claim": "A 99-member Uzbek competitive-programming Telegram community actively uses the incumbent bot: in 2026 it posted about 56 final-standings messages in the group and members invoked /upcoming and /current_standings repeatedly.",
+  "source": "Member-visible history of the community group, aggregate counts only, 2026-11-08",
+  "date": "2026-11-08",
+  "confidence": "high",
+  "type": "FACT",
+  "risk": "LOW",
+  "evidence_id": "EVID-007"
+}

@@ -1,0 +1,9 @@
+{
+  "event_id": "be69861cd150",
+  "event_type": "stage.started",
+  "timestamp": "2026-11-07T20:35:44+00:00",
+  "stage": "01-vision",
+  "from_status": "NOT_STARTED",
+  "to_status": "IN_PROGRESS",
+  "reason": null
+}

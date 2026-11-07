@@ -1,0 +1,14 @@
+{
+  "event_id": "8a7dc4d9924b",
+  "event_type": "evidence.recorded",
+  "timestamp": "2026-11-07T20:34:00+00:00",
+  "path": "docs\\evidence\\EVID-002.md",
+  "stage": "03-market-research",
+  "claim": "Codeforces contest.standings for non-admin users accepts only the bare contestId parameter; handles, from, count and showUnofficial are rejected with an explicit error.",
+  "source": "https://codeforces.com/api/contest.standings (measured error message, 2026-11-08)",
+  "date": "2026-11-08",
+  "confidence": "high",
+  "type": "FACT",
+  "risk": "MEDIUM",
+  "evidence_id": "EVID-002"
+}

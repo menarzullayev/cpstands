@@ -1,0 +1,14 @@
+{
+  "event_id": "f88e3bf45894",
+  "event_type": "evidence.recorded",
+  "timestamp": "2026-11-07T20:34:00+00:00",
+  "path": "docs\\evidence\\EVID-005.md",
+  "stage": "03-market-research",
+  "claim": "Upsolving notifications of the incumbent bot stopped: about 100 lines per month until 2026-03, 38 in 2026-04, none afterwards, consistent with the removal of showUnofficial from the Codeforces API call.",
+  "source": "Maintainer's private bot-chat export (aggregate) and upstream commit 2026-05-10, 2026-11-08",
+  "date": "2026-11-08",
+  "confidence": "high",
+  "type": "FACT",
+  "risk": "LOW",
+  "evidence_id": "EVID-005"
+}

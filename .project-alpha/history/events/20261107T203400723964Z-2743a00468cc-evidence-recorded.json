@@ -1,0 +1,14 @@
+{
+  "event_id": "2743a00468cc",
+  "event_type": "evidence.recorded",
+  "timestamp": "2026-11-07T20:34:00+00:00",
+  "path": "docs\\evidence\\EVID-004.md",
+  "stage": "03-market-research",
+  "claim": "In the maintainer's own chat with the incumbent bot (2025-04 to 2026-11, aggregate counts), 11 of 15 /current_standings requests got no reply within 60 s; 3 of them were answered 10-14 minutes later and 8 never.",
+  "source": "Maintainer's private bot-chat export, aggregate only, 2026-11-08",
+  "date": "2026-11-08",
+  "confidence": "high",
+  "type": "FACT",
+  "risk": "LOW",
+  "evidence_id": "EVID-004"
+}

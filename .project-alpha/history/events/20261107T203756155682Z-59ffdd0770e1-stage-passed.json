@@ -1,0 +1,9 @@
+{
+  "event_id": "59ffdd0770e1",
+  "event_type": "stage.passed",
+  "timestamp": "2026-11-07T20:37:56+00:00",
+  "stage": "01-vision",
+  "from_status": "REVIEW",
+  "to_status": "PASSED",
+  "reason": "Owner approved vision, scope and planning targets"
+}

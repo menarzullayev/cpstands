@@ -1,0 +1,9 @@
+{
+  "event_id": "acd1f6fec0ed",
+  "event_type": "approval.recorded",
+  "timestamp": "2026-11-07T20:37:56+00:00",
+  "stage": "01-vision",
+  "decision": "PASS",
+  "approver": "Saidakbar Narzullayev",
+  "reason": "Owner approved vision, scope and planning targets"
+}
