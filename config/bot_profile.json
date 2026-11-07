@@ -4,5 +4,17 @@
     "en": "cpstands · Contest standings",
     "ru": "cpstands · Результаты контестов",
     "uz": "cpstands · Contest natijalari"
+  },
+  "short_description": {
+    "en": "Live contest standings, reminders and solve alerts for you and your friends. Codeforces + kep.uz.",
+    "ru": "Живые результаты, напоминания и уведомления о решениях для вас и друзей. Codeforces + kep.uz.",
+    "uz": "Contestlar jonli natijalari, eslatmalar va do'stlaringiz yechgan masalalar haqida xabarlar. Codeforces + kep.uz.",
+    "": "Live contest standings, reminders and solve alerts for you and your friends. Codeforces + kep.uz."
+  },
+  "description": {
+    "en": "Live contest standings for you and your friends.\n\n• Standings update in one message\n• Reminders before every contest, in your timezone\n• Alerts when friends solve problems\n• Works in private chats and groups\n\nSources: Codeforces now, kep.uz next.\nPress Start and pick your language.",
+    "ru": "Живые результаты контестов для вас и ваших друзей.\n\n• Таблица результатов обновляется в одном сообщении\n• Напоминания перед каждым контестом в вашем часовом поясе\n• Уведомления, когда друзья решают задачи\n• Работает в личных чатах и группах\n\nИсточники: сейчас Codeforces, затем kep.uz.\nНажмите Start и выберите язык.",
+    "uz": "Siz va do'stlaringiz uchun contestlarning jonli natijalari.\n\n• Natijalar bitta xabarda yangilanib turadi\n• Har bir contestdan oldin eslatma, o'zingizning vaqt zonangizda\n• Do'stlaringiz masala yechganda xabar\n• Shaxsiy chatda ham, guruhda ham ishlaydi\n\nManbalar: hozir Codeforces, keyin kep.uz.\nStart ni bosing va tilni tanlang.",
+    "": "Live contest standings for you and your friends.\n\n• Standings update in one message\n• Reminders before every contest, in your timezone\n• Alerts when friends solve problems\n• Works in private chats and groups\n\nSources: Codeforces now, kep.uz next.\nPress Start and pick your language."
   }
 }
