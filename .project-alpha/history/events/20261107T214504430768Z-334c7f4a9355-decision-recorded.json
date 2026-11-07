@@ -1,0 +1,20 @@
+{
+  "event_id": "334c7f4a9355",
+  "event_type": "decision.recorded",
+  "timestamp": "2026-11-07T21:45:04+00:00",
+  "path": ".project-alpha\\decisions\\DEC-011.md",
+  "stage": "07-adr",
+  "title": "Amend freshness target after experiment M1",
+  "risk": "MEDIUM",
+  "decision_id": "DEC-011",
+  "decision": "Adopt p95 data age at most 75 s (METRIC-001, REQ-N01) and poll standings just after the source cache expires (NFR-001, ADR-004)",
+  "context": "Codeforces serves standings from a 60 s proxy cache with an Expires header; no polling strategy can show data younger than about 60 to 63 s at p95",
+  "chosen_option": "p95 at most 75 s with expiry-aligned polling",
+  "rationale": "A 60 s promise cannot be kept; 75 s leaves margin for processing and Telegram edits and polling once per minute is cheaper and no worse than faster polling",
+  "impact": "Medium",
+  "reversibility": "High",
+  "evidence": "EVID-019,EVID-020,EVID-021",
+  "approval_required": "yes",
+  "approval_status": "approved",
+  "approval_id": "APR-011"
+}

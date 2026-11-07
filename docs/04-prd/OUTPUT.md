@@ -79,7 +79,7 @@ Non-functional requirements use REQ identifiers prefixed N; measurable targets r
 
 | ID | Requirement | Target |
 |---|---|---|
-| REQ-N01 | Standings freshness during a contest | p95 data age at most 60 s (METRIC-001) |
+| REQ-N01 | Standings freshness during a contest | p95 data age at most 75 s (METRIC-001, amended 2026-11-08 because the source cache lasts 60 s) |
 | REQ-N02 | Reminder reliability | at least 99.5 percent within 60 s of schedule (METRIC-002) |
 | REQ-N03 | Solve alert latency | p95 at most 120 s from verdict to message (METRIC-003) |
 | REQ-N04 | Availability inside contest windows | measured and published monthly; no formal target on the interim home host (best effort); at least 99.9 percent per month on a dedicated always-on host (METRIC-004, amended 2026-11-08) |

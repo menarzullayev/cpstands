@@ -24,7 +24,7 @@ Problems this product exists to solve (details and evidence in stage 02):
 
 Measurable strategic targets (to be validated and refined in stage 02 and 04):
 
-- METRIC-001: Live standings freshness: p95 age of the data in the edited standings message at most 60 seconds during a contest.
+- METRIC-001: Live standings freshness: p95 age of the data in the edited standings message at most 75 seconds during a contest. Amended 2026-11-08 by owner decision after experiment M1: Codeforces caches standings for 60 seconds, so 60 seconds cannot be promised.
 - METRIC-002: Reminder reliability: at least 99.5 percent of reminders delivered within 60 seconds of their scheduled time.
 - METRIC-003: Solve alert latency: p95 at most 120 seconds from the submission verdict to the Telegram message.
 - METRIC-004: Availability inside contest windows is measured and published every month. Amended 2026-11-08 by owner decision: while the bot runs on a single home machine there is no formal target (best effort); a target of at least 99.9 percent per month applies once a dedicated always-on host is used.

@@ -1,7 +1,7 @@
 # Cross-Stage Semantic Consistency Audit
 
 - Status: PASS
-- Semantic IDs: 398
+- Semantic IDs: 404
 
 ## Findings
 - None

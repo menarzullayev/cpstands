@@ -69,10 +69,10 @@ routine reversible decisions are agent-approved and listed for transparency.
 - **Status:** ACCEPTED
 - **Context / problem:** Codeforces forbids handle filters on standings for non-admin callers, and full responses are 0.5 to 7 MB (REQ-N01, REQ-N07).
 - **Options considered:** per-handle `user.status` polling; one shared full-standings fetch per contest; scraping HTML pages; authenticated requests.
-- **Selected solution:** One shared anonymous fetch per active contest with an adaptive interval, a streaming parser keeping only watched handles, and per-handle `user.status` only as a limited fallback for upsolves.
+- **Selected solution:** One shared anonymous fetch per active contest, polled just after the source cache expires (`Expires` header, amended 2026-11-08), a streaming parser keeping only watched handles, and per-handle `user.status` only as a limited fallback for upsolves.
 - **Rationale:** Per-handle polling cannot meet freshness within one request per two seconds; scraping is fragile; authenticated requests are rejected for the same parameters.
-- **Consequences:** Bandwidth cost per active contest; need caching and backoff; the interval must be tuned by experiment before the freshness target is promised.
-- **Evidence:** EVID-002, EVID-003 and EVID-012 (API restriction, payload size, rate limit)
+- **Consequences:** About 0.3 MB per fetch on the wire (gzip) and one request per minute per active contest; no conditional requests exist; the freshness floor is the 60 s source cache, so the target is p95 at most 75 s; behavior during a running contest is verified in the first live round.
+- **Evidence:** EVID-002, EVID-003, EVID-012, EVID-019, EVID-020 and EVID-021 (API restriction, payload, rate limit, gzip sizes, cache behavior, parser performance)
 - **Reversibility:** High (adapter behind `SourcePort`).
 - **Approval:** owner, 2026-11-08.
 

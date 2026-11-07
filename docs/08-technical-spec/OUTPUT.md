@@ -155,7 +155,7 @@ Each has a deterministic key. The notifier consumes events through `deliveries`;
 
 | ID | Target | Requirement |
 |---|---|---|
-| NFR-001 | During CODING and SYSTEM_TEST, one standings fetch per active contest every 20 s by default, adaptive between 15 s and 120 s, never faster than one Codeforces request per 2 s per instance | REQ-N01, REQ-N07 |
+| NFR-001 | During CODING and SYSTEM_TEST, one standings fetch per active contest shortly after the source cache expires (`Expires` header plus a 1 s margin, fallback 60 s, never waiting longer than 120 s), never faster than one Codeforces request per 2 s per instance (amended 2026-11-08 after experiment M1) | REQ-N01, REQ-N07 |
 | NFR-002 | Parsing a 7 MB standings body keeps peak memory under 256 MB using streaming and finishes within 3 s | REQ-N01, REQ-N05 |
 | NFR-003 | A rendered standings message is at most 3800 characters; longer lists are truncated with a localized "and N more" line | REQ-002 |
 | NFR-004 | Edit budget: at most one edit per `(chat, contest)` per 3 s; at most 20 messages per minute per group; at most 25 messages per second overall (configurable, verified against Telegram limits) | REQ-N01, REQ-N03 |
@@ -168,7 +168,7 @@ Each has a deterministic key. The notifier consumes events through `deliveries`;
 | NFR-011 | Logs are structured JSON without message text, kept at most 30 days; log level configurable | REQ-N06, REQ-N08 |
 | NFR-012 | Quality: strict typing, at least 85 percent line coverage on the domain and notification modules, and contract tests against recorded Codeforces fixtures | REQ-N10 |
 
-Targets NFR-001, NFR-002, NFR-004 and NFR-005 are validated by an experiment (replayed contest, largest observed payload) before the freshness promise in REQ-N01 is published (stage 09 task).
+Targets NFR-002, NFR-004 and NFR-005 are validated by experiments before the freshness promise in REQ-N01 is published. Experiment M1 (docs/experiments/M1-standings-fetch.md) validated NFR-002 (9743 rows in about 0.19 s adding 2 to 7 MB) and changed NFR-001; the cache behavior during a running contest is confirmed in the first live round.
 
 ## Integrations
 

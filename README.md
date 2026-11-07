@@ -3,8 +3,8 @@
 Live competitive-programming contest tracker for Telegram: friends' standings, reminders, and solve notifications
 for Codeforces and kep.uz, in Uzbek, Russian, and English.
 
-> Status: **pre-alpha.** The design is complete (documentation set approved); implementation is at milestone **M0 done**
-> (project skeleton, CI, container image, database baseline). The bot does not respond to users yet. Bot handle: `@cpstandsbot`.
+> Status: **pre-alpha.** The design is complete (documentation set approved); implementation is at milestones **M0 and M1 done**
+> (project skeleton, CI, image, database baseline, Codeforces client and standings parser). The bot does not respond to users yet. Bot handle: `@cpstandsbot`.
 
 ## Availability and support
 
