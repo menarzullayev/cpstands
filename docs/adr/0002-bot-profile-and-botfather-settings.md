@@ -17,10 +17,17 @@
 | 7 | Privacy policy | `PRIVACY.md` (draft, pre-alpha); linked in BotFather on 2026-11-08 |
 | 8 | Description picture | Banner "Brand + podium" 640x360 (`assets/description_banner.svg` + `.jpg`), uploaded through BotFather 2026-11-08 |
 
-## Not available through the chat menu of @BotFather
+## Settings only in the @BotFather Mini App (done 2026-11-08, verified with `getMe`)
 
-Topics in private chats, guest mode, bot-to-bot messaging, and managing other bots are configured in the
-@BotFather Mini App (graphical). They are tracked as manual steps for the bot owner.
+| Setting | Value | `getMe` field |
+|---|---|---|
+| Threaded Mode (topics in private chats, streaming replies) | ON | `has_topics_enabled=true` |
+| Users may create new threads | ON (default, revisit if per-contest topics get messy) | `allows_users_to_create_topics=true` |
+| Guest Chat Mode (`@cpstandsbot` mentions in chats it has not joined) | ON | `supports_guest_queries=true` |
+| Bot management, guard, secretary, bot-to-bot | OFF | unchanged |
+
+Note: Threaded Mode is documented as "subject to an additional fee for Telegram Star purchases"; we sell nothing,
+so no cost is expected. Re-check the Mini App text before ever adding paid features.
 
 ## Open
 
