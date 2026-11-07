@@ -121,3 +121,25 @@ help-text =
 
     <b>Контесты</b> <i>(скоро)</i>
     /standings · /upcoming · /rank
+
+standings-usage =
+    🏆 <b>Результаты контеста</b>
+
+    <code>/standings 1970</code> — по номеру контеста
+    <code>/standings https://codeforces.com/contest/1970</code> — по ссылке
+standings-status = { $phase ->
+        [running] 🔥 <b>Идёт</b>
+        [before] ⏰ <b>Ещё не начался</b>
+       *[finished] 🏁 <b>Завершён</b>
+    } · 👥 { $count ->
+        [one] { $count } участник
+        [few] { $count } участника
+        [many] { $count } участников
+       *[other] { $count } участника
+    } · 🕐 { $time }
+standings-footer = Строки { $first }–{ $last } из { $total } · задачи { $from_problem }–{ $to_problem }
+standings-empty = Строк пока нет.
+standings-not-found = ❌ Контест <b>{ $id }</b> не найден на Codeforces.
+standings-not-started = ⏰ <b>{ $name }</b> ещё не начался. Таблица появится, когда он начнётся.
+standings-source-error = ⚠️ Codeforces сейчас не отвечает. Попробуйте через минуту.
+button-refresh = Обновить

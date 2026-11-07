@@ -117,3 +117,23 @@ help-text =
 
     <b>Contests</b> <i>(coming soon)</i>
     /standings · /upcoming · /rank
+
+standings-usage =
+    🏆 <b>Contest standings</b>
+
+    <code>/standings 1970</code> — by contest id
+    <code>/standings https://codeforces.com/contest/1970</code> — by link
+standings-status = { $phase ->
+        [running] 🔥 <b>Running</b>
+        [before] ⏰ <b>Not started</b>
+       *[finished] 🏁 <b>Finished</b>
+    } · 👥 { $count ->
+        [one] { $count } participant
+       *[other] { $count } participants
+    } · 🕐 { $time }
+standings-footer = Rows { $first }–{ $last } of { $total } · problems { $from_problem }–{ $to_problem }
+standings-empty = No rows yet.
+standings-not-found = ❌ Contest <b>{ $id }</b> was not found on Codeforces.
+standings-not-started = ⏰ <b>{ $name }</b> has not started yet. The table appears when it does.
+standings-source-error = ⚠️ Codeforces does not answer right now. Try again in a minute.
+button-refresh = Refresh

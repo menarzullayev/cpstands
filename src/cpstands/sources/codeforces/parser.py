@@ -19,10 +19,12 @@ import ijson
 from cpstands.domain.contest import (
     Contest,
     ContestPhase,
+    FullStandings,
     ParticipantResult,
     Problem,
     ProblemResult,
     ProblemStatus,
+    StandingRow,
     StandingsSnapshot,
     handle_key,
 )
@@ -230,4 +232,45 @@ def parse_standings(body: bytes, watched: frozenset[str]) -> StandingsSnapshot:
         results=tuple(results),
         rows_scanned=scanned,
         team_rows_skipped=skipped_teams,
+    )
+
+
+def _standing_row(raw: dict[str, Any]) -> StandingRow:
+    try:
+        party = raw["party"]
+        handles = tuple(str(m["handle"]) for m in party["members"])
+        who = str(party.get("teamName") or ", ".join(handles))
+        return StandingRow(
+            rank=int(raw["rank"]),
+            who=who,
+            handles=handles,
+            points=float(raw.get("points", 0.0)),
+            penalty=int(raw.get("penalty", 0)),
+            participant_type=str(party.get("participantType", "")),
+            problems=tuple(_problem_result(item) for item in raw["problemResults"]),
+        )
+    except (KeyError, TypeError, ValueError, IndexError) as exc:
+        raise SourceFormatError(f"malformed standings row: {type(exc).__name__}") from exc
+
+
+def parse_full_standings(body: bytes, *, fetched_at: datetime) -> FullStandings:
+    """Parse a ``contest.standings`` body into the whole table (teams included)."""
+    try:
+        check_envelope(next(_items(body, "status"), None), next(_items(body, "comment"), None))
+        raw_contest = next(_items(body, "result.contest"), None)
+        if not isinstance(raw_contest, dict):
+            raise SourceFormatError("standings response has no contest object")
+        problems = tuple(
+            Problem(
+                index=str(item["index"]),
+                name=str(item.get("name", "")),
+                points=float(item["points"]) if "points" in item else None,
+            )
+            for item in _items(body, "result.problems.item")
+        )
+        rows = tuple(_standing_row(raw) for raw in _items(body, "result.rows.item"))
+    except ijson.JSONError as exc:
+        raise RetryableSourceError("standings body is not valid JSON (truncated?)") from exc
+    return FullStandings(
+        contest=parse_contest(raw_contest), problems=problems, rows=rows, fetched_at=fetched_at
     )

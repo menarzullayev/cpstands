@@ -16,10 +16,12 @@ from cpstands.bot.deps import Deps
 from cpstands.bot.ratelimit import RateLimiter
 from cpstands.db import repos
 from cpstands.db.engine import create_engine, create_session_factory
+from cpstands.domain.contest import ContestPhase
 from cpstands.i18n import I18n
 from cpstands.services import timezone as tzs
+from cpstands.services.standings import StandingsService
 from cpstands.services.watchlist import WatchlistService
-from tests.support.sources import FakeSource
+from tests.support.sources import FakeSource, make_standings
 from tests.support.telegram import (
     FakeSession,
     callback_update,
@@ -75,12 +77,20 @@ async def harness(migrated_database: str) -> AsyncIterator[Harness]:
     fake.member_status[(GROUP, ADMIN)] = "administrator"
     fake.member_status[(GROUP, MEMBER)] = "member"
     bot = make_bot(fake)
-    source = FakeSource(["tourist", "jiangly", "Petr"])
+    source = FakeSource(
+        ["tourist", "jiangly", "Petr"],
+        standings={
+            1970: make_standings(),
+            1971: make_standings(contest_id=1971, phase=ContestPhase.BEFORE, rows=0, problems=5),
+            1972: make_standings(contest_id=1972, rows=3, problems=5, kind="CF"),
+        },
+    )
     deps = Deps(
         i18n=I18N,
         sessions=sessions,
         watchlist=WatchlistService(sessions, source),  # type: ignore[arg-type]
         admin=make_admin_checker(bot),
+        standings=StandingsService(source),  # type: ignore[arg-type]
     )
     yield Harness(build_dispatcher(deps, RateLimiter()), bot, fake, sessions, source)
     await engine.dispose()
@@ -229,7 +239,7 @@ async def test_settings_shows_summary_and_menu_buttons(harness: Harness) -> None
 
 
 async def test_unfinished_commands_answer_coming_soon(harness: Harness) -> None:
-    for command in ("/standings", "/upcoming", "/rank", "/privacy", "/delete"):
+    for command in ("/upcoming", "/rank", "/privacy", "/delete"):
         await harness.say(PRIVATE, PRIVATE, command)
         assert harness.session.last_text() == I18N.t(None, "coming-soon")
 
@@ -265,6 +275,7 @@ async def test_rate_limit_answers_once_then_stays_quiet(migrated_database: str) 
         sessions=sessions,
         watchlist=WatchlistService(sessions, FakeSource([])),  # type: ignore[arg-type]
         admin=make_admin_checker(bot),
+        standings=StandingsService(FakeSource([])),  # type: ignore[arg-type]
     )
     harness = Harness(
         build_dispatcher(deps, RateLimiter(per_user=3)), bot, fake, sessions, FakeSource([])
@@ -424,3 +435,73 @@ async def test_refused_ephemeral_falls_back_and_is_not_retried(harness: Harness)
     await harness.say(GROUP, MEMBER, "/track add jiangly")
     assert len([c for c in harness.session.sent() if _ephemeral(c)]) == attempts
     assert harness.session.last_text() == I18N.t(None, "not-admin")
+
+
+async def test_standings_sends_a_rich_table_with_navigation(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/standings 1970")
+    page = harness.session.rich()[-1]
+    assert "<h1>Test Contest</h1>" in page["html"]
+    assert page["html"].count("<tr>") == 26  # header + 25 rows
+    assert page["html"].count("<th>") == 20  # 4 fixed + 16 problems, Telegram's maximum
+    rows = page["reply_markup"]["inline_keyboard"]
+    callbacks = [b["callback_data"] for row in rows for b in row]
+    assert callbacks == [
+        "st:1970:0:0",
+        "st:1970:0:0",
+        "st:noop",
+        "st:1970:1:0",
+        "st:1970:2:0",
+        "st:1970:0:0",
+        "st:1970:0:1",
+        "st:1970:0:0:r",
+    ]
+
+
+async def test_standings_accepts_links_and_explains_usage(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/standings https://codeforces.com/contest/1970/standings")
+    assert len(harness.session.rich()) == 1
+    await harness.say(PRIVATE, PRIVATE, "/standings")
+    assert harness.session.last_text() == I18N.t(None, "standings-usage")
+    await harness.say(PRIVATE, PRIVATE, "/standings hello")
+    assert harness.session.last_text() == I18N.t(None, "standings-usage")
+    assert len(harness.session.rich()) == 1
+
+
+async def test_standings_failures_are_explained(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/standings 999999")
+    assert harness.session.last_text() == I18N.t(None, "standings-not-found", id="999999")
+    await harness.say(PRIVATE, PRIVATE, "/standings 1971")
+    assert harness.session.last_text() == I18N.t(None, "standings-not-started", name="Test Contest")
+    harness.source.fail = True
+    await harness.say(PRIVATE, PRIVATE, "/standings 1970")
+    assert harness.session.last_text() == I18N.t(None, "standings-source-error")
+    assert not harness.session.rich()
+
+
+async def test_standings_paging_edits_the_same_message(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/standings 1970")
+    await harness.tap(PRIVATE, PRIVATE, "st:1970:2:1")
+    page = harness.session.rich()[-1]
+    assert "<td>51</td>" in page["html"]  # third page starts at rank 51
+    assert page["html"].count("<th>") == 4 + 5  # second column page: P17..P21
+    edit = [c for c in harness.session.calls if c.method == "EditMessageText"][-1]
+    assert edit.data["rich_message"]["html"] == page["html"]
+    assert harness.source.full_fetches == 1  # paging uses the cache
+
+
+async def test_standings_refresh_noop_and_bad_callbacks(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/standings 1970")
+    await harness.tap(PRIVATE, PRIVATE, "st:noop")
+    await harness.tap(PRIVATE, PRIVATE, "st:1970:0:0:r")
+    assert harness.source.full_fetches == 1  # a fresh copy is not refetched
+    before = len(harness.session.alerts())
+    await harness.tap(PRIVATE, PRIVATE, "st:abc")
+    await harness.tap(PRIVATE, PRIVATE, "st:424242:0:0")
+    assert len(harness.session.alerts()) == before + 2
+
+
+async def test_cf_type_contests_show_points_not_times(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/standings 1972")
+    html = harness.session.rich()[-1]["html"]
+    assert "<td>500</td>" in html
+    assert ":" not in html.split("<table>")[1].split("</table>")[0]

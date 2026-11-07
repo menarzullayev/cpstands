@@ -21,6 +21,14 @@ SAMPLE_ARGS: dict[str, str | int] = {
     "handles": "tourist, jiangly",
     "limit": 100,
     "mood": "playful",
+    "phase": "finished",
+    "first": 1,
+    "last": 25,
+    "total": 827,
+    "from_problem": "A1",
+    "to_problem": "D2",
+    "id": "1970",
+    "name": "Round",
 }
 
 
@@ -144,7 +152,7 @@ def test_checker_catches_missing_catalog_file(broken_locales: Path) -> None:
 
 
 _KEY_RE = re.compile(
-    r"""(?:\b(?:t|say)\(\s*(?:[^,()"']+,\s*)?|_say\([^()]*\)\(\s*)["']([a-z0-9-]+)["']"""
+    r"""(?:\b(?:t|say|rich)\(\s*(?:[^,()"']+,\s*)?|_say\([^()]*\)\(\s*)["']([a-z0-9-]+)["']"""
 )
 SRC = Path(__file__).resolve().parents[1] / "src" / "cpstands"
 

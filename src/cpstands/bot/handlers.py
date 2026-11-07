@@ -2,19 +2,30 @@
 
 from __future__ import annotations
 
+import re
+
 import structlog
 from aiogram import F, Router
 from aiogram.enums import ChatMemberStatus
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command, CommandObject
-from aiogram.types import CallbackQuery, Chat, ChatMemberUpdated, InlineKeyboardMarkup, Message
+from aiogram.types import (
+    CallbackQuery,
+    Chat,
+    ChatMemberUpdated,
+    InlineKeyboardMarkup,
+    InputRichMessage,
+    Message,
+)
 
-from cpstands.bot import keyboards
+from cpstands.bot import keyboards, standings_view
 from cpstands.bot.deps import Deps
 from cpstands.db import repos
+from cpstands.domain.contest import ContestPhase, FullStandings
 from cpstands.i18n import LANGUAGE_NAMES, SUPPORTED_LANGUAGES, TONES, Translator
 from cpstands.services import timezone as tzs
 from cpstands.services.watchlist import INPUT_CAP, PLATFORM
-from cpstands.sources.base import SourceError
+from cpstands.sources.base import PermanentSourceError, SourceError
 
 log = structlog.get_logger(__name__)
 
@@ -25,7 +36,6 @@ _CHAT_TYPES = {"private": "private", "group": "group", "supergroup": "supergroup
 _JOINED = {ChatMemberStatus.MEMBER, ChatMemberStatus.ADMINISTRATOR}
 _GONE = {ChatMemberStatus.LEFT, ChatMemberStatus.KICKED}
 _PLANNED_COMMANDS = (
-    "standings",
     "upcoming",
     "rank",
     "privacy",
@@ -394,6 +404,102 @@ async def on_chat_member(event: ChatMemberUpdated, deps: Deps) -> None:
     deps.admin.invalidate(event.chat.id, event.new_chat_member.user.id)
 
 
+# --- standings ---------------------------------------------------------------------------
+
+_CONTEST_URL_RE = re.compile(r"codeforces\.com/(?:contest|contests)/(\d{1,7})", re.IGNORECASE)
+
+
+def parse_contest_id(text: str) -> int | None:
+    """Accept ``1970`` or a codeforces.com contest link."""
+    cleaned = text.strip()
+    if cleaned.isascii() and cleaned.isdigit() and len(cleaned) <= 7:
+        return int(cleaned) or None
+    match = _CONTEST_URL_RE.search(cleaned)
+    return int(match.group(1)) if match else None
+
+
+async def on_standings(message: Message, command: CommandObject, deps: Deps) -> None:
+    chat = await _ensure_chat(deps, message.chat)
+    if chat is None:
+        return
+    say = _say(deps, chat)
+    contest_id = parse_contest_id(command.args or "")
+    if contest_id is None:
+        await deps.whisper.reply(message, say("standings-usage"))
+        return
+    await message.bot.send_chat_action(message.chat.id, "typing")  # type: ignore[union-attr]
+    standings = await _load_standings(deps, contest_id)
+    if isinstance(standings, str):
+        await deps.whisper.reply(message, _failure(say, standings, contest_id))
+        return
+    if standings.contest.phase is ContestPhase.BEFORE:
+        await message.answer(say("standings-not-started", name=standings.contest.name))
+        return
+    text = standings_view.render(standings, 0, 0, say, time_zone=chat.time_zone)
+    markup = standings_view.keyboard(standings, 0, 0, say, icons=deps.icons)
+    await message.bot.send_rich_message(  # type: ignore[union-attr]
+        message.chat.id, InputRichMessage(html=text), reply_markup=markup
+    )
+
+
+async def _load_standings(
+    deps: Deps, contest_id: int, *, refresh: bool = False
+) -> FullStandings | str:
+    """Return the standings, or the name of a failure: ``not-found`` or ``source-error``."""
+    try:
+        return await deps.standings.get(contest_id, refresh=refresh)
+    except PermanentSourceError:
+        return "not-found"
+    except SourceError:
+        log.warning("standings_source_error", contest_id=contest_id, exc_info=True)
+        return "source-error"
+
+
+def _failure(say: Translator, kind: str, contest_id: int) -> str:
+    if kind == "not-found":
+        return say("standings-not-found", id=str(contest_id))
+    return say("standings-source-error")
+
+
+async def on_standings_page(callback: CallbackQuery, deps: Deps) -> None:
+    context = await _tap_context(deps, callback, admin=False)
+    if context is None:
+        return
+    message, chat = context
+    say = _say(deps, chat)
+    parts = (callback.data or "").split(":")
+    try:
+        contest_id, row_page, col_page = int(parts[1]), int(parts[2]), int(parts[3])
+    except (IndexError, ValueError):
+        await callback.answer(say("button-expired"), show_alert=True)
+        return
+    standings = await _load_standings(deps, contest_id, refresh=parts[4:] == ["r"])
+    if isinstance(standings, str):
+        await callback.answer(_plain(_failure(say, standings, contest_id)), show_alert=True)
+        return
+    text = standings_view.render(standings, row_page, col_page, say, time_zone=chat.time_zone)
+    markup = standings_view.keyboard(standings, row_page, col_page, say, icons=deps.icons)
+    try:
+        await message.bot.edit_message_text(  # type: ignore[union-attr]
+            chat_id=message.chat.id,
+            message_id=message.message_id,
+            rich_message=InputRichMessage(html=text),
+            reply_markup=markup,
+        )
+    except TelegramBadRequest as exc:
+        if "not modified" not in str(exc):
+            raise
+    await callback.answer()
+
+
+def _plain(html_text: str) -> str:
+    return re.sub(r"<[^>]+>", "", html_text)
+
+
+async def on_standings_noop(callback: CallbackQuery) -> None:
+    await callback.answer()
+
+
 def create_router() -> Router:
     """Build a fresh router; one per dispatcher so tests can build several."""
     router = Router(name="main")
@@ -408,6 +514,11 @@ def create_router() -> Router:
     router.callback_query.register(on_help_settings, F.data == keyboards.HELP_SETTINGS)
     router.callback_query.register(on_help_track, F.data == keyboards.HELP_TRACK)
     router.message.register(on_track, Command("track", "friends"))
+    router.message.register(on_standings, Command("standings"))
+    router.callback_query.register(on_standings_noop, F.data == standings_view.NOOP)
+    router.callback_query.register(
+        on_standings_page, F.data.startswith(standings_view.CALLBACK_PREFIX)
+    )
     router.message.register(on_help, Command("help"))
     router.message.register(on_coming_soon, Command(*_PLANNED_COMMANDS))
     router.my_chat_member.register(on_my_chat_member)

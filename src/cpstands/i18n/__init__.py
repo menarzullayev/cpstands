@@ -52,6 +52,24 @@ class I18n:
     def t(
         self, lang: str | None, key: str, *, tone: str = DEFAULT_TONE, **args: FluentValue
     ) -> str:
+        """Render ``key`` for a normal message (custom emoji applied when enabled)."""
+        return self._translate(lang, key, tone, args, decorate_emoji=self._custom_emoji)
+
+    def rich(
+        self, lang: str | None, key: str, *, tone: str = DEFAULT_TONE, **args: FluentValue
+    ) -> str:
+        """Render ``key`` for a Rich Message, where plain emoji are kept as they are."""
+        return self._translate(lang, key, tone, args, decorate_emoji=False)
+
+    def _translate(
+        self,
+        lang: str | None,
+        key: str,
+        tone: str,
+        args: Mapping[str, FluentValue],
+        *,
+        decorate_emoji: bool,
+    ) -> str:
         """Render ``key`` in ``lang``; unknown languages use the default language.
 
         With the neutral tone, ``<key>-neutral`` is preferred when the catalog has it.
@@ -71,7 +89,7 @@ class I18n:
         if text is None:
             log.error("i18n_missing_key", key=key, lang=language)
             return html.escape(key, quote=False)
-        return decorate(text) if self._custom_emoji else text
+        return decorate(text) if decorate_emoji else text
 
     def bound(self, lang: str | None, tone: str = DEFAULT_TONE) -> Translator:
         return Translator(self, lang, tone)
@@ -101,3 +119,6 @@ class Translator:
 
     def __call__(self, key: str, **args: FluentValue) -> str:
         return self.i18n.t(self.lang, key, tone=self.tone, **args)
+
+    def rich(self, key: str, **args: FluentValue) -> str:
+        return self.i18n.rich(self.lang, key, tone=self.tone, **args)

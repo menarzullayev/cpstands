@@ -117,3 +117,23 @@ help-text =
 
     <b>Contestlar</b> <i>(tez orada)</i>
     /standings · /upcoming · /rank
+
+standings-usage =
+    🏆 <b>Contest natijalari</b>
+
+    <code>/standings 1970</code> — contest raqami bo'yicha
+    <code>/standings https://codeforces.com/contest/1970</code> — havola bo'yicha
+standings-status = { $phase ->
+        [running] 🔥 <b>Davom etmoqda</b>
+        [before] ⏰ <b>Hali boshlanmagan</b>
+       *[finished] 🏁 <b>Yakunlangan</b>
+    } · 👥 { $count ->
+        [one] { $count } ishtirokchi
+       *[other] { $count } ishtirokchi
+    } · 🕐 { $time }
+standings-footer = { $first }–{ $last }-qatorlar, jami { $total } · masalalar { $from_problem }–{ $to_problem }
+standings-empty = Hozircha qatorlar yo'q.
+standings-not-found = ❌ <b>{ $id }</b> raqamli contest Codeforces'da topilmadi.
+standings-not-started = ⏰ <b>{ $name }</b> hali boshlanmagan. Jadval boshlanganda paydo bo'ladi.
+standings-source-error = ⚠️ Codeforces hozir javob bermayapti. Bir daqiqadan keyin qayta urinib ko'ring.
+button-refresh = Yangilash

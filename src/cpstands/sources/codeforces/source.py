@@ -5,9 +5,11 @@ from __future__ import annotations
 import asyncio
 import re
 from collections.abc import Sequence
+from datetime import UTC, datetime
 
 from cpstands.domain.contest import (
     ContestList,
+    FullStandings,
     HandleResolution,
     StandingsFetch,
     handle_key,
@@ -17,6 +19,7 @@ from cpstands.sources.codeforces.client import CodeforcesClient
 from cpstands.sources.codeforces.parser import (
     PLATFORM,
     parse_contest_list,
+    parse_full_standings,
     parse_standings,
     parse_user_info,
 )
@@ -45,6 +48,14 @@ class CodeforcesSource:
         else:
             snapshot = parse_standings(raw.body, watched)
         return StandingsFetch(snapshot=snapshot, meta=raw.meta)
+
+    async def fetch_full_standings(self, contest_id: int) -> FullStandings:
+        """Fetch the whole anonymous standings table (every row, teams included)."""
+        raw = await self._client.fetch("contest.standings", {"contestId": str(contest_id)})
+        fetched_at = datetime.now(UTC)
+        if len(raw.body) >= OFFLOAD_THRESHOLD_BYTES:
+            return await asyncio.to_thread(parse_full_standings, raw.body, fetched_at=fetched_at)
+        return parse_full_standings(raw.body, fetched_at=fetched_at)
 
     async def resolve_handles(self, handles: Sequence[str]) -> HandleResolution:
         """Validate handles via user.info, dropping unknown ones until the batch succeeds."""

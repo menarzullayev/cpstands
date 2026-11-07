@@ -64,7 +64,7 @@ class FakeSession(BaseSession):
             and self.refuse_ephemeral
         ):
             raise TelegramBadRequest(method=method, message="Bad Request: BOT_NOT_ADMIN")
-        if name in {"SendMessage", "EditMessageText"}:
+        if name in {"SendMessage", "EditMessageText", "SendRichMessage"}:
             self.next_message_id += 1
             chat_id = data.get("chat_id", 0)
             result = Message(
@@ -125,6 +125,17 @@ class FakeSession(BaseSession):
             if call.method in {"SendMessage", "EditMessageText"}:
                 return str(call.data["text"])
         raise AssertionError("no message was sent")
+
+    def rich(self) -> list[dict[str, Any]]:
+        """Every Rich Message sent or edited, as ``{"html": ..., "reply_markup": ...}``."""
+        found = []
+        for call in self.calls:
+            payload = call.data.get("rich_message")
+            if payload and call.method in {"SendRichMessage", "EditMessageText"}:
+                found.append(
+                    {"html": payload["html"], "reply_markup": call.data.get("reply_markup")}
+                )
+        return found
 
     def alerts(self) -> list[dict[str, Any]]:
         return [c.data for c in self.calls if c.method == "AnswerCallbackQuery"]

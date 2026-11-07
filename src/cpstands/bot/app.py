@@ -15,6 +15,7 @@ from cpstands.config import Settings
 from cpstands.db.engine import create_engine, create_session_factory
 from cpstands.i18n import I18n
 from cpstands.services.admin import AdminChecker
+from cpstands.services.standings import StandingsService
 from cpstands.services.watchlist import WatchlistService
 from cpstands.sources.codeforces.client import ClientConfig, CodeforcesClient
 from cpstands.sources.codeforces.source import CodeforcesSource
@@ -71,11 +72,13 @@ async def run_bot(settings: Settings) -> None:
         default=DefaultBotProperties(parse_mode=ParseMode.HTML),
     )
     sessions = create_session_factory(engine)
+    source = CodeforcesSource(client)
     deps = Deps(
         i18n=I18n(custom_emoji=settings.custom_emoji),
         sessions=sessions,
-        watchlist=WatchlistService(sessions, CodeforcesSource(client)),
+        watchlist=WatchlistService(sessions, source),
         admin=make_admin_checker(bot),
+        standings=StandingsService(source),
         owner_id=settings.telegram_owner_id,
         icons=settings.button_icons,
     )

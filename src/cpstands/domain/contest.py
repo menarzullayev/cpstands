@@ -82,6 +82,19 @@ class ParticipantResult:
 
 
 @dataclass(frozen=True, slots=True)
+class StandingRow:
+    """One line of the full standings table: a participant or a team."""
+
+    rank: int
+    who: str  # team name, or the handle of a single participant
+    handles: tuple[str, ...]
+    points: float
+    penalty: int
+    participant_type: str
+    problems: tuple[ProblemResult, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class FetchMeta:
     """What we learned about a fetch besides the data itself."""
 
@@ -100,6 +113,16 @@ class StandingsSnapshot:
     results: tuple[ParticipantResult, ...]  # watched handles only
     rows_scanned: int
     team_rows_skipped: int
+
+
+@dataclass(frozen=True, slots=True)
+class FullStandings:
+    """The whole standings table of a contest, every row and every problem column."""
+
+    contest: Contest
+    problems: tuple[Problem, ...]
+    rows: tuple[StandingRow, ...]
+    fetched_at: datetime
 
 
 @dataclass(frozen=True, slots=True)

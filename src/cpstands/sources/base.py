@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Protocol, runtime_checkable
 
-from cpstands.domain.contest import ContestList, HandleResolution, StandingsFetch
+from cpstands.domain.contest import ContestList, FullStandings, HandleResolution, StandingsFetch
 
 
 class SourceError(Exception):
@@ -56,5 +56,7 @@ class SourcePort(Protocol):
     async def list_contests(self) -> ContestList: ...
 
     async def fetch_standings(self, contest_id: int, watched: frozenset[str]) -> StandingsFetch: ...
+
+    async def fetch_full_standings(self, contest_id: int) -> FullStandings: ...
 
     async def resolve_handles(self, handles: Sequence[str]) -> HandleResolution: ...

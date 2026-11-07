@@ -48,8 +48,8 @@ class Settings(BaseSettings):
     default_timezone: str = "Asia/Tashkent"
     # Custom emoji in message text need Telegram Premium on the bot owner (Bot API 9.4).
     custom_emoji: bool = True
-    # Icons on buttons need extra Fragment usernames on the bot; keep off until verified.
-    button_icons: bool = False
+    # Custom-emoji icons on buttons (Bot API 9.4); verified to render in Telegram Desktop 7.4.
+    button_icons: bool = True
     database_url: SecretStr = SecretStr(
         "postgresql+asyncpg://cpstands:cpstands@127.0.0.1:5440/cpstands"
     )
