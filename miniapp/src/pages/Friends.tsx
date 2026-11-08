@@ -106,8 +106,8 @@ export function Friends() {
                     <Avatar src={f.avatar} handle={f.handle} rating={f.rating} size={40} />
                     <button className="min-w-0 flex-1 text-left" onClick={() => push({ name: 'profile', handle: f.handle })}>
                       <Handle handle={f.handle} rating={f.rating} />
-                      <div className="truncate text-xs capitalize text-muted-foreground">
-                        {f.rank ?? t('unrated')}
+                      <div className="truncate text-xs text-muted-foreground">
+                        <span className="capitalize">{f.rank ?? t('unrated')}</span>
                         {f.lastOnline ? ` · ${fmt.ago(f.lastOnline)}` : ''}
                       </div>
                     </button>
