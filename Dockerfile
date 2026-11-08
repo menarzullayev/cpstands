@@ -23,7 +23,9 @@ ENV PATH="/app/.venv/bin:$PATH" \
 ARG GIT_SHA=unknown
 LABEL org.opencontainers.image.source="https://github.com/menarzullayev/cpstands" \
       org.opencontainers.image.revision="${GIT_SHA}"
-ENV GIT_SHA=${GIT_SHA}
+ENV GIT_SHA=${GIT_SHA} \
+    HTTP_HOST=0.0.0.0 \
+    HTTP_PORT=8080
 EXPOSE 8080
 # Liveness only: the process and its event loop answer. Readiness is /readyz.
 HEALTHCHECK --interval=15s --timeout=4s --start-period=20s --retries=4 \

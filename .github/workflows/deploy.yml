@@ -58,7 +58,7 @@ jobs:
         env:
           EXPECTED_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
         run: |
-          $port = if ($env:CPSTANDS_HTTP_PORT) { $env:CPSTANDS_HTTP_PORT } else { 8080 }
+          $port = if ($env:CPSTANDS_HTTP_PORT) { $env:CPSTANDS_HTTP_PORT } else { 9180 }
           $deadline = (Get-Date).AddSeconds(120)
           $body = $null
           while ((Get-Date) -lt $deadline) {

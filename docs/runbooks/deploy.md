@@ -18,8 +18,8 @@ workflows in the repository settings.
 
 ```bash
 GIT_SHA=$(git rev-parse HEAD) docker compose up -d --build
-curl -s http://127.0.0.1:8080/readyz     # ready, commit, checks
-curl -s http://127.0.0.1:8080/metrics | head
+curl -s http://127.0.0.1:9180/readyz     # ready, commit, checks
+curl -s http://127.0.0.1:9180/metrics | head
 ```
 
 Secrets live in `.env` (or the file named by `CPSTANDS_ENV_FILE`), never in the repository.

@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     http_host: str = "127.0.0.1"
     # The commit this build was made from (set by the image build, shown by /readyz and /metrics).
     git_sha: str = "dev"
-    http_port: int = 8080
+    http_port: int = 9180
     # Custom emoji in message text need Telegram Premium on the bot owner (Bot API 9.4).
     custom_emoji: bool = True
     # Custom-emoji icons on buttons (Bot API 9.4); verified to render in Telegram Desktop 7.4.

@@ -50,7 +50,7 @@ services:
       HTTP_PORT: "8080"
       GIT_SHA: ${GIT_SHA:-unknown}
     ports:
-      - "127.0.0.1:${CPSTANDS_HTTP_PORT:-8080}:8080"
+      - "127.0.0.1:${CPSTANDS_HTTP_PORT:-9180}:8080"
     depends_on:
       db:
         condition: service_healthy
