@@ -157,7 +157,16 @@ async def run_bot(settings: Settings) -> None:
     )
     dispatcher = build_dispatcher(deps)
     await store_api_secret(sessions, settings.telegram_bot_token.get_secret_value())
-    heartbeat = Heartbeat(sessions, commit=settings.git_sha, version=__version__)
+    heartbeat = Heartbeat(
+        sessions,
+        commit=settings.git_sha,
+        version=__version__,
+        ping_url=(
+            settings.healthchecks_ping_url.get_secret_value()
+            if settings.healthchecks_ping_url
+            else None
+        ),
+    )
     if settings.announce_channel and settings.announce_offsets:
         await register_channel(
             bot,

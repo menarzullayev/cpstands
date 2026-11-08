@@ -59,6 +59,8 @@ class Settings(BaseSettings):
     announce_channel: str = "@cpstands"
     announce_offsets: Annotated[list[int], NoDecode] = [1440, 60]
     announce_language: str = "uz"
+    # Healthchecks.io ping URL (a secret: anyone with it can fake pings). Unset turns it off.
+    healthchecks_ping_url: SecretStr | None = None
     database_url: SecretStr = SecretStr(
         "postgresql+asyncpg://cpstands:cpstands@127.0.0.1:5440/cpstands"
     )

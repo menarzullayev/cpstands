@@ -10,8 +10,9 @@ from __future__ import annotations
 import asyncio
 import json
 import time
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 
+import httpx
 import structlog
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
@@ -21,6 +22,7 @@ log = structlog.get_logger(__name__)
 
 HEARTBEAT_KEY = "bot.heartbeat"
 TICK_S = 60.0
+PING_TIMEOUT_S = 10.0
 
 
 async def store_api_secret(sessions: async_sessionmaker[AsyncSession], bot_token: str) -> bool:
@@ -64,29 +66,61 @@ async def beat(
         )
 
 
+Pinger = Callable[[str], Awaitable[None]]
+
+
+async def http_ping(url: str) -> None:
+    async with httpx.AsyncClient(timeout=PING_TIMEOUT_S) as client:
+        await client.get(url)
+
+
 class Heartbeat:
+    """Writes the heartbeat row and, when configured, pings an external monitor.
+
+    The monitor (Healthchecks.io) alerts the owner when pings stop: the bot, Docker or the
+    PC is down. A database failure pings ``<url>/fail`` so that alert comes at once.
+    """
+
     def __init__(
         self,
         sessions: async_sessionmaker[AsyncSession],
         *,
         commit: str,
         version: str,
+        ping_url: str | None = None,
+        pinger: Pinger = http_ping,
         clock: Callable[[], float] = time.time,
     ) -> None:
         self._sessions = sessions
         self._commit = commit
         self._version = version
+        self._ping_url = ping_url.rstrip("/") if ping_url else None
+        self._pinger = pinger
         self._clock = clock
         self._started = clock()
 
     async def tick(self) -> None:
-        await beat(
-            self._sessions,
-            commit=self._commit,
-            version=self._version,
-            started_at=self._started,
-            now=self._clock(),
-        )
+        try:
+            await beat(
+                self._sessions,
+                commit=self._commit,
+                version=self._version,
+                started_at=self._started,
+                now=self._clock(),
+            )
+        except SQLAlchemyError:
+            await self._ping("/fail")
+            raise
+        await self._ping("")
+
+    async def _ping(self, suffix: str) -> None:
+        if self._ping_url is None:
+            return
+        try:
+            await self._pinger(self._ping_url + suffix)
+        except (httpx.HTTPError, OSError):
+            # The monitor being unreachable must never disturb the bot; it alerts on silence.
+            log.warning("monitor_ping_failed")  # the URL is a secret and is not logged
 
     async def run(self) -> None:
         while True:
