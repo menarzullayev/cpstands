@@ -64,3 +64,28 @@ store, not in PostgreSQL.
 - Where the Supabase key is stored safely for the endpoints: the official page does not say how
   secrets work.
 - Account creation: the owner creates the Supabase account and turns on Serverless in BotFather.
+
+## Done: the move to Supabase (2026-11-08)
+
+- **Project:** `cpstands` (ref `upztrvigdloqzxcgdkwi`), organization `cpstands`, Free plan,
+  Central EU (Frankfurt).
+  - "Automatically expose new tables" is off.
+  - Automatic RLS is on.
+- **Bot connection:** session pooler (IPv4), `aws-1-eu-central-1.pooler.supabase.com:5432`, with
+  `ssl=require`. The URL lives only in `.env` as `CPSTANDS_DATABASE_URL`. The local Docker
+  database stays as a fallback: remove that line and the bot uses it again.
+- **Data:** copied with `pg_dump --data-only` in one transaction. Row counts matched in all
+  eight tables.
+- **API audit:** the anon role has no table grants, RLS is on everywhere, the `private` schema is
+  closed, and only the six `app_*` functions are executable.
+  - Reading a table over REST returns 401.
+  - A forged signature returns 403.
+  - Real Telegram init data from the Mini App works for settings and friends; checked live.
+- **Mini App config:** `miniapp/.env.production` holds the URL and the publishable key (public by
+  design). `.gitleaks.toml` allows only `sb_publishable_` keys, and a negative test shows other
+  secrets are still caught.
+- **Settings left as they are:**
+  - Enforce SSL is off on the project; the bot already requires SSL.
+  - There are no network restrictions.
+  - There are no backups (row 1).
+
