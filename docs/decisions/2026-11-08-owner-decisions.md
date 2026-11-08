@@ -91,3 +91,13 @@ store, not in PostgreSQL.
   - The database restart caused one moment of "database not available" errors in the bot's
     loops (06:32:42 UTC); the bot recovered without a restart.
   - Measured: an SSL connection works, and a non-SSL one is refused with `ESSLREQUIRED`.
+
+## Follow-up decisions (2026-11-08, later)
+
+| Topic | Decision and state |
+|---|---|
+| Backups (row 1 revised) | One every 30 days, plus manual runs. The scheduled task is `cpstands\monthly-db-backup`. Dumps leave out the bot token, and a restore into a throwaway container is checked. See `docs/runbooks/database-backup.md`. |
+| Local production database | Deleted after a final token-free dump (`~/backups/cpstands/localdb-final-*.dump`). The compose `db` service is now `profiles: ["dev"]`, used for tests only. Production needs `CPSTANDS_DATABASE_URL`, with no fallback. |
+| Secret files | Moved from the Desktop to `~/.secrets/cpstands/`. The folder ACL allows only the owner and SYSTEM. |
+| Next feature | Group mode in the Mini App. |
+

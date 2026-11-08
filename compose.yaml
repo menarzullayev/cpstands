@@ -1,11 +1,14 @@
-# The cpstands stack. The database and the HTTP endpoints listen on 127.0.0.1 only.
-# Development:  docker compose up -d db        (PostgreSQL for development and tests)
-# Production:   docker compose up -d --build   (database, migrations, then the bot)
+# The cpstands stack. The HTTP endpoints listen on 127.0.0.1 only.
+# Production:   docker compose up -d --build   (migrations, then the bot) against the hosted
+#               database in CPSTANDS_DATABASE_URL (Supabase, see docs/runbooks/database-backup.md).
+# Development:  docker compose --profile dev up -d db   (PostgreSQL for tests, 127.0.0.1:5440)
 #   CPSTANDS_ENV_FILE points at the secrets file (default ./.env); GIT_SHA labels the build.
 name: cpstands
 
 services:
   db:
+    # Development and tests only; production uses the hosted database.
+    profiles: ["dev"]
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
@@ -15,7 +18,7 @@ services:
     ports:
       - "127.0.0.1:${CPSTANDS_DB_PORT:-5440}:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata-dev:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U cpstands -d cpstands"]
       interval: 5s
@@ -32,11 +35,8 @@ services:
     restart: "no"
     env_file: ${CPSTANDS_ENV_FILE:-.env}
     environment:
-      # CPSTANDS_DATABASE_URL (in .env) points at the hosted database; the local db is the fallback.
-      DATABASE_URL: ${CPSTANDS_DATABASE_URL:-postgresql+asyncpg://cpstands:${POSTGRES_PASSWORD:-cpstands}@db:5432/cpstands}
-    depends_on:
-      db:
-        condition: service_healthy
+      # Required: the hosted database (set in .env). There is no silent fallback.
+      DATABASE_URL: ${CPSTANDS_DATABASE_URL:?set CPSTANDS_DATABASE_URL in .env}
 
   bot:
     build: *build
@@ -46,18 +46,16 @@ services:
     stop_grace_period: 20s
     env_file: ${CPSTANDS_ENV_FILE:-.env}
     environment:
-      # CPSTANDS_DATABASE_URL (in .env) points at the hosted database; the local db is the fallback.
-      DATABASE_URL: ${CPSTANDS_DATABASE_URL:-postgresql+asyncpg://cpstands:${POSTGRES_PASSWORD:-cpstands}@db:5432/cpstands}
+      # Required: the hosted database (set in .env). There is no silent fallback.
+      DATABASE_URL: ${CPSTANDS_DATABASE_URL:?set CPSTANDS_DATABASE_URL in .env}
       HTTP_HOST: 0.0.0.0
       HTTP_PORT: "8080"
       GIT_SHA: ${GIT_SHA:-unknown}
     ports:
       - "127.0.0.1:${CPSTANDS_HTTP_PORT:-9180}:8080"
     depends_on:
-      db:
-        condition: service_healthy
       migrate:
         condition: service_completed_successfully
 
 volumes:
-  pgdata:
+  pgdata-dev:

@@ -9,7 +9,7 @@ Requirements: [uv](https://docs.astral.sh/uv/), Docker (for PostgreSQL), Git.
 
 ```bash
 uv sync                       # create the virtual environment (Python 3.13)
-docker compose up -d db       # PostgreSQL on 127.0.0.1:5440
+docker compose --profile dev up -d db       # PostgreSQL on 127.0.0.1:5440
 uv run pytest                 # tests (database tests need the container above)
 uv run ruff format . && uv run ruff check . && uv run mypy
 ```

@@ -40,7 +40,7 @@ Apache-2.0. See [LICENSE](LICENSE).
 
 ```bash
 uv sync                      # Python 3.13 environment
-docker compose up -d db      # PostgreSQL on 127.0.0.1:5440
+docker compose --profile dev up -d db      # PostgreSQL on 127.0.0.1:5440
 uv run pytest                # tests
 uv run cpstands config-check # configured keys, never secret values
 ```
