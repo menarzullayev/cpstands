@@ -9,6 +9,8 @@ export type Inner =
   | { name: 'upsolve'; handle: string }
   | { name: 'status' }
   | { name: 'group'; param: string }
+  | { name: 'kstandings'; contestId: number }
+  | { name: 'kprofile'; handle: string }
 
 interface Router {
   tab: Tab
@@ -30,6 +32,14 @@ export function parseStart(param: string): { tab: Tab; stack: Inner[] } {
   if (kind === 'profile') {
     const handle = param.slice('profile_'.length)
     if (HANDLE.test(handle)) return { tab: 'home', stack: [{ name: 'profile', handle }] }
+  }
+  // kep.uz: kprofile_<handle> and standings_kep<id>.
+  if (kind === 'kprofile') {
+    const handle = param.slice('kprofile_'.length)
+    if (HANDLE.test(handle)) return { tab: 'contests', stack: [{ name: 'kprofile', handle }] }
+  }
+  if (kind === 'standings' && /^kep\d{1,7}$/.test(rest[0] ?? '')) {
+    return { tab: 'contests', stack: [{ name: 'kstandings', contestId: Number(rest[0].slice(3)) }] }
   }
   if (param === 'status') return { tab: 'me', stack: [{ name: 'status' }] }
   // A signed group link from the bot: g<id>_<signature>[_s<contest>]; the database checks it.
@@ -57,6 +67,8 @@ export function routeParam(route: Inner | Tab): string {
   if (route.name === 'upsolve') return `upsolve_${route.handle}`
   if (route.name === 'status') return 'status'
   if (route.name === 'group') return route.param
+  if (route.name === 'kprofile') return `kprofile_${route.handle}`
+  if (route.name === 'kstandings') return `standings_kep${route.contestId}`
   return `standings_${route.contestId}`
 }
 
