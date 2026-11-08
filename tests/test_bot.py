@@ -568,7 +568,7 @@ async def test_cf_type_contests_show_points_not_times(harness: Harness) -> None:
     await harness.say(PRIVATE, PRIVATE, "/standings 1972")
     html = harness.session.rich()[-1]["html"]
     table = html.split("<table", 1)[1].split("</table>")[0]
-    assert re.search(r"> ?(<b>)?500(</b>)?</td>", table)  # points after the ✅ or ⚡, not a time
+    assert re.search(r"> ?(<b>)?500(</b>)?</td>", table)  # points after the 🟢 or ⚡, not a time
     assert ":" not in re.sub(r"<[^>]+>", "", table)
 
 

@@ -115,7 +115,7 @@ def first_solves(standings: FullStandings) -> list[int | None]:
 
 
 def styled_cell(result: ProblemResult, *, icpc: bool, padded: bool, style: str, first: bool) -> str:
-    """A cell in the ``emoji`` style (✅ solved, ⚡ first solve, ❌ tried) or ``classic`` one
+    """A cell in the ``emoji`` style (🟢 solved, ⚡ first solve, ❌ tried) or ``classic`` one
     (attempts raised, the first solve marked)."""
     if style not in STYLES:
         return cell(result, icpc=icpc, padded=padded)
@@ -128,7 +128,7 @@ def styled_cell(result: ProblemResult, *, icpc: bool, padded: bool, style: str, 
         if style == "emoji":
             if first:
                 return f"{_emoji('⚡')}{tries} <b>{value}</b>{star}"
-            return f"{_emoji('✅')}{tries} {value}{star}"
+            return f"{_emoji('🟢')}{tries} {value}{star}"
         text = f"+{tries} {value}{star}" if icpc else f"{value}{star}"
         return f"<mark>{text}</mark>" if first else text
     if result.status is ProblemStatus.REJECTED:
