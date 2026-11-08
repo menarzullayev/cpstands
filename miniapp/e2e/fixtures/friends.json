@@ -1,0 +1,45 @@
+{
+ "added": [
+  "jiangly",
+  "Petr",
+  "ksun48",
+  "Benq"
+ ],
+ "already": 0,
+ "overLimit": 0,
+ "max": 200,
+ "friends": [
+  {
+   "handle": "Benq",
+   "rating": 3676,
+   "maxRating": 3857,
+   "rank": "legendary grandmaster",
+   "avatar": "https://userpic.codeforces.org/312472/title/7cf0a442d4071e87.jpg",
+   "lastOnline": 1794104178
+  },
+  {
+   "handle": "jiangly",
+   "rating": 3640,
+   "maxRating": 4039,
+   "rank": "legendary grandmaster",
+   "avatar": "https://userpic.codeforces.org/887306/title/b450806e36caa423.jpg",
+   "lastOnline": 1794080265
+  },
+  {
+   "handle": "ksun48",
+   "rating": 2860,
+   "maxRating": 3781,
+   "rank": "international grandmaster",
+   "avatar": "https://userpic.codeforces.org/no-title.jpg",
+   "lastOnline": 1794080182
+  },
+  {
+   "handle": "Petr",
+   "rating": 2770,
+   "maxRating": 3597,
+   "rank": "international grandmaster",
+   "avatar": "https://userpic.codeforces.org/664/title/c1ef9e749cad14a0.jpg",
+   "lastOnline": 1794080912
+  }
+ ]
+}

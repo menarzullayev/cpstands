@@ -1,134 +1,157 @@
-import { useEffect, useState } from 'react'
-import { ratingColor, type Comparison } from '../cf'
-import { fmtDate, t } from '../i18n'
-import { haptic, storage } from '../tg'
-import { useCall } from '../useCall'
-import { Card, ErrorBox, Skeleton } from '../components/ui'
-import { RatingChart } from '../components/RatingChart'
+import { useState } from 'react'
+import { Plus, X } from 'lucide-react'
+import { useCall } from '@/lib/api'
+import { ratingColor, type Comparison } from '@/lib/cf'
+import { useRouter } from '@/lib/router'
+import { useSettings } from '@/lib/settings'
+import { haptic } from '@/lib/tg'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Avatar, Empty, ErrorState, Handle, Loading, Panel, Rise } from '@/components/kit'
+import { RatingChart } from '@/components/charts'
+import { ShareBar } from '@/components/ShareBar'
 
-const KEY = 'compare.handles'
 const MAX = 6
-// Distinct line colours that read on light and dark themes.
-const PALETTE = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899']
+// Line colours distinct from each other and readable on both themes.
+const PALETTE = ['#22d3ee', '#a78bfa', '#4ade80', '#fbbf24', '#f472b6', '#fb923c']
 
-export function Compare() {
-  const [handles, setHandles] = useState<string[]>([])
+export default function Compare({ initial }: { initial: string[] }) {
+  const { t, me, fmt } = useSettings()
+  const { push } = useRouter()
+  const [handles, setHandles] = useState<string[]>(() => {
+    const start = initial.length === 1 && me && me.toLowerCase() !== initial[0].toLowerCase() ? [me, ...initial] : initial
+    return start.slice(0, MAX)
+  })
   const [draft, setDraft] = useState('')
-  useEffect(() => {
-    storage.get(KEY).then((v) => {
-      try {
-        const list = JSON.parse(v ?? '[]')
-        if (Array.isArray(list)) setHandles(list.filter((h) => typeof h === 'string').slice(0, MAX))
-      } catch {
-        /* ignore a bad stored value */
-      }
-    })
-  }, [])
-  const save = (list: string[]) => {
-    setHandles(list)
-    storage.set(KEY, JSON.stringify(list))
-  }
+  const [all, setAll] = useState(false)
+  const { data, error, loading, reload } = useCall<Comparison>('compare', handles.length ? { handles } : null, 600_000)
+  const colorOf = (h: string) => PALETTE[Math.max(0, handles.findIndex((x) => x.toLowerCase() === h.toLowerCase())) % PALETTE.length]
+
   const add = () => {
-    const parts = draft.split(/[\s,;]+/).map((h) => h.trim()).filter(Boolean)
     const next = [...handles]
-    for (const p of parts) {
+    for (const p of draft.split(/[\s,;]+/).map((x) => x.trim()).filter(Boolean)) {
       if (next.length < MAX && !next.some((h) => h.toLowerCase() === p.toLowerCase())) next.push(p)
     }
-    haptic()
-    save(next)
+    haptic.tap()
+    setHandles(next)
     setDraft('')
   }
-  const { data, error, loading, reload } = useCall<Comparison>('compare', handles.length ? { handles } : null)
-  const colorOf = (handle: string) => {
-    const i = handles.findIndex((h) => h.toLowerCase() === handle.toLowerCase())
-    return PALETTE[(i < 0 ? 0 : i) % PALETTE.length]
+
+  // Wins: in how many common contests each handle had the best place.
+  const wins: Record<string, number> = {}
+  for (const row of data?.common ?? []) {
+    const best = Math.min(...Object.values(row.ranks))
+    for (const [h, r] of Object.entries(row.ranks)) if (r === best) wins[h] = (wins[h] ?? 0) + 1
   }
+
   return (
     <>
-      <form
-        className="search"
-        onSubmit={(e) => {
-          e.preventDefault()
-          add()
-        }}
-      >
-        <input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder={handles.length >= MAX ? t('compare.max') : t('compare.placeholder')}
-          disabled={handles.length >= MAX}
-          autoCapitalize="off"
-          autoCorrect="off"
-          spellCheck={false}
-        />
-        <button className="btn" type="submit" disabled={!draft.trim() || handles.length >= MAX}>
-          {t('compare.add')}
-        </button>
-      </form>
-      {handles.length > 0 && (
-        <div className="chips">
+      <Rise i={0}>
+        <form
+          className="flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault()
+            add()
+          }}
+        >
+          <Input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder={handles.length >= MAX ? t('cmp.max') : t('cmp.placeholder')}
+            disabled={handles.length >= MAX}
+            className="h-10 font-mono"
+            autoCapitalize="off"
+            spellCheck={false}
+          />
+          <Button type="submit" className="h-10" disabled={!draft.trim() || handles.length >= MAX}>
+            <Plus />
+          </Button>
+        </form>
+        <div className="mt-2 flex flex-wrap gap-1.5">
           {handles.map((h) => (
-            <button key={h} className="chip" style={{ borderColor: colorOf(h) }} onClick={() => save(handles.filter((x) => x !== h))}>
-              <span className="dot" style={{ background: colorOf(h) }} />
-              {h} <span aria-hidden>×</span>
+            <button
+              key={h}
+              onClick={() => setHandles(handles.filter((x) => x !== h))}
+              className="flex items-center gap-1.5 rounded-full border bg-card px-2.5 py-1 font-mono text-xs"
+              style={{ borderColor: colorOf(h) }}
+            >
+              <span className="size-2 rounded-full" style={{ background: colorOf(h) }} />
+              {h}
+              <X className="size-3 text-muted-foreground" />
             </button>
           ))}
         </div>
-      )}
-      {handles.length < 2 && <p className="empty">{t('compare.empty')}</p>}
+      </Rise>
+      {handles.length < 2 && <Empty>{t('cmp.empty')}</Empty>}
       {handles.length > 0 &&
         (error ? (
-          <ErrorBox code={error} onRetry={reload} />
+          <ErrorState code={error} onRetry={reload} />
         ) : loading || !data ? (
-          <Card>
-            <Skeleton lines={5} />
-          </Card>
+          <Loading lines={6} />
         ) : (
           <>
-            <Card>
-              <div className="legend">
-                {data.series.map((s) => (
-                  <div key={s.handle} className="legend-item">
-                    <span className="dot" style={{ background: colorOf(s.handle) }} />
-                    <b style={{ color: ratingColor(s.rating) }}>{s.handle}</b>
-                    <span className="muted small">
-                      {s.rating ?? '—'} / {s.maxRating ?? '—'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <RatingChart lines={data.series.map((s) => ({ handle: s.handle, color: colorOf(s.handle), points: s.points }))} />
-            </Card>
+            <Rise i={1}>
+              <Panel glow extra={<ShareBar route={{ name: 'compare', handles }} text={t('share.compare', data.series.map((s) => `${s.handle} ${s.rating ?? '—'}`).join(' · '))} />}>
+                <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {data.series.map((s) => (
+                    <button
+                      key={s.handle}
+                      onClick={() => push({ name: 'profile', handle: s.handle })}
+                      className="flex items-center gap-2 rounded-xl border bg-muted/40 p-2 text-left"
+                      style={{ borderLeft: `3px solid ${colorOf(s.handle)}` }}
+                    >
+                      <Avatar src={s.avatar} handle={s.handle} rating={s.rating} size={30} />
+                      <div className="min-w-0">
+                        <Handle handle={s.handle} rating={s.rating} className="block truncate text-sm" />
+                        <div className="font-mono text-[11px] text-muted-foreground">
+                          {s.rating ?? '—'} / <span style={{ color: ratingColor(s.maxRating) }}>{s.maxRating ?? '—'}</span>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                <RatingChart lines={data.series.map((s) => ({ handle: s.handle, color: colorOf(s.handle), points: s.points }))} />
+              </Panel>
+            </Rise>
             {data.series.length >= 2 && (
-              <Card title={t('compare.common')}>
-                {data.common.length === 0 ? (
-                  <p className="muted">{t('compare.noCommon')}</p>
-                ) : (
-                  <div className="table-wrap">
-                    <table className="h2h">
+              <Rise i={2}>
+                <Panel title={t('cmp.h2h')}>
+                  <div className="mb-3 flex flex-wrap gap-3 font-mono text-xs">
+                    {data.series.map((s) => (
+                      <span key={s.handle}>
+                        <span style={{ color: colorOf(s.handle) }}>{s.handle}</span> <b>{wins[s.handle] ?? 0}</b>{' '}
+                        <span className="text-muted-foreground">{t('cmp.wins')}</span>
+                      </span>
+                    ))}
+                  </div>
+                  {data.common.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">{t('cmp.noCommon')}</p>
+                  ) : (
+                    <table className="w-full table-fixed text-sm">
                       <thead>
-                        <tr>
-                          <th />
+                        <tr className="border-b font-mono text-[11px]">
+                          <th className="w-[44%] py-2 text-left font-normal text-muted-foreground">{t('cmp.contest')}</th>
                           {data.series.map((s) => (
-                            <th key={s.handle} style={{ color: colorOf(s.handle) }}>
+                            <th key={s.handle} className="truncate py-2 text-center" style={{ color: colorOf(s.handle) }}>
                               {s.handle}
                             </th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
-                        {data.common.map((row) => {
+                        {data.common.slice(0, all ? undefined : 10).map((row) => {
                           const best = Math.min(...Object.values(row.ranks))
                           return (
-                            <tr key={row.contestId}>
-                              <td>
-                                <div className="h2h-name">{row.contest}</div>
-                                <div className="muted small">{fmtDate(row.time, false)}</div>
+                            <tr key={row.contestId} className="border-b last:border-0">
+                              <td className="py-2 pr-2">
+                                <div className="line-clamp-2 text-xs leading-snug">{row.contest}</div>
+                                <div className="font-mono text-[10px] text-muted-foreground">{fmt.date(row.time, false)}</div>
                               </td>
                               {data.series.map((s) => {
                                 const r = row.ranks[s.handle]
                                 return (
-                                  <td key={s.handle} className={r === best ? 'win' : ''}>
+                                  <td key={s.handle} className={cn('py-2 text-center font-mono text-xs', r === best && 'font-bold text-success')}>
                                     {r ?? '—'}
                                   </td>
                                 )
@@ -138,9 +161,14 @@ export function Compare() {
                         })}
                       </tbody>
                     </table>
-                  </div>
-                )}
-              </Card>
+                  )}
+                  {data.common.length > 10 && (
+                    <Button variant="ghost" size="sm" className="mt-1 w-full text-primary" onClick={() => setAll((v) => !v)}>
+                      {all ? t('less') : t('more')}
+                    </Button>
+                  )}
+                </Panel>
+              </Rise>
             )}
           </>
         ))}

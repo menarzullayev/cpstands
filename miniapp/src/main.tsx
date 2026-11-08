@@ -1,19 +1,19 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
-import { tg } from './tg'
-import './styles.css'
+import { RouterProvider } from './lib/router'
+import { SettingsProvider } from './lib/settings'
+import { setupChrome } from './lib/tg'
+import './index.css'
 
-if (tg) {
-  tg.ready()
-  tg.expand()
-  const scheme = () => document.documentElement.setAttribute('data-theme', tg?.colorScheme ?? 'light')
-  scheme()
-  tg.onEvent('themeChanged', scheme)
-}
+setupChrome('#0a0e14')
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <SettingsProvider>
+      <RouterProvider>
+        <App />
+      </RouterProvider>
+    </SettingsProvider>
   </StrictMode>,
 )

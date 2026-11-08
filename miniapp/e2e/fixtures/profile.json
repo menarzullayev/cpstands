@@ -1,0 +1,447 @@
+{
+ "user": {
+  "handle": "tourist",
+  "rating": 3408,
+  "maxRating": 4009,
+  "rank": "legendary grandmaster",
+  "maxRank": "tourist",
+  "avatar": "https://userpic.codeforces.org/422/title/50a270ed4a722867.jpg",
+  "country": "Belarus",
+  "organization": "ITMO University",
+  "contribution": 111,
+  "friendOfCount": 91707,
+  "registered": 1265987288
+ },
+ "contests": 311,
+ "best": {
+  "contestId": 33,
+  "contestName": "Codeforces Beta Round 33 (Codeforces format)",
+  "handle": "tourist",
+  "rank": 1,
+  "ratingUpdateTimeSeconds": 1286470800,
+  "oldRating": 2128,
+  "newRating": 2203
+ },
+ "stats": {
+  "solved": 3060,
+  "attempted": 3167,
+  "submissions": 5519,
+  "verdicts": [
+   {
+    "name": "OK",
+    "count": 3379
+   },
+   {
+    "name": "PARTIAL",
+    "count": 838
+   },
+   {
+    "name": "WRONG_ANSWER",
+    "count": 768
+   },
+   {
+    "name": "TIME_LIMIT_EXCEEDED",
+    "count": 260
+   },
+   {
+    "name": "RUNTIME_ERROR",
+    "count": 113
+   },
+   {
+    "name": "SKIPPED",
+    "count": 62
+   },
+   {
+    "name": "COMPILATION_ERROR",
+    "count": 58
+   },
+   {
+    "name": "MEMORY_LIMIT_EXCEEDED",
+    "count": 22
+   }
+  ],
+  "languages": [
+   {
+    "name": "C++20",
+    "count": 1601
+   },
+   {
+    "name": "C++17",
+    "count": 1560
+   },
+   {
+    "name": "Delphi",
+    "count": 590
+   },
+   {
+    "name": "GNU C++",
+    "count": 500
+   },
+   {
+    "name": "GNU C++11",
+    "count": 420
+   }
+  ],
+  "tags": [
+   {
+    "name": "greedy",
+    "count": 961
+   },
+   {
+    "name": "math",
+    "count": 931
+   },
+   {
+    "name": "dp",
+    "count": 720
+   },
+   {
+    "name": "implementation",
+    "count": 680
+   },
+   {
+    "name": "constructive algorithms",
+    "count": 605
+   },
+   {
+    "name": "data structures",
+    "count": 567
+   },
+   {
+    "name": "brute force",
+    "count": 485
+   },
+   {
+    "name": "graphs",
+    "count": 365
+   },
+   {
+    "name": "binary search",
+    "count": 333
+   },
+   {
+    "name": "sortings",
+    "count": 330
+   },
+   {
+    "name": "dfs and similar",
+    "count": 310
+   },
+   {
+    "name": "trees",
+    "count": 286
+   }
+  ],
+  "ratings": [
+   {
+    "rating": 800,
+    "count": 213
+   },
+   {
+    "rating": 900,
+    "count": 56
+   },
+   {
+    "rating": 1000,
+    "count": 73
+   },
+   {
+    "rating": 1100,
+    "count": 86
+   },
+   {
+    "rating": 1200,
+    "count": 86
+   },
+   {
+    "rating": 1300,
+    "count": 105
+   },
+   {
+    "rating": 1400,
+    "count": 117
+   },
+   {
+    "rating": 1500,
+    "count": 95
+   },
+   {
+    "rating": 1600,
+    "count": 138
+   },
+   {
+    "rating": 1700,
+    "count": 144
+   },
+   {
+    "rating": 1800,
+    "count": 142
+   },
+   {
+    "rating": 1900,
+    "count": 141
+   },
+   {
+    "rating": 2000,
+    "count": 147
+   },
+   {
+    "rating": 2100,
+    "count": 108
+   },
+   {
+    "rating": 2200,
+    "count": 119
+   },
+   {
+    "rating": 2300,
+    "count": 126
+   },
+   {
+    "rating": 2400,
+    "count": 141
+   },
+   {
+    "rating": 2500,
+    "count": 124
+   },
+   {
+    "rating": 2600,
+    "count": 108
+   },
+   {
+    "rating": 2700,
+    "count": 81
+   },
+   {
+    "rating": 2800,
+    "count": 86
+   },
+   {
+    "rating": 2900,
+    "count": 64
+   },
+   {
+    "rating": 3000,
+    "count": 58
+   },
+   {
+    "rating": 3100,
+    "count": 49
+   },
+   {
+    "rating": 3200,
+    "count": 48
+   },
+   {
+    "rating": 3300,
+    "count": 42
+   },
+   {
+    "rating": 3400,
+    "count": 24
+   },
+   {
+    "rating": 3500,
+    "count": 62
+   }
+  ],
+  "heatmap": [
+   {
+    "day": 20398,
+    "count": 11
+   },
+   {
+    "day": 20399,
+    "count": 1
+   },
+   {
+    "day": 20415,
+    "count": 16
+   },
+   {
+    "day": 20420,
+    "count": 1
+   },
+   {
+    "day": 20441,
+    "count": 13
+   },
+   {
+    "day": 20449,
+    "count": 7
+   },
+   {
+    "day": 20460,
+    "count": 10
+   },
+   {
+    "day": 20470,
+    "count": 10
+   },
+   {
+    "day": 20482,
+    "count": 7
+   },
+   {
+    "day": 20495,
+    "count": 15
+   },
+   {
+    "day": 20496,
+    "count": 1
+   },
+   {
+    "day": 20507,
+    "count": 9
+   },
+   {
+    "day": 20513,
+    "count": 2
+   },
+   {
+    "day": 20520,
+    "count": 11
+   },
+   {
+    "day": 20540,
+    "count": 10
+   },
+   {
+    "day": 20556,
+    "count": 7
+   },
+   {
+    "day": 20568,
+    "count": 10
+   },
+   {
+    "day": 20576,
+    "count": 1
+   },
+   {
+    "day": 20596,
+    "count": 11
+   },
+   {
+    "day": 20622,
+    "count": 8
+   },
+   {
+    "day": 20631,
+    "count": 4
+   },
+   {
+    "day": 20650,
+    "count": 8
+   },
+   {
+    "day": 20706,
+    "count": 7
+   },
+   {
+    "day": 20708,
+    "count": 8
+   },
+   {
+    "day": 20709,
+    "count": 3
+   },
+   {
+    "day": 20712,
+    "count": 1
+   },
+   {
+    "day": 20722,
+    "count": 5
+   },
+   {
+    "day": 20736,
+    "count": 8
+   },
+   {
+    "day": 20743,
+    "count": 14
+   },
+   {
+    "day": 20764,
+    "count": 6
+   }
+  ],
+  "streak": 0,
+  "recent": [
+   {
+    "id": 397765878,
+    "contestId": 2279,
+    "index": "E",
+    "name": "Save Me!",
+    "rating": null,
+    "verdict": "OK",
+    "time": 1794066910
+   },
+   {
+    "id": 397764659,
+    "contestId": 2279,
+    "index": "E",
+    "name": "Save Me!",
+    "rating": null,
+    "verdict": "WRONG_ANSWER",
+    "time": 1794066634
+   },
+   {
+    "id": 397755588,
+    "contestId": 2279,
+    "index": "D",
+    "name": "Meta Graph",
+    "rating": null,
+    "verdict": "OK",
+    "time": 1794064795
+   },
+   {
+    "id": 397744289,
+    "contestId": 2279,
+    "index": "C",
+    "name": "Anti-Productive",
+    "rating": null,
+    "verdict": "OK",
+    "time": 1794063235
+   },
+   {
+    "id": 397741719,
+    "contestId": 2279,
+    "index": "B",
+    "name": "Balanced Subsets",
+    "rating": null,
+    "verdict": "OK",
+    "time": 1794062967
+   },
+   {
+    "id": 397737200,
+    "contestId": 2279,
+    "index": "A",
+    "name": "Reverse and Double",
+    "rating": null,
+    "verdict": "OK",
+    "time": 1794062535
+   },
+   {
+    "id": 395033187,
+    "contestId": 2261,
+    "index": "H",
+    "name": "Oh Tree Tree Tree, No Need to Leave",
+    "rating": 3500,
+    "verdict": "OK",
+    "time": 1792258463
+   },
+   {
+    "id": 395018055,
+    "contestId": 2261,
+    "index": "F1",
+    "name": "Plegma II: Ask Me Any Cell (Easy Version)",
+    "rating": 2500,
+    "verdict": "OK",
+    "time": 1792254948
+   }
+  ]
+ }
+}

@@ -52,8 +52,11 @@ export async function callCf(method, params = {}) {
     console.warn('cf unreachable', method, String(e));
     throw new EndpointError('Codeforces is not reachable', { code: 'CF_DOWN' });
   }
-  if (res.status === 429 || res.status >= 500) {
-    throw new EndpointError('Codeforces is busy', { code: 'CF_DOWN' });
+  if (res.status === 429 || res.status === 503) {
+    throw new EndpointError('Codeforces is busy', { code: 'CF_BUSY' });
+  }
+  if (res.status >= 500) {
+    throw new EndpointError('Codeforces is not available', { code: 'CF_DOWN' });
   }
   let doc;
   try {
@@ -69,6 +72,7 @@ export async function callCf(method, params = {}) {
     if (/not found/i.test(comment)) {
       throw new EndpointError('Handle not found', { code: 'NOT_FOUND', comment });
     }
+    console.warn('cf refused', method, comment);
     throw new EndpointError('Codeforces refused the request', { code: 'CF_ERROR', comment });
   }
   return doc.result;

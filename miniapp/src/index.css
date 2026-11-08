@@ -1,0 +1,211 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/inter/wght.css";
+@import "@fontsource-variable/jetbrains-mono/wght.css";
+
+/* The brand is dark-first: :root is dark, `.light` on <html> switches to the light palette. */
+@custom-variant dark (&:not(.light *));
+@custom-variant light (&:is(.light *));
+
+@theme inline {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-violet: var(--violet);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+
+  --animate-pulse-glow: pulse-glow 2.4s ease-in-out infinite;
+  --animate-scan: scan 6s linear infinite;
+}
+
+:root {
+  --radius: 0.85rem;
+  --background: #0a0e14;
+  --foreground: #e6edf3;
+  --card: #111823;
+  --card-foreground: #e6edf3;
+  --popover: #111823;
+  --popover-foreground: #e6edf3;
+  --primary: #22d3ee;
+  --primary-foreground: #031016;
+  --secondary: #1a2332;
+  --secondary-foreground: #e6edf3;
+  --muted: #161e2b;
+  --muted-foreground: #8b949e;
+  --accent: #1a2332;
+  --accent-foreground: #e6edf3;
+  --violet: #a78bfa;
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --destructive: #f87171;
+  --border: #1f2a3a;
+  --input: #1f2a3a;
+  --ring: #22d3ee;
+  --chart-1: #22d3ee;
+  --chart-2: #a78bfa;
+  --chart-3: #4ade80;
+  --chart-4: #fbbf24;
+  --chart-5: #f472b6;
+  --glow: 0 0 24px rgb(34 211 238 / 0.35);
+
+  /* Codeforces rank colours, brightened for the dark background. */
+  --r-newbie: #a3a3a3;
+  --r-pupil: #4ade80;
+  --r-specialist: #2dd4bf;
+  --r-expert: #7c9cff;
+  --r-cm: #e879f9;
+  --r-master: #fb923c;
+  --r-gm: #f87171;
+  --r-lgm: #ff5252;
+
+  color-scheme: dark;
+}
+
+.light {
+  --background: #f5f7fa;
+  --foreground: #0d1117;
+  --card: #ffffff;
+  --card-foreground: #0d1117;
+  --popover: #ffffff;
+  --popover-foreground: #0d1117;
+  --primary: #0e7490;
+  --primary-foreground: #ffffff;
+  --secondary: #e9eef4;
+  --secondary-foreground: #0d1117;
+  --muted: #eef2f6;
+  --muted-foreground: #57606a;
+  --accent: #e9eef4;
+  --accent-foreground: #0d1117;
+  --violet: #6d28d9;
+  --success: #15803d;
+  --warning: #b45309;
+  --destructive: #b91c1c;
+  --border: #d8dee6;
+  --input: #d8dee6;
+  --ring: #0e7490;
+  --chart-1: #0891b2;
+  --chart-2: #7c3aed;
+  --chart-3: #16a34a;
+  --chart-4: #d97706;
+  --chart-5: #db2777;
+  --glow: 0 0 0 transparent;
+
+  --r-newbie: #737373;
+  --r-pupil: #15803d;
+  --r-specialist: #0f766e;
+  --r-expert: #1d4ed8;
+  --r-cm: #a21caf;
+  --r-master: #c2410c;
+  --r-gm: #dc2626;
+  --r-lgm: #991b1b;
+
+  color-scheme: light;
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    text-shadow: 0 0 8px rgb(34 211 238 / 0.25);
+  }
+  50% {
+    text-shadow: 0 0 22px rgb(34 211 238 / 0.65);
+  }
+}
+
+@keyframes scan {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 0 100%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    overscroll-behavior-y: none;
+  }
+  /* Effects off (setting or reduced motion): no glow, no animated backgrounds. */
+  .no-fx * {
+    animation-duration: 0s !important;
+    transition-duration: 0s !important;
+    text-shadow: none !important;
+  }
+}
+
+@layer components {
+  /* Faint grid behind the app: the "terminal" texture of the brand. */
+  .bg-grid {
+    background-image:
+      linear-gradient(rgb(34 211 238 / 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(34 211 238 / 0.045) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  .light .bg-grid {
+    background-image:
+      linear-gradient(rgb(14 116 144 / 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(14 116 144 / 0.05) 1px, transparent 1px);
+  }
+  .glow {
+    box-shadow: var(--glow);
+  }
+  .text-glow {
+    text-shadow: 0 0 14px rgb(34 211 238 / 0.45);
+  }
+  .light .text-glow {
+    text-shadow: none;
+  }
+  .gradient-border {
+    border: 1px solid transparent;
+    background:
+      linear-gradient(var(--card), var(--card)) padding-box,
+      linear-gradient(135deg, rgb(34 211 238 / 0.7), rgb(167 139 250 / 0.7)) border-box;
+  }
+  .safe-top {
+    padding-top: calc(var(--tg-safe-area-inset-top, 0px) + var(--tg-content-safe-area-inset-top, 0px));
+  }
+  .safe-bottom {
+    padding-bottom: calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
+  }
+}

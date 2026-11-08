@@ -1,0 +1,110 @@
+// Behaviour: navigation, deep links, Telegram's Back button, friends, settings.
+import { expect, test } from '@playwright/test'
+import { backVisible, mockTelegram, pressBack } from './mock'
+
+test('first launch asks for the handle, and skipping lands on Home', async ({ page }) => {
+  await mockTelegram(page, { storage: { me: '' }, noFriends: true })
+  // An empty stored value means "skipped"; a missing one means "never asked".
+  await page.addInitScript(() => {
+    const tg = (window as unknown as { __tg: { store: Record<string, string> } }).__tg
+    delete tg.store.me
+  })
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: 'Welcome to cpstands' })).toBeVisible()
+  await page.getByRole('button', { name: 'I don’t have one yet' }).click()
+  await expect(page.getByRole('button', { name: 'Home' })).toHaveAttribute('aria-current', 'page')
+})
+
+test('onboarding saves the handle Codeforces confirms', async ({ page }) => {
+  await mockTelegram(page)
+  await page.addInitScript(() => {
+    delete (window as unknown as { __tg: { store: Record<string, string> } }).__tg.store.me
+  })
+  await page.goto('/')
+  await page.getByLabel(/Codeforces handle/).fill('tourist')
+  await page.getByRole('button', { name: 'Continue' }).click()
+  await expect(page.getByText('My rating')).toBeVisible()
+  expect(await page.evaluate(() => (window as unknown as { __tg: { store: Record<string, string> } }).__tg.store.me)).toBe('tourist')
+})
+
+test('tabs switch screens', async ({ page }) => {
+  await mockTelegram(page)
+  await page.goto('/')
+  for (const [tab, text] of [
+    ['Contests', 'Upcoming'],
+    ['Standings', 'Codeforces Round 1133 (Div. 1)'],
+    ['Friends', 'Benq'],
+    ['Me', 'My handle'],
+  ] as const) {
+    await page.getByRole('navigation').getByRole('button', { name: tab, exact: true }).click()
+    await expect(page.getByText(text).first()).toBeVisible()
+  }
+})
+
+test('a deep link opens a profile and Back returns to Home', async ({ page }) => {
+  await mockTelegram(page, { startParam: 'profile_tourist' })
+  await page.goto('/')
+  await expect(page.getByText('Rating history')).toBeVisible()
+  expect(await backVisible(page)).toBe(true)
+  await pressBack(page)
+  await expect(page.getByText('My rating')).toBeVisible()
+  expect(await backVisible(page)).toBe(false)
+})
+
+test('an unknown deep link falls back to Home', async ({ page }) => {
+  await mockTelegram(page, { startParam: 'profile_bad handle!' })
+  await page.goto('/')
+  await expect(page.getByText('My rating')).toBeVisible()
+})
+
+test('a compare link opens all handles on one chart', async ({ page }) => {
+  await mockTelegram(page, { startParam: 'compare_tourist-jiangly-Petr' })
+  await page.goto('/')
+  await expect(page.getByText('Head to head')).toBeVisible()
+  await expect(page.locator('.recharts-line')).toHaveCount(3)
+})
+
+test('adding and removing a friend', async ({ page }) => {
+  await mockTelegram(page)
+  await page.goto('/')
+  await page.getByRole('navigation').getByRole('button', { name: 'Friends', exact: true }).click()
+  await page.getByPlaceholder('Handles, separated by spaces').fill('Um_nik')
+  await page.getByRole('button', { name: 'Add', exact: true }).click()
+  await expect(page.getByText('Added: Um_nik')).toBeVisible()
+  await page.getByRole('button', { name: 'Remove' }).first().click() // edit mode
+  await page.locator('li', { hasText: 'Um_nik' }).getByRole('button', { name: 'Remove' }).click()
+  await expect(page.locator('li', { hasText: 'Um_nik' })).toHaveCount(0)
+})
+
+test('without friends, Standings explains what to do', async ({ page }) => {
+  await mockTelegram(page, { noFriends: true })
+  await page.goto('/')
+  await page.getByRole('navigation').getByRole('button', { name: 'Standings', exact: true }).click()
+  await expect(page.getByText('Add friends to compare places in contests')).toBeVisible()
+})
+
+test('language and theme switch at once and are remembered', async ({ page }) => {
+  await mockTelegram(page)
+  await page.goto('/')
+  await page.getByRole('navigation').getByRole('button', { name: 'Me', exact: true }).click()
+  await page.getByRole('button', { name: 'O‘zbekcha' }).click()
+  await expect(page.getByRole('button', { name: 'Do‘stlar', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Yorug‘' }).click()
+  await expect(page.locator('html')).toHaveClass(/light/)
+  const store = await page.evaluate(() => (window as unknown as { __tg: { store: Record<string, string> } }).__tg.store)
+  expect(store.lang).toBe('uz')
+  expect(store.theme).toBe('light')
+})
+
+test('Russian Telegram users get Russian text', async ({ page }) => {
+  await mockTelegram(page, { lang: 'ru' })
+  await page.goto('/')
+  await expect(page.getByRole('button', { name: 'Друзья', exact: true })).toBeVisible()
+})
+
+test('outside Telegram the app says where to open it', async ({ page }) => {
+  await page.route('https://telegram.org/**', (r) => r.fulfill({ status: 200, contentType: 'text/javascript', body: '' }))
+  await page.addInitScript(() => localStorage.setItem('me', 'tourist'))
+  await page.goto('/')
+  await expect(page.getByText('Open this app from @cpstandsbot in Telegram.').first()).toBeVisible()
+})

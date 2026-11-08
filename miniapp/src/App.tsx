@@ -1,48 +1,126 @@
-import { useState } from 'react'
-import { t } from './i18n'
-import { haptic, insideTelegram } from './tg'
-import { Contests } from './pages/Contests'
-import { Profile } from './pages/Profile'
-import { Compare } from './pages/Compare'
-import { ErrorBox } from './components/ui'
+import { lazy, Suspense, type ReactNode } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
+import { CalendarDays, House, Trophy, User, Users } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { useRouter, type Tab } from '@/lib/router'
+import { useSettings } from '@/lib/settings'
+import { insideTelegram } from '@/lib/tg'
+import { ErrorState, Loading, Logo } from '@/components/kit'
+import { Onboarding } from '@/pages/Onboarding'
+import { Home } from '@/pages/Home'
+import { Contests } from '@/pages/Contests'
+import { Standings } from '@/pages/Standings'
+import { Friends } from '@/pages/Friends'
+import { Me } from '@/pages/Me'
 
-type Tab = 'contests' | 'profile' | 'compare'
+// Pages with charts load Recharts only when opened.
+const Profile = lazy(() => import('@/pages/Profile'))
+const Compare = lazy(() => import('@/pages/Compare'))
 
-const ICONS: Record<Tab, string> = {
-  contests: 'M7 3v2M17 3v2M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z',
-  profile: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 20a8 8 0 0 1 16 0',
-  compare: 'M4 19l5-7 4 4 7-10M4 5v14h16',
+const TABS: { id: Tab; icon: typeof House }[] = [
+  { id: 'home', icon: House },
+  { id: 'contests', icon: CalendarDays },
+  { id: 'standings', icon: Trophy },
+  { id: 'friends', icon: Users },
+  { id: 'me', icon: User },
+]
+
+function TabBar() {
+  const { tab, stack, go } = useRouter()
+  const { t, effects } = useSettings()
+  return (
+    <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t bg-background/80 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-3xl px-1 pt-1.5 pb-1">
+        {TABS.map(({ id, icon: Icon }) => {
+          const active = tab === id && stack.length === 0
+          return (
+            <button
+              key={id}
+              onClick={() => go(id)}
+              aria-current={active ? 'page' : undefined}
+              className={cn(
+                'relative flex flex-1 flex-col items-center gap-0.5 rounded-xl py-1.5 text-[10.5px] font-medium transition-colors',
+                active ? 'text-primary' : 'text-muted-foreground',
+              )}
+            >
+              {active && effects && (
+                <motion.span
+                  layoutId="tab-glow"
+                  className="absolute inset-x-3 -top-1.5 h-0.5 rounded-full bg-primary shadow-[0_0_12px_var(--primary)]"
+                />
+              )}
+              <Icon className="size-[22px]" strokeWidth={active ? 2.2 : 1.8} />
+              <span>{t(`tab.${id}`)}</span>
+            </button>
+          )
+        })}
+      </div>
+    </nav>
+  )
+}
+
+function Screen() {
+  const { tab, top } = useRouter()
+  if (top?.name === 'profile') return <Profile handle={top.handle} />
+  if (top?.name === 'compare') return <Compare initial={top.handles} />
+  if (top?.name === 'standings') return <Standings contestId={top.contestId} />
+  switch (tab) {
+    case 'home':
+      return <Home />
+    case 'contests':
+      return <Contests />
+    case 'standings':
+      return <Standings />
+    case 'friends':
+      return <Friends />
+    case 'me':
+      return <Me />
+  }
+}
+
+function Transition({ id, children }: { id: string; children: ReactNode }) {
+  const { effects } = useSettings()
+  if (!effects) return <div>{children}</div>
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={id}
+        initial={{ opacity: 0, y: 12, filter: 'blur(4px)' }}
+        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+        exit={{ opacity: 0, y: -8, filter: 'blur(4px)' }}
+        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
+  )
 }
 
 export function App() {
-  const [tab, setTab] = useState<Tab>('contests')
-  const tabs: Tab[] = ['contests', 'profile', 'compare']
+  const { ready, me } = useSettings()
+  const router = useRouter()
+  if (!ready) return <div className="min-h-screen bg-background" />
+  if (me === null) return <Onboarding />
+  const id = router.top ? `${router.tab}/${router.stack.length}/${JSON.stringify(router.top)}` : router.tab
   return (
-    <div className="app">
-      <main>
-        {!insideTelegram && <ErrorBox code="NO_TELEGRAM" />}
-        {tab === 'contests' && <Contests />}
-        {tab === 'profile' && <Profile />}
-        {tab === 'compare' && <Compare />}
+    <div className="bg-grid min-h-screen">
+      <header className="safe-top sticky top-0 z-30 border-b bg-background/75 backdrop-blur-xl">
+        <div className="mx-auto flex h-12 max-w-3xl items-center justify-between px-4">
+          <Logo />
+          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">codeforces</span>
+        </div>
+      </header>
+      <main className="mx-auto max-w-3xl space-y-3 px-3 pt-3 pb-28">
+        {!insideTelegram && <ErrorState code="NO_TELEGRAM" />}
+        <Transition id={id}>
+          <Suspense fallback={<Loading lines={6} />}>
+            <div className="space-y-3">
+              <Screen />
+            </div>
+          </Suspense>
+        </Transition>
       </main>
-      <nav className="tabbar">
-        {tabs.map((name) => (
-          <button
-            key={name}
-            className={name === tab ? 'active' : ''}
-            onClick={() => {
-              if (name !== tab) haptic()
-              setTab(name)
-              window.scrollTo({ top: 0 })
-            }}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden>
-              <path d={ICONS[name]} />
-            </svg>
-            <span>{t(`tab.${name}`)}</span>
-          </button>
-        ))}
-      </nav>
+      <TabBar />
     </div>
   )
 }
