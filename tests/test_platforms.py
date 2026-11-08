@@ -257,3 +257,11 @@ async def test_without_followers_only_every_chat_is_reminded(
             text("SELECT DISTINCT chat_id FROM reminders WHERE platform = 'kep'")
         )
         assert {int(r[0]) for r in rows.all()} == {CHAT, OTHER, CHANNEL}
+
+
+def test_kep_tables_write_times_like_kep_uz() -> None:
+    from cpstands.domain.contest import ProblemResult, ProblemStatus
+
+    solved = ProblemResult(ProblemStatus.ACCEPTED, 1, 83 * 60, 1.0)
+    assert standings_view.cell(solved, icpc=True, padded=True) == "+1 01:23"
+    assert standings_view.cell(solved, icpc=True) == "+1 1:23"  # Codeforces keeps its own form

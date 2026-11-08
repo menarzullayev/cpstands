@@ -9,6 +9,8 @@ Measured facts about the undocumented API (2026-11-08) that the parsers rely on:
 * ``contestTime`` is ``HH:MM`` from the start of the contest for solved problems, else null;
 * before the start, ``/problems/`` and ``/contestants/`` answer 401 (the contest detail is public);
 * virtual participants are separate rows (``isVirtual``) that share the table and its ranks;
+  the site's own standings hide them and rank the rest, so the parsers do the same
+  (checked against kep.uz for contest 502: potato167 is rank 4 in the API, 1 on the site);
 * ``rowType`` and ``isOfficial`` carry no usable signal.
 
 Privacy: only the public ``username`` is read from a participant row. Full names, avatars and
@@ -268,18 +270,34 @@ def _contestant_items(body: bytes) -> list[Any]:
     return _array(body, "contestants")
 
 
+def _official(items: list[Any]) -> list[tuple[_Row, int]]:
+    """The non-virtual rows in table order, each with its rank among them.
+
+    Rows with the same points and penalty share a rank, as on the site.
+    """
+    found: list[tuple[_Row, int]] = []
+    previous: tuple[float, int] | None = None
+    rank = 0
+    for position, row in enumerate((r for r in map(_row, items) if not r.virtual), start=1):
+        score = (row.points, row.penalty)
+        if score != previous:
+            rank, previous = position, score
+        found.append((row, rank))
+    return found
+
+
 def parse_standings(
     contest: Contest, problems: tuple[Problem, ...], body: bytes, watched: frozenset[str]
 ) -> StandingsSnapshot:
     """Keep only the rows of ``watched`` handle keys (kep has no server-side filter)."""
     items = _contestant_items(body)
+    for raw in items:
+        _username(raw)  # every row must be well formed, watched or not
     results: list[ParticipantResult] = []
     skipped_teams = 0
-    for raw in items:
-        username = _username(raw)
-        if handle_key(username) not in watched:
+    for row, rank in _official(items):
+        if handle_key(row.username) not in watched:
             continue
-        row = _row(raw)
         if row.team:
             skipped_teams += 1
             continue
@@ -287,7 +305,7 @@ def parse_standings(
             ParticipantResult(
                 handle=row.username,
                 key=handle_key(row.username),
-                rank=row.rank,
+                rank=rank,
                 points=row.points,
                 penalty=row.penalty,
                 participant_type=row.participant_type,
@@ -307,11 +325,10 @@ def parse_full_standings(
     contest: Contest, problems: tuple[Problem, ...], body: bytes, *, fetched_at: datetime
 ) -> FullStandings:
     rows: list[StandingRow] = []
-    for raw in _contestant_items(body):
-        row = _row(raw)
+    for row, rank in _official(_contestant_items(body)):
         rows.append(
             StandingRow(
-                rank=row.rank,
+                rank=rank,
                 who=row.username,
                 handles=(row.username,),
                 points=row.points,

@@ -183,30 +183,47 @@ def test_standings_keep_only_watched_handles_case_insensitively() -> None:
     assert snapshot.team_rows_skipped == 0
     assert snapshot.contest is contest
     row = snapshot.results[0]
-    assert (row.handle, row.rank, row.points, row.penalty) == ("user_004", 4, 11.0, 385)
+    # kep.uz says rank 4: three virtual rows are above it. The site, and so the bot, says 1.
+    assert (row.handle, row.rank, row.points, row.penalty) == ("user_004", 1, 11.0, 385)
     assert row.official
 
 
-def test_virtual_rows_are_marked_and_keep_their_own_row() -> None:
+def test_virtual_rows_are_left_out_like_on_the_site() -> None:
     contest, problems = contest_and_problems()
     snapshot = parse_standings(
         contest, problems, fixture("contestants_502.json"), frozenset({"user_003", "user_001"})
     )
-    kinds = sorted((r.key, r.participant_type) for r in snapshot.results)
-    # user_003 has three virtual rows, user_001 one virtual and one real (rank 54, no points).
-    assert kinds == [
-        ("user_001", "CONTESTANT"),
-        ("user_001", "VIRTUAL"),
-        ("user_003", "VIRTUAL"),
-        ("user_003", "VIRTUAL"),
-        ("user_003", "VIRTUAL"),
-    ]
-    assert sum(r.official for r in snapshot.results) == 1
+    # user_003 has only virtual rows; user_001 one virtual and one real row (no points).
+    assert [(r.key, r.participant_type) for r in snapshot.results] == [("user_001", "CONTESTANT")]
     full = parse_full_standings(
         contest, problems, fixture("contestants_502.json"), fetched_at=FETCHED_AT
     )
-    assert sum(r.participant_type == "VIRTUAL" for r in full.rows) == 9
-    assert sum(r.participant_type == "CONTESTANT" for r in full.rows) == 56
+    assert len(full.rows) == 56  # 65 rows, 9 of them virtual
+    assert all(r.participant_type == "CONTESTANT" for r in full.rows)
+
+
+def test_official_ranks_match_the_kep_uz_standings_page() -> None:
+    """Contest 502 on kep.uz (2026-11-08): 1 potato167 11 (385), 2 _sunflower_ 11 (390),
+    3 physics 10 (348), ... and NarzullayevMe 23rd; the API gives them 4, 5, 7 and 27."""
+    contest, problems = contest_and_problems()
+    full = parse_full_standings(
+        contest, problems, fixture("contestants_502.json"), fetched_at=FETCHED_AT
+    )
+    top = [(r.rank, r.points, r.penalty) for r in full.rows[:8]]
+    assert top == [
+        (1, 11, 385), (2, 11, 390), (3, 10, 348), (4, 10, 463),
+        (5, 9, 353), (6, 9, 406), (7, 8, 284), (8, 8, 288),
+    ]  # fmt: skip
+    assert [r.rank for r in full.rows if (r.points, r.penalty) == (6, 68)] == [23]
+
+
+def test_equal_scores_share_a_rank() -> None:
+    contest, problems = contest_and_problems()
+    rows = json.loads(fixture("contestants_502.json"))
+    real = [r for r in rows if not r["isVirtual"]]
+    real[1]["points"], real[1]["penalties"] = real[0]["points"], real[0]["penalties"]
+    full = parse_full_standings(contest, problems, json.dumps(rows).encode(), fetched_at=FETCHED_AT)
+    assert [r.rank for r in full.rows[:3]] == [1, 1, 3]
 
 
 def test_solved_and_rejected_counts_match_the_icpc_formula() -> None:
@@ -214,7 +231,7 @@ def test_solved_and_rejected_counts_match_the_icpc_formula() -> None:
     full = parse_full_standings(
         contest, problems, fixture("contestants_502.json"), fetched_at=FETCHED_AT
     )
-    assert len(full.rows) == 65
+    assert len(full.rows) == 56
     assert full.expires_at is None
     for row in full.rows:
         accepted = [p for p in row.problems if p.status is ProblemStatus.ACCEPTED]

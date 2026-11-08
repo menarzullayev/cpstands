@@ -150,7 +150,7 @@ async def test_fetch_standings_filters_to_watched_and_caches_problems() -> None:
 async def test_fetch_full_standings() -> None:
     source, _, _ = make_source()
     full = await source.fetch_full_standings(502)
-    assert len(full.rows) == 65
+    assert len(full.rows) == 56  # the 9 virtual rows are left out, as on the site
     assert full.contest.external_id == 502
     assert full.fetched_at.tzinfo is not None
 
