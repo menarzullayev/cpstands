@@ -67,6 +67,10 @@ settings-summary =
        *[4] всё
     }</b>
     📊 Колонок в таблице: <b>{ $cols }</b>
+    📈 Вид таблицы: <b>{ $style ->
+        [classic] классический
+       *[emoji] эмодзи
+    }</b>
     🏁 Итоги контеста: <b>{ $summary ->
         [off] выкл
        *[on] вкл
@@ -305,6 +309,10 @@ rank-source-error = ⚠️ Codeforces сейчас не отвечает. Поп
 word-off = выкл
 button-back = Назад
 button-columns = Колонок: { $n }
+button-table-style = Вид: { $style ->
+        [classic] классический
+       *[emoji] эмодзи
+    }
 button-summary = { $state ->
         [off] Итоги: выкл
        *[on] Итоги: вкл

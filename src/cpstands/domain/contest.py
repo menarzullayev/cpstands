@@ -64,6 +64,7 @@ class ProblemResult:
     rejected_attempts: int
     time_s: int | None
     points: float
+    first: bool = False  # the platform marks this as the first solve of the problem
 
 
 @dataclass(frozen=True, slots=True)

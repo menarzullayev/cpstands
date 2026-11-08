@@ -215,6 +215,7 @@ def _problem_result(raw: dict[str, Any]) -> ProblemResult:
         rejected_attempts=rejected,
         time_s=_contest_seconds(raw.get("contestTime")) if points > 0 else None,
         points=points,
+        first=points > 0 and raw.get("theBest") is True,
     )
 
 

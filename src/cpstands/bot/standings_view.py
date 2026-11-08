@@ -26,6 +26,7 @@ from cpstands.domain.contest import (
 )
 from cpstands.i18n import Translator
 from cpstands.services import timezone as tzs
+from cpstands.ui.emoji import custom_emoji_id
 
 ROWS_PER_PAGE = 25
 PROBLEM_COLUMNS = 16
@@ -34,6 +35,8 @@ CALLBACK_PREFIX = "st:"
 NOOP = "st:noop"
 VIEW_TOKEN = {"friends": "f", "all": "a"}
 TOKEN_VIEW = {"f": "friends", "a": "all"}
+STYLES = ("emoji", "classic")  # owner decision 2026-11-08: emoji by default
+MEDALS = {1: "🥇", 2: "🥈", 3: "🥉"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,6 +46,7 @@ class ViewContext:
     view: str = "all"  # "friends" or "all"
     friends: frozenset[str] = frozenset()
     cols: int = PROBLEM_COLUMNS
+    style: str = "emoji"  # "emoji" or "classic"
 
     @property
     def has_friends(self) -> bool:
@@ -90,6 +94,50 @@ def _number(value: float) -> str:
     return f"{value:g}" if value != int(value) else str(int(value))
 
 
+def _emoji(emoji: str) -> str:
+    found = custom_emoji_id(emoji)
+    return f'<tg-emoji emoji-id="{found}">{emoji}</tg-emoji>' if found else emoji
+
+
+_SOLVED = {ProblemStatus.ACCEPTED, ProblemStatus.PROVISIONAL}
+
+
+def first_solves(standings: FullStandings) -> list[int | None]:
+    """The earliest solve time of each problem over the whole table (not just one page)."""
+    best: list[int | None] = [None] * len(standings.problems)
+    for row in standings.rows:
+        for i, result in enumerate(row.problems[: len(best)]):
+            if result.status in _SOLVED and result.time_s is not None:
+                current = best[i]
+                if current is None or result.time_s < current:
+                    best[i] = result.time_s
+    return best
+
+
+def styled_cell(result: ProblemResult, *, icpc: bool, padded: bool, style: str, first: bool) -> str:
+    """A cell in the ``emoji`` style (✅ solved, ⚡ first solve, ❌ tried) or ``classic`` one
+    (attempts raised, the first solve marked)."""
+    if style not in STYLES:
+        return cell(result, icpc=icpc, padded=padded)
+    if result.status in _SOLVED:
+        tries = f"<sup>{result.rejected_attempts}</sup>" if result.rejected_attempts else ""
+        star = "*" if result.status is ProblemStatus.PROVISIONAL else ""
+        value = _hm(result.time_s, padded=padded) if icpc else _number(result.points)
+        if not icpc:
+            tries = ""
+        if style == "emoji":
+            if first:
+                return f"{_emoji('⚡')}{tries} <b>{value}</b>{star}"
+            return f"{_emoji('✅')}{tries} {value}{star}"
+        text = f"+{tries} {value}{star}" if icpc else f"{value}{star}"
+        return f"<mark>{text}</mark>" if first else text
+    if result.status is ProblemStatus.REJECTED:
+        if style == "emoji":
+            return f"{_emoji('❌')}<sup>{result.rejected_attempts}</sup>"
+        return f"-{result.rejected_attempts}"
+    return ""
+
+
 def cell(result: ProblemResult, *, icpc: bool, padded: bool = False) -> str:
     """One problem cell: ``+2 3:02`` solved after 2 wrong tries, ``-3`` unsolved, blank untried."""
     if result.status in {ProblemStatus.ACCEPTED, ProblemStatus.PROVISIONAL}:
@@ -110,16 +158,38 @@ def _phase_key(phase: ContestPhase) -> str:
     return "before" if phase is ContestPhase.BEFORE else "finished"
 
 
-def _row_html(row: StandingRow, columns: range, *, icpc: bool, padded: bool = False) -> str:
+def _row_html(
+    row: StandingRow,
+    columns: range,
+    *,
+    icpc: bool,
+    padded: bool = False,
+    ctx: ViewContext | None = None,
+    firsts: list[int | None] | None = None,
+    flagged: bool = False,
+) -> str:
+    ctx = ctx or ViewContext()
+    firsts = firsts or []
+    who = html.escape(_clip(row.who), quote=False)
+    if ctx.view != "friends" and any(handle_key(h) in ctx.friends for h in row.handles):
+        who = f"<mark><b>{who}</b></mark>"  # a followed handle stands out in the full table
+
+    def problem(i: int) -> str:
+        if i >= len(row.problems):
+            return ""
+        result = row.problems[i]
+        if flagged:  # the platform names the first solver (kep.uz: one per problem)
+            first = result.first
+        else:  # the earliest time; ties at the same second all count
+            first = i < len(firsts) and firsts[i] is not None and result.time_s == firsts[i]
+        return styled_cell(result, icpc=icpc, padded=padded, style=ctx.style, first=first)
+
     cells = [
-        str(row.rank),
-        html.escape(_clip(row.who), quote=False),
-        _number(row.points),
+        _emoji(MEDALS[row.rank]) if row.rank in MEDALS else str(row.rank),
+        who,
+        f"<b>{_number(row.points)}</b>",
         str(row.penalty),
-        *(
-            cell(row.problems[i], icpc=icpc, padded=padded) if i < len(row.problems) else ""
-            for i in columns
-        ),
+        *(problem(i) for i in columns),
     ]
     return "<tr>" + "".join(f"<td>{c}</td>" for c in cells) + "</tr>"
 
@@ -148,7 +218,14 @@ def render(
     header = "<tr>" + "".join(f"<th>{html.escape(h, quote=False)}</th>" for h in head) + "</tr>"
     # kep.uz writes solve times as 01:23, Codeforces as 1:23; each table follows its site.
     padded = standings.contest.platform == platforms.KEP
-    body = "".join(_row_html(r, range(start, end), icpc=icpc, padded=padded) for r in rows)
+    firsts = first_solves(standings)
+    flagged = any(p.first for r in standings.rows for p in r.problems)
+    body = "".join(
+        _row_html(
+            r, range(start, end), icpc=icpc, padded=padded, ctx=ctx, firsts=firsts, flagged=flagged
+        )
+        for r in rows
+    )
     zone = time_zone if time_zone and tzs.is_valid_zone(time_zone) else "UTC"
     status = say.rich(
         "standings-status",
@@ -166,7 +243,8 @@ def render(
         to_problem=standings.problems[end - 1].index if standings.problems else "-",
     )
     name = html.escape(standings.contest.name, quote=False)
-    table = f"<table>{header}{body}</table>" if rows else ""
+    attrs = "bordered striped" if ctx.style == "classic" else "bordered compact"
+    table = f"<table {attrs}>{header}{body}</table>" if rows else ""
     empty = ""
     if not rows:
         if ctx.view == "friends":

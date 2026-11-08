@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
@@ -566,8 +567,9 @@ async def test_standings_refresh_noop_and_bad_callbacks(harness: Harness) -> Non
 async def test_cf_type_contests_show_points_not_times(harness: Harness) -> None:
     await harness.say(PRIVATE, PRIVATE, "/standings 1972")
     html = harness.session.rich()[-1]["html"]
-    assert "<td>500</td>" in html
-    assert ":" not in html.split("<table>")[1].split("</table>")[0]
+    table = html.split("<table", 1)[1].split("</table>")[0]
+    assert re.search(r"> ?(<b>)?500(</b>)?</td>", table)  # points after the ✅ or ⚡, not a time
+    assert ":" not in re.sub(r"<[^>]+>", "", table)
 
 
 async def _live_rows(harness: Harness) -> list[tuple[int, int, int, int, str]]:
@@ -875,7 +877,7 @@ async def test_settings_hub_shows_every_setting_with_its_button(harness: Harness
         assert line in text
     assert _callbacks(sent) == [
         "set:menu:lang", "set:menu:tz", "set:tone:neutral", "set:menu:rem",
-        "set:menu:alr", "set:cols:8", "set:sum:off", "fr:l:0",
+        "set:menu:alr", "set:cols:8", "set:sum:off", "fr:l:0", "set:style:classic",
     ]  # fmt: skip
 
 
@@ -1072,7 +1074,11 @@ async def _follow(harness: Harness, chat_id: int, user_id: int, *names: str) -> 
 
 
 def _table_ranks(html: str) -> list[str]:
-    return [part.split("</td>")[0] for part in html.split("<tr><td>")[1:]]
+    """The rank column, with the top-3 medals read back as numbers."""
+    medals = {"🥇": "1", "🥈": "2", "🥉": "3"}
+    cells = [part.split("</td>")[0] for part in html.split("<tr><td>")[1:]]
+    plain = [re.sub(r"<[^>]+>", "", c) for c in cells]
+    return [medals.get(c, c) for c in plain]
 
 
 async def test_a_chat_with_friends_sees_only_them_first_and_can_switch(harness: Harness) -> None:
@@ -1299,3 +1305,46 @@ async def test_a_silent_chat_gets_no_answer_of_any_kind(harness: Harness) -> Non
     # The control: the same dispatcher still answers everywhere else.
     await harness.say(PRIVATE, PRIVATE, "/help")
     assert harness.session.last_text() == I18N.t(None, "help-text")
+
+
+async def test_the_table_style_is_switched_in_settings(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/settings")
+    chat = await harness.chat(PRIVATE)
+    assert chat is not None
+    assert chat.table_style == "emoji"
+    await harness.tap(PRIVATE, PRIVATE, "set:style:classic")
+    chat = await harness.chat(PRIVATE)
+    assert chat is not None
+    assert chat.table_style == "classic"
+    text = harness.session.sent("EditMessageText")[-1]["text"]
+    assert "Jadval ko'rinishi: <b>klassik</b>" in text
+
+    await harness.say(PRIVATE, PRIVATE, "/standings 1970")
+    assert "<table bordered striped>" in harness.session.rich()[-1]["html"]
+
+    before = len(harness.session.alerts())
+    await harness.tap(PRIVATE, PRIVATE, "set:style:neon")  # not a style
+    assert len(harness.session.alerts()) == before + 1
+    chat = await harness.chat(PRIVATE)
+    assert chat is not None
+    assert chat.table_style == "classic"
+
+
+async def test_only_an_admin_switches_a_groups_table_style(harness: Harness) -> None:
+    await harness.say(GROUP, ADMIN, "/settings")
+    await harness.tap(GROUP, MEMBER, "set:style:classic")
+    chat = await harness.chat(GROUP)
+    assert chat is not None
+    assert chat.table_style == "emoji"
+
+
+async def test_the_database_refuses_an_unknown_table_style(harness: Harness) -> None:
+    from sqlalchemy import text
+    from sqlalchemy.exc import IntegrityError
+
+    await harness.say(PRIVATE, PRIVATE, "/settings")
+    with pytest.raises(IntegrityError):
+        async with harness.sessions() as session, session.begin():
+            await session.execute(
+                text("UPDATE chats SET table_style = 'neon' WHERE chat_id = :c"), {"c": PRIVATE}
+            )

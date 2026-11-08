@@ -9,7 +9,7 @@ from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Message
 
-from cpstands.bot import keyboards
+from cpstands.bot import keyboards, standings_view
 from cpstands.bot.common import (
     DEFAULT_REMINDER_OFFSETS,
     ensure_chat,
@@ -42,6 +42,7 @@ MENU_ALR = "set:menu:alr"
 RT_PREFIX = "set:rt:"
 LVL_PREFIX = "set:lvl:"
 COLS_PREFIX = "set:cols:"
+STYLE_PREFIX = "set:style:"
 SUM_PREFIX = "set:sum:"
 FR_LIST = "fr:l:"
 FR_DETAIL = "fr:d:"
@@ -80,6 +81,7 @@ async def settings_view(deps: Deps, chat: repos.ChatRecord) -> tuple[str, Inline
         reminders=reminders_text(deps, chat),
         level=chat.notify_level,
         cols=chat.table_cols,
+        style=chat.table_style,
         summary="on" if chat.summary_enabled else "off",
         count=count,
     )
@@ -91,6 +93,7 @@ def _hub_keyboard(deps: Deps, chat: repos.ChatRecord, tr: Translator) -> InlineK
     other_tone = "neutral" if chat.tone == "playful" else "playful"
     next_cols = COLUMN_CHOICES[(COLUMN_CHOICES.index(chat.table_cols) + 1) % len(COLUMN_CHOICES)]
     next_summary = "off" if chat.summary_enabled else "on"
+    next_style = "classic" if chat.table_style == "emoji" else "emoji"
     state = "on" if chat.summary_enabled else "off"
     b = keyboards.button
     return InlineKeyboardMarkup(
@@ -125,6 +128,14 @@ def _hub_keyboard(deps: Deps, chat: repos.ChatRecord, tr: Translator) -> InlineK
                     icons=icons,
                 ),
                 b(tr("button-friends"), f"{FR_LIST}0", emoji="👥", icons=icons),
+            ],
+            [
+                b(
+                    tr("button-table-style", style=chat.table_style),
+                    f"{STYLE_PREFIX}{next_style}",
+                    emoji="📈",
+                    icons=icons,
+                ),
             ],
         ]
     )
@@ -308,6 +319,20 @@ async def on_cols_chosen(callback: CallbackQuery, deps: Deps) -> None:
     await _show_hub(callback, deps, message, chat.chat_id)
 
 
+async def on_style_chosen(callback: CallbackQuery, deps: Deps) -> None:
+    context = await tap_context(deps, callback, admin=True)
+    if context is None:
+        return
+    message, chat = context
+    style = (callback.data or "")[len(STYLE_PREFIX) :]
+    if style not in standings_view.STYLES:
+        await callback.answer(say(deps, chat)("button-expired"), show_alert=True)
+        return
+    async with deps.sessions() as session, session.begin():
+        await repos.set_table_style(session, chat.chat_id, style)
+    await _show_hub(callback, deps, message, chat.chat_id)
+
+
 async def on_summary_chosen(callback: CallbackQuery, deps: Deps) -> None:
     context = await tap_context(deps, callback, admin=True)
     if context is None:
@@ -472,6 +497,7 @@ def create_settings_router() -> Router:
     router.callback_query.register(on_menu_alerts, F.data == MENU_ALR)
     router.callback_query.register(on_level_chosen, F.data.startswith(LVL_PREFIX))
     router.callback_query.register(on_cols_chosen, F.data.startswith(COLS_PREFIX))
+    router.callback_query.register(on_style_chosen, F.data.startswith(STYLE_PREFIX))
     router.callback_query.register(on_summary_chosen, F.data.startswith(SUM_PREFIX))
     router.callback_query.register(on_friends_list, F.data.startswith(FR_LIST))
     router.callback_query.register(on_friend_detail, F.data.startswith(FR_DETAIL))
