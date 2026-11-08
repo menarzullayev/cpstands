@@ -15,7 +15,8 @@ from cpstands.ui.emoji_ids import CUSTOM_EMOJI_IDS
 VS16 = chr(0xFE0F)  # variation selector-16, appended to some emoji
 
 # The RestrictedEmoji set has no twin for these, so each is drawn with the closest emoji it has.
-# The plain emoji stays as the tag's fallback text, so clients without custom emoji see no change.
+# The tag's text is the twin, not the plain character: Telegram refuses a custom emoji whose text
+# is not that emoji (``→`` gave ENTITY_TEXT_INVALID on 2026-11-08).
 ALIASES: dict[str, str] = {
     "⚠️": "❗",
     "ℹ️": "❕",
@@ -63,6 +64,7 @@ def decorate(html_text: str) -> str:
         if m.group(1) is not None:
             return m.group(1)
         emoji = m.group(0)
-        return f'<tg-emoji emoji-id="{_IDS[emoji]}">{emoji}</tg-emoji>'
+        text = ALIASES.get(emoji, emoji)
+        return f'<tg-emoji emoji-id="{_IDS[emoji]}">{text}</tg-emoji>'
 
     return _DECORATE.sub(wrap, html_text)
