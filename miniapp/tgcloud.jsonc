@@ -1,0 +1,9 @@
+{
+  "$schema": "./node_modules/@tgcloud/cli/schema/tgcloud.json",
+  "static": {
+    "source": "dist",
+    // Vite puts content-hashed files here, so browsers may cache them for a year.
+    "immutable": ["/assets/*"],
+    "headers": [{ "path": "/*", "set": { "Referrer-Policy": "no-referrer" } }]
+  }
+}
