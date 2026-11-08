@@ -62,7 +62,7 @@ Primary: **S1 community member in groups**. Control surface: **S2 group admin**.
 | REQ-010 | Upsolved problems are reported separately from in-contest solves, when the data source permits it. | FEAT-003 |
 | REQ-011 | Admins add and remove handles by public handle, singly or in bulk; invalid handles are reported individually without rejecting valid ones. | FEAT-004 |
 | REQ-012 | A chat's watch list is limited (default 100 handles) with a clear message at the limit. | FEAT-004 |
-| REQ-013 | The bot never asks for Codeforces API keys, secrets, passwords or tokens. | FEAT-004 |
+| REQ-013 | The bot never asks for Codeforces passwords or tokens, and never stores or logs an API key or secret. Owner decision 2026-11-08: the optional `/import` command (private chat only) may receive an API key and secret once, deletes that message at once, uses them for one `user.friends` call and drops them. | FEAT-004 |
 | REQ-014 | Each chat has a language (uz, ru, en) and a time zone; defaults come from the chat's first admin setup, never from guesses without confirmation. | FEAT-005 |
 | REQ-015 | All user-facing texts exist in uz, ru and en with the same meaning; a missing translation fails the build. | FEAT-005 |
 | REQ-016 | `/upcoming` lists the next contests with local start times and links. | FEAT-006 |

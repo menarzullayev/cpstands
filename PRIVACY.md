@@ -17,9 +17,21 @@ cpstands (the Telegram bot @cpstandsbot) stores the minimum it needs to work.
 
 - the text of any message sent to the bot or to a chat it is in
 - names, usernames or phone numbers of Telegram users
-- Codeforces passwords, API keys, secrets or tokens (the bot never asks for them)
+- Codeforces passwords or tokens (the bot never asks for them)
+- Codeforces API keys and secrets: the only exception is the optional `/import` command, see below
 
 Logs are structured, contain no message text and keep Telegram ids hashed.
+
+## Importing friends with an API key (optional)
+
+`/import` (private chat only) can copy the friends list of your Codeforces account. For that you
+send an API key and its secret in one message. The bot deletes that message first, uses the key
+for a single signed `user.friends` request, and drops it: the key and secret are held in memory for
+the duration of that request, never written to the database, never logged and never repeated back.
+If Telegram refuses to delete the message, the bot tells you so; delete it yourself. Afterwards,
+remove the key at https://codeforces.com/settings/api. Telegram itself and Codeforces see the key
+as they see any message or request; use a key you can revoke. The command is entirely optional:
+handles can always be added by name with `/track`.
 
 ## Deleting your data
 

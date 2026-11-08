@@ -128,6 +128,7 @@ help-text =
     /rank — kuzatilgan handlelar reytingi
     /rating — bitta foydalanuvchi reyting kartasi
     /summary — kuzatilgan handlelarning oxirgi contestdagi natijasi
+    /import — Codeforces do'stlarini ko'chirish (shaxsiy chat)
 
     <b>Contestlar</b> <i>(tez orada)</i>
     /standings · /upcoming · /rank
@@ -226,7 +227,7 @@ privacy-text =
     • siz kuzatadigan ommaviy Codeforces handlelari
     • o'sha handlelarning contest natijalari, 30 kun
 
-    Xabar matnini saqlamayman va hech qachon parol, API kalit yoki token so'ramayman.
+    Xabar matnini saqlamayman va hech qachon parol yoki token so'ramayman. Yagona istisno — ixtiyoriy /import: API kalitni shaxsiy chatda bir marta yuborasiz, men xabarni o'chiraman, kalitni bitta so'rov uchun ishlataman va hech qayerda saqlamayman va logga yozmayman.
     Shu chat haqida saqlangan hamma narsani o'chirish uchun /delete yuboring.
 button-privacy-policy = Siyosat
 button-delete-data = Ma'lumotni o'chirish
@@ -375,3 +376,22 @@ summary-no-friends = 👥 Avval handle qo'shing: <code>/track add tourist</code>
 summary-none = 🤷 Kuzatilgan handlelardan hech biri unda qatnashmagan.
 summary-source-error = ⚠️ Codeforces hozir javob bermayapti. Bir daqiqadan keyin qayta urinib ko'ring.
 button-results = Natijalar
+
+import-private-only = 🔒 Import uchun API kalitingiz kerak, shuning uchun u faqat men bilan shaxsiy chatda ishlaydi. Botni oching va u yerda /import yuboring.
+import-intro =
+    📥 <b>Codeforces do'stlarini import qilish</b>
+
+    1. <a href="https://codeforces.com/settings/api">codeforces.com/settings/api</a> sahifasini oching va "Add API key" tugmasini bosing.
+    2. Menga <b>kalit va secret</b>ni bitta xabarda yuboring, masalan:
+    <code>KEY SECRET</code> (40 belgili ikkita kod).
+
+    Xabaringizni darhol o'chiraman, kalitni bitta so'rov uchun ishlataman va unutaman: u hech qayerda saqlanmaydi va logga yozilmaydi. Keyin kalitni Codeforces'dan o'chiring. /cancel — bekor qilish; 5 daqiqa kutaman.
+import-cancelled = ✋ Import bekor qilindi.
+import-bad-format = ⚠️ Xabarda 40 belgili ikkita kod (kalit va secret) topilmadi. Xabar o'chirildi. Qayta yuboring yoki /cancel.
+import-not-deleted = ⚠️ Kalit yozilgan xabarni o'chira olmadim. Uni o'zingiz o'chiring va kalitni Codeforces'dan olib tashlang.
+import-bad-credentials = ❌ Codeforces bu kalit yoki secretni qabul qilmadi. Ikkala kodni tekshirib, /import bilan qaytadan boshlang.
+import-source-error = ⚠️ Codeforces hozir javob bermayapti. Bir daqiqadan keyin /import bilan qaytadan boshlang.
+import-none = 🤷 Codeforces'dagi do'stlar ro'yxatingiz bo'sh.
+import-done = ✅ Import qilindi: { $count } ta yangi, { $already } tasi ro'yxatda allaqachon bor edi.
+import-over-limit = 🔒 Ro'yxat limitiga sig'madi: { $count } ta.
+import-revoke = 🧹 Endi API kalitni codeforces.com/settings/api sahifasidan o'chiring: u menga keyin kerak emas.

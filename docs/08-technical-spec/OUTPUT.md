@@ -136,7 +136,7 @@ Each has a deterministic key. The notifier consumes events through `deliveries`;
 
 ## Authentication / authorization
 
-- Identity: Telegram user and chat ids from updates; no passwords, no tokens from users (REQ-013).
+- Identity: Telegram user and chat ids from updates; no passwords, no tokens from users (REQ-013). The one exception is the opt-in `/import` flow: an API key and secret in a private chat, deleted at once, used for one call, never stored or logged.
 - Roles: **member** (read-only commands), **chat admin** (Telegram administrators and the creator; watch list and settings), **owner** (configured Telegram id; operator commands in private chat).
 - Admin check: `getChatMember` result cached for 5 minutes per `(chat, user)` and refreshed from `chat_member` updates; every admin-only callback re-checks (REQ-021).
 - Rate limits: per user 20 commands per minute and per chat 60 per minute; excess gets one localized notice then silence for the window.

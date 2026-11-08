@@ -42,6 +42,7 @@ class FakeSession(BaseSession):
     next_message_id: int = 1000
     refuse_ephemeral: bool = False
     edit_error: Exception | None = None
+    delete_error: Exception | None = None
     send_error: Exception | None = None
     send_attempts: int = 0
 
@@ -67,6 +68,8 @@ class FakeSession(BaseSession):
                 raise self.send_error
         if name == "EditMessageText" and self.edit_error is not None:
             raise self.edit_error
+        if name == "DeleteMessage" and self.delete_error is not None:
+            raise self.delete_error
         if (
             name == "SendMessage"
             and data.get("ephemeral_message_parameters")

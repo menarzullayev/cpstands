@@ -128,6 +128,7 @@ help-text =
     /rank — ratings of the followed handles
     /rating — one user's rating card
     /summary — how the followed handles did in the last contest
+    /import — copy your Codeforces friends (private chat)
 
     <b>Contests</b> <i>(coming soon)</i>
     /standings · /upcoming · /rank
@@ -226,7 +227,7 @@ privacy-text =
     • the public Codeforces handles you follow
     • contest results of those handles, for 30 days
 
-    I never keep message text, and I never ask for passwords, API keys or tokens.
+    I never keep message text and never ask for passwords or tokens. The only exception is the optional /import: you send an API key once in a private chat, I delete the message, use the key for one request and never store or log it.
     Send /delete to erase everything stored about this chat.
 button-privacy-policy = Privacy policy
 button-delete-data = Delete data
@@ -378,3 +379,22 @@ summary-no-friends = 👥 Follow some handles first: <code>/track add tourist</c
 summary-none = 🤷 None of the followed handles took part in it.
 summary-source-error = ⚠️ Codeforces does not answer right now. Try again in a minute.
 button-results = Results
+
+import-private-only = 🔒 Importing needs your API key, so it works only in a private chat with me. Open the bot and send /import there.
+import-intro =
+    📥 <b>Import friends from Codeforces</b>
+
+    1. Open <a href="https://codeforces.com/settings/api">codeforces.com/settings/api</a> and press "Add API key".
+    2. Send me the <b>key and the secret</b> in one message, for example:
+    <code>KEY SECRET</code> (two 40-character codes).
+
+    I delete your message at once, use the key for one request and forget it: it is never saved or logged. Afterwards delete the key on Codeforces. /cancel to stop; I wait 5 minutes.
+import-cancelled = ✋ Import cancelled.
+import-bad-format = ⚠️ I could not find two 40-character codes (key and secret) in your message. It was deleted. Send them again, or /cancel.
+import-not-deleted = ⚠️ I could not delete your message with the key. Please delete it yourself and remove the key on Codeforces.
+import-bad-credentials = ❌ Codeforces rejected this key or secret. Check both codes and start again with /import.
+import-source-error = ⚠️ Codeforces does not answer right now. Start again with /import in a minute.
+import-none = 🤷 Your friends list on Codeforces is empty.
+import-done = ✅ Imported: { $count } new, { $already } were already in the list.
+import-over-limit = 🔒 { $count } did not fit into the list limit.
+import-revoke = 🧹 Now delete the API key at codeforces.com/settings/api: I no longer need it.

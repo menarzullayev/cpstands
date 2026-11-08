@@ -15,6 +15,7 @@ from cpstands import __version__, metrics
 from cpstands.bot.alerts import AlertNotifier, AlertWatcher
 from cpstands.bot.deps import Deps
 from cpstands.bot.handlers import create_router
+from cpstands.bot.import_friends import create_import_router
 from cpstands.bot.live import LiveUpdater
 from cpstands.bot.monitor import OperatorAlerts
 from cpstands.bot.owner import create_owner_router
@@ -61,6 +62,7 @@ def build_dispatcher(deps: Deps, limiter: RateLimiter | None = None) -> Dispatch
     dispatcher.include_router(create_settings_router())
     dispatcher.include_router(create_rating_router())
     dispatcher.include_router(create_summary_router())
+    dispatcher.include_router(create_import_router())
     dispatcher.include_router(create_privacy_router())
     dispatcher.include_router(create_owner_router())
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -43,6 +43,21 @@ MEMBER = 11
 I18N = I18n()
 
 
+class FriendsStub:
+    """Stands in for the one-shot ``user.friends`` call."""
+
+    def __init__(self) -> None:
+        self.result: tuple[str, ...] = ("tourist", "jiangly")
+        self.error: Exception | None = None
+        self.calls: list[tuple[str, str]] = []
+
+    async def fetch(self, api_key: str, api_secret: str) -> tuple[str, ...]:
+        self.calls.append((api_key, api_secret))
+        if self.error is not None:
+            raise self.error
+        return self.result
+
+
 @dataclass
 class Harness:
     dispatcher: Dispatcher
@@ -52,6 +67,7 @@ class Harness:
     source: FakeSource
     ops: OpsState
     _next: int = 1
+    friends: FriendsStub = field(default_factory=lambda: FriendsStub())
 
     async def feed(self, update: Update) -> None:
         bound = Update.model_validate(
@@ -127,7 +143,11 @@ async def harness(migrated_database: str) -> AsyncIterator[Harness]:
         summaries=SummaryService(source, standings),  # type: ignore[arg-type]
         owner_id=PRIVATE,
     )
-    yield Harness(build_dispatcher(deps, RateLimiter()), bot, fake, sessions, source, ops)
+    stub = FriendsStub()
+    deps.fetch_friends = stub.fetch
+    yield Harness(
+        build_dispatcher(deps, RateLimiter()), bot, fake, sessions, source, ops, friends=stub
+    )
     await engine.dispose()
 
 
