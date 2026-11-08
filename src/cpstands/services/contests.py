@@ -11,11 +11,12 @@ from typing import Literal
 import structlog
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from cpstands import platforms
 from cpstands.db import repos
 from cpstands.domain.contest import ContestPhase
 from cpstands.sources.base import SourcePort
 
-PLATFORM = "codeforces"
+PLATFORM = platforms.CODEFORCES  # the default platform
 UPCOMING_DAYS = 14
 UPCOMING_LIMIT = 8
 FRESH_FOR_S = 900.0  # /upcoming re-reads the contest list when the stored one is older
@@ -44,6 +45,13 @@ class ContestService:
         self._now = now
         self._clock = clock
         self._synced_at: float | None = None
+        self._platform = source.platform
+        # Codeforces reminds every chat; other platforms only the chats that follow them.
+        self._followers_only = self._platform != PLATFORM
+
+    @property
+    def platform(self) -> str:
+        return self._platform
 
     async def sync(self) -> list[ContestChange]:
         """Read the contest list, store it, and correct reminders for what changed."""
@@ -51,7 +59,9 @@ class ContestService:
         now = self._now()
         changes: list[ContestChange] = []
         async with self._sessions() as session, session.begin():
-            known = {c.contest_id: c for c in await repos.stored_before_contests(session, PLATFORM)}
+            known = {
+                c.contest_id: c for c in await repos.stored_before_contests(session, self._platform)
+            }
             seen: set[int] = set()
             for contest in listing.contests:
                 previous = known.get(contest.external_id)
@@ -60,7 +70,7 @@ class ContestService:
                 seen.add(contest.external_id)
                 await repos.upsert_contest(
                     session,
-                    PLATFORM,
+                    self._platform,
                     contest.external_id,
                     contest.name,
                     contest.phase.value,
@@ -75,15 +85,17 @@ class ContestService:
             for contest_id, previous in known.items():
                 if contest_id not in seen:  # deleted from the list: treat as cancelled
                     await repos.upsert_contest(
-                        session, PLATFORM, contest_id, previous.name, "CANCELLED",
+                        session, self._platform, contest_id, previous.name, "CANCELLED",
                         previous.starts_at, previous.duration_s,
                     )  # fmt: skip
-                    told = await repos.cancel_reminders(session, PLATFORM, contest_id)
+                    told = await repos.cancel_reminders(session, self._platform, contest_id)
                     await repos.queue_notice(
-                        session, PLATFORM, contest_id, told, repos.NOTICE_CANCELLED, now=now
+                        session, self._platform, contest_id, told, repos.NOTICE_CANCELLED, now=now
                     )
                     changes.append(ContestChange(contest_id, previous.name, "cancelled"))
-            await repos.plan_reminders(session, PLATFORM, now=now)
+            await repos.plan_reminders(
+                session, self._platform, now=now, followers_only=self._followers_only
+            )
         self._synced_at = self._clock()
         if changes:
             log.info("contest_changes", changes=[(c.contest_id, c.kind) for c in changes])
@@ -101,24 +113,30 @@ class ContestService:
         assert isinstance(contest, Contest)
         cid = contest.external_id
         if contest.phase is ContestPhase.CANCELLED:
-            told = await repos.cancel_reminders(session, PLATFORM, cid)
-            await repos.queue_notice(session, PLATFORM, cid, told, repos.NOTICE_CANCELLED, now=now)
+            told = await repos.cancel_reminders(session, self._platform, cid)
+            await repos.queue_notice(
+                session, self._platform, cid, told, repos.NOTICE_CANCELLED, now=now
+            )
             return ContestChange(cid, contest.name, "cancelled")
         if contest.phase is not ContestPhase.BEFORE:
-            await repos.cancel_reminders(session, PLATFORM, cid)
+            await repos.cancel_reminders(session, self._platform, cid)
             return ContestChange(cid, contest.name, "started")
         if contest.starts_at is not None and contest.starts_at != previous.starts_at:
             told = await repos.reschedule_reminders(
-                session, PLATFORM, cid, contest.starts_at, now=now
+                session, self._platform, cid, contest.starts_at, now=now
             )
-            await repos.queue_notice(session, PLATFORM, cid, told, repos.NOTICE_MOVED, now=now)
+            await repos.queue_notice(
+                session, self._platform, cid, told, repos.NOTICE_MOVED, now=now
+            )
             return ContestChange(cid, contest.name, "moved")
         return None
 
     async def plan(self) -> int:
         """Create the reminder rows that are missing (new chats, switched-on reminders)."""
         async with self._sessions() as session, session.begin():
-            return await repos.plan_reminders(session, PLATFORM, now=self._now())
+            return await repos.plan_reminders(
+                session, self._platform, now=self._now(), followers_only=self._followers_only
+            )
 
     async def upcoming(self) -> list[repos.ContestRow]:
         """The next contests, re-reading the list first when the stored one is stale."""
@@ -128,7 +146,7 @@ class ContestService:
         async with self._sessions() as session:
             return await repos.upcoming_contests(
                 session,
-                PLATFORM,
+                self._platform,
                 now=now,
                 until=now + timedelta(days=UPCOMING_DAYS),
                 limit=UPCOMING_LIMIT,

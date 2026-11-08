@@ -8,7 +8,7 @@ cpstands (the Telegram bot @cpstandsbot) stores the minimum it needs to work.
 |---|---|---|
 | Telegram chat id, chat type | to know where to send messages | until the chat is deleted or removed the bot (then 30 days) |
 | language, time zone, tone, reminder and alert switches | your settings | same |
-| public Codeforces handles the chat follows | to follow them | same |
+| public Codeforces and kep.uz handles the chat follows | to follow them | same |
 | contest results of those handles (problems, times) | to detect solves | 30 days |
 | ids of the bot's own live-standings messages | to edit them in place | 30 days after the contest |
 | queued and sent reminders and alerts (no message text) | to send each one once | 30 days |
@@ -17,6 +17,7 @@ cpstands (the Telegram bot @cpstandsbot) stores the minimum it needs to work.
 
 - the text of any message sent to the bot or to a chat it is in
 - names, usernames or phone numbers of Telegram users
+- full names, avatars or countries of kep.uz users: the kep.uz tables include them, the bot reads only the public username
 - Codeforces passwords or tokens (the bot never asks for them)
 - Codeforces API keys and secrets: the only exception is the optional `/import` command, see below
 

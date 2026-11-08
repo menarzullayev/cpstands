@@ -541,13 +541,19 @@ class ClaimedReminder:
 
 
 async def plan_reminders(
-    session: AsyncSession, platform: str, *, now: datetime, horizon_days: int = 30
+    session: AsyncSession,
+    platform: str,
+    *,
+    now: datetime,
+    horizon_days: int = 30,
+    followers_only: bool = False,
 ) -> int:
     """Create the missing reminder rows of every active chat; safe to run again and again.
 
     An offset whose moment has already passed is stored as ``skipped``, so it is never sent late
     and never planned twice. Rows that were cancelled (reminders switched off and on again)
-    become scheduled again when their moment is still ahead.
+    become scheduled again when their moment is still ahead. With ``followers_only`` only
+    channels and the chats that follow a handle of this platform are reminded.
     """
     result = await session.execute(
         text(
@@ -561,6 +567,9 @@ async def plan_reminders(
             JOIN contests c ON c.platform = :platform
             CROSS JOIN LATERAL unnest(ch.reminder_offsets) AS off
             WHERE ch.status = 'active'
+              AND (NOT CAST(:followers AS boolean) OR ch.chat_type = 'channel' OR EXISTS (
+                    SELECT 1 FROM watched_handles w
+                    WHERE w.chat_id = ch.chat_id AND w.platform = c.platform))
               AND c.phase = 'BEFORE'
               AND c.starts_at > CAST(:now AS timestamptz)
               AND c.starts_at <= CAST(:now AS timestamptz) + make_interval(days => :days)
@@ -570,7 +579,7 @@ async def plan_reminders(
               WHERE reminders.state = 'cancelled' AND EXCLUDED.due_at > CAST(:now AS timestamptz)
             """
         ),
-        {"platform": platform, "now": now, "days": horizon_days},
+        {"platform": platform, "now": now, "days": horizon_days, "followers": followers_only},
     )
     return int(result.rowcount or 0)  # type: ignore[attr-defined]
 

@@ -10,7 +10,7 @@ from aiogram import Router
 from aiogram.filters import Command, CommandObject
 from aiogram.types import Message
 
-from cpstands import __version__
+from cpstands import __version__, platforms
 from cpstands.bot.deps import Deps
 from cpstands.db import repos
 from cpstands.i18n import Markup, Translator
@@ -127,8 +127,8 @@ async def _switch(message: Message, command: CommandObject, deps: Deps, *, pause
     if target.lstrip("-").isdigit():
         await _switch_chat(message, deps, say, int(target), pause=pause)
         return
-    name = target.lower() or PLATFORM
-    if name != PLATFORM:
+    name = target.lower().rstrip(":") or PLATFORM
+    if name not in platforms.PLATFORMS:
         await message.answer(say("owner-pause-usage"))
         return
     health = deps.ops.source(name)

@@ -69,7 +69,8 @@ class Settings(BaseSettings):
     cf_api_base: str = "https://codeforces.com/api"
     cf_min_request_interval_seconds: float = 2.0
     kep_api_base: str = "https://kep.uz/api"
-    kep_enabled: bool = False
+    kep_min_request_interval_seconds: float = 1.5
+    kep_enabled: bool = True  # owner decision 2026-11-08: kep.uz for everyone
 
     @field_validator("announce_offsets", mode="before")
     @classmethod

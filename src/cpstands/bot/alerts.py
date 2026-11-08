@@ -20,7 +20,7 @@ from aiogram.exceptions import (
 from aiogram.types import InlineKeyboardMarkup, LinkPreviewOptions
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from cpstands import metrics
+from cpstands import metrics, platforms
 from cpstands.bot.common import html_link
 from cpstands.bot.live import fetch_delay
 from cpstands.bot.reminders import duration_text
@@ -64,6 +64,7 @@ class AlertWatcher:
         self._clock = clock
         self._now = now
         self._sleep = sleep
+        self._platform = standings.platform
         self._next_due: dict[int, float] = {}
 
     async def run(self) -> None:
@@ -78,7 +79,7 @@ class AlertWatcher:
 
     async def tick(self) -> None:
         async with self._sessions() as session:
-            contests = await repos.active_contests_to_watch(session, PLATFORM)
+            contests = await repos.active_contests_to_watch(session, self._platform)
         for gone in set(self._next_due) - set(contests):
             self._next_due.pop(gone, None)
         for contest_id in contests:
@@ -105,7 +106,7 @@ class AlertWatcher:
         async with self._sessions() as session, session.begin():
             await repos.upsert_contest(
                 session,
-                PLATFORM,
+                self._platform,
                 contest_id,
                 contest.name,
                 contest.phase.value,
@@ -128,16 +129,16 @@ def render_alerts(
     blocks of different contests share a message.
     """
     say = i18n.bound(chat.language, chat.tone)
-    by_contest: dict[int, list[repos.ClaimedAlert]] = defaultdict(list)
+    by_contest: dict[tuple[str, int], list[repos.ClaimedAlert]] = defaultdict(list)
     for alert in alerts:
-        by_contest[int(str(alert.payload["contest_id"]))].append(alert)
+        platform = str(alert.payload.get("platform", PLATFORM))
+        by_contest[(platform, int(str(alert.payload["contest_id"])))].append(alert)
     blocks: list[tuple[str, list[str]]] = []
-    for contest_id, group in by_contest.items():
+    for (platform, contest_id), group in by_contest.items():
+        site = platforms.get(platform)
         name = str(group[0].payload["contest_name"])
-        header = say(
-            "alert-contest", contest=_link(f"https://codeforces.com/contest/{contest_id}", name)
-        )
-        lines = [_alert_line(say, contest_id, alert.payload) for alert in group]
+        header = say("alert-contest", contest=_link(site.contest_url(contest_id), name))
+        lines = [_alert_line(say, site, contest_id, alert.payload) for alert in group]
         for start in range(0, len(lines), MAX_LINES_PER_MESSAGE):
             blocks.append((header, lines[start : start + MAX_LINES_PER_MESSAGE]))
     messages: list[str] = []
@@ -154,11 +155,11 @@ def render_alerts(
     return messages
 
 
-def _alert_line(say: Translator, contest_id: int, p: dict[str, object]) -> str:
-    problem = _link(
-        f"https://codeforces.com/contest/{contest_id}/problem/{p['problem']}", str(p["problem"])
-    )
-    handle = _link(f"https://codeforces.com/profile/{p['handle']}", str(p["handle"]))
+def _alert_line(
+    say: Translator, site: platforms.Platform, contest_id: int, p: dict[str, object]
+) -> str:
+    problem = _link(site.problem_url(contest_id, str(p["problem"])), str(p["problem"]))
+    handle = _link(site.profile_url(str(p["handle"])), site.shown(str(p["handle"])))
     time_s = p.get("time_s")
     title = str(p.get("problem_name") or "")
     when = duration_text(time_s) if isinstance(time_s, int) else "-"

@@ -18,6 +18,7 @@ from aiogram.types import (
     Message,
 )
 
+from cpstands import platforms
 from cpstands.bot import keyboards, rank_view, standings_view
 from cpstands.bot.common import CHAT_TYPES
 from cpstands.bot.common import ensure_chat as _ensure_chat
@@ -25,7 +26,7 @@ from cpstands.bot.common import is_admin as _is_admin
 from cpstands.bot.common import refresh as _refresh
 from cpstands.bot.common import say as _say
 from cpstands.bot.common import tap_context as _tap_context
-from cpstands.bot.deps import Deps
+from cpstands.bot.deps import Deps, PlatformKit
 from cpstands.bot.live import MAX_LIVE_PER_CHAT
 from cpstands.bot.reminders import duration_text, tg_time
 from cpstands.bot.settings import settings_view as _settings_view
@@ -170,20 +171,29 @@ async def on_upcoming(message: Message, deps: Deps) -> None:
     if chat is None:
         return
     say = _say(deps, chat)
-    try:
-        contests = await deps.contests.upcoming()
-    except SourceError:
-        log.warning("upcoming_source_error", exc_info=True)
+    contests: list[tuple[platforms.Platform, repos.ContestRow]] = []
+    failed = 0
+    for name, kit in deps.kits().items():
+        try:
+            found = await kit.contests.upcoming()
+        except SourceError:
+            log.warning("upcoming_source_error", platform=name, exc_info=True)
+            failed += 1
+            continue
+        contests.extend((platforms.get(name), c) for c in found)
+    if failed and not contests:
         await deps.whisper.reply(message, say("upcoming-source-error"))
         return
+    contests.sort(key=lambda pc: (pc[1].starts_at is None, pc[1].starts_at, pc[0].name))
     if not contests:
         await deps.whisper.reply(message, say("upcoming-empty"))
         return
     blocks = [say("upcoming-header")]
-    for contest in contests:
+    for site, contest in contests:
+        label = f" · {site.label}" if site.prefix else ""
         name = Markup(
-            f'<a href="https://codeforces.com/contests/{contest.contest_id}">'
-            f"{_escape(contest.name)}</a>"
+            f'<a href="{site.contest_url(contest.contest_id)}">'
+            f"{_escape(contest.name)}</a>{_escape(label)}"
         )
         assert contest.starts_at is not None  # upcoming contests always have a start
         blocks.append(
@@ -210,7 +220,7 @@ async def on_track(message: Message, command: CommandObject, deps: Deps) -> None
     verb, _, rest = (command.args or "").strip().partition(" ")
     verb = verb.lower()
     if verb == "list":
-        handles = await deps.watchlist.list(chat.chat_id)
+        handles = await deps.watchlist.list_all(chat.chat_id)
         if not handles:
             await deps.whisper.reply(message, say("track-list-empty"))
         else:
@@ -308,28 +318,45 @@ async def on_help_track(callback: CallbackQuery, deps: Deps) -> None:
 
 
 async def _rank_page(
-    deps: Deps, chat: repos.ChatRecord, page: int, *, refresh: bool
+    deps: Deps,
+    chat: repos.ChatRecord,
+    page: int,
+    *,
+    refresh: bool,
+    platform: str = PLATFORM,
 ) -> tuple[str, InlineKeyboardMarkup] | str:
     """The rating page and its buttons, or the text of a failure."""
     say = _say(deps, chat)
-    handles = await deps.watchlist.list(chat.chat_id)
-    if not handles:
+    kit = deps.kit(platform)
+    handles = await deps.watchlist.list(chat.chat_id, platform)
+    if not handles or kit is None:
         return say("rank-empty")
     try:
-        table = await deps.ratings.get(handles, refresh=refresh)
+        table = await kit.ratings.get(handles, refresh=refresh)
     except SourceError:
-        log.warning("rank_source_error", exc_info=True)
+        log.warning("rank_source_error", platform=platform, exc_info=True)
         return say("rank-source-error")
-    text = rank_view.render(table, page, say, time_zone=chat.time_zone)
-    return text, rank_view.keyboard(len(table.rows), page, say, icons=deps.icons)
+    site = platforms.get(platform)
+    text = rank_view.render(table, page, say, time_zone=chat.time_zone, site=site)
+    return text, rank_view.keyboard(len(table.rows), page, say, icons=deps.icons, site=site)
 
 
-async def on_rank(message: Message, deps: Deps) -> None:
+def _rank_platform(arg: str) -> str:
+    """``/rank`` is Codeforces; ``/rank kep`` (or ``kep:``) is kep.uz."""
+    word = arg.strip().lower().rstrip(":")
+    for name, site in platforms.PLATFORMS.items():
+        if word and word in {name, site.prefix.rstrip(":"), site.label.lower()}:
+            return name
+    return PLATFORM
+
+
+async def on_rank(message: Message, command: CommandObject, deps: Deps) -> None:
     chat = await _ensure_chat(deps, message.chat)
     if chat is None:
         return
     await message.bot.send_chat_action(message.chat.id, "typing")  # type: ignore[union-attr]
-    result = await _rank_page(deps, chat, 0, refresh=False)
+    platform = _rank_platform(command.args or "")
+    result = await _rank_page(deps, chat, 0, refresh=False, platform=platform)
     if isinstance(result, str):
         await deps.whisper.reply(message, result)
         return
@@ -353,7 +380,9 @@ async def on_rank_page(callback: CallbackQuery, deps: Deps) -> None:
     except (IndexError, ValueError):
         await callback.answer(_say(deps, chat)("button-expired"), show_alert=True)
         return
-    result = await _rank_page(deps, chat, page, refresh=parts[2:] == ["r"])
+    platform = rank_view.platform_of(parts)
+    refresh = "r" in parts[2:]
+    result = await _rank_page(deps, chat, page, refresh=refresh, platform=platform)
     if isinstance(result, str):
         await callback.answer(_plain(result), show_alert=True)
         return
@@ -400,16 +429,11 @@ async def on_chat_member(event: ChatMemberUpdated, deps: Deps) -> None:
 
 # --- standings ---------------------------------------------------------------------------
 
-_CONTEST_URL_RE = re.compile(r"codeforces\.com/(?:contest|contests)/(\d{1,7})", re.IGNORECASE)
-
 
 def parse_contest_id(text: str) -> int | None:
-    """Accept ``1970`` or a codeforces.com contest link."""
-    cleaned = text.strip()
-    if cleaned.isascii() and cleaned.isdigit() and len(cleaned) <= 7:
-        return int(cleaned) or None
-    match = _CONTEST_URL_RE.search(cleaned)
-    return int(match.group(1)) if match else None
+    """Accept ``1970`` or a codeforces.com contest link (Codeforces only)."""
+    found = platforms.parse_contest(text)
+    return found[1] if found and found[0].name == PLATFORM else None
 
 
 async def on_standings(message: Message, command: CommandObject, deps: Deps) -> None:
@@ -417,19 +441,21 @@ async def on_standings(message: Message, command: CommandObject, deps: Deps) -> 
     if chat is None:
         return
     say = _say(deps, chat)
-    contest_id = parse_contest_id(command.args or "")
-    if contest_id is None:
+    found = platforms.parse_contest(command.args or "")
+    kit = deps.kit(found[0].name) if found else None
+    if found is None or kit is None:
         await deps.whisper.reply(message, say("standings-usage"))
         return
+    site, contest_id = found
     await message.bot.send_chat_action(message.chat.id, "typing")  # type: ignore[union-attr]
-    standings = await _load_standings(deps, contest_id)
+    standings = await _load_standings(kit, contest_id)
     if isinstance(standings, str):
-        await deps.whisper.reply(message, _failure(say, standings, contest_id))
+        await deps.whisper.reply(message, _failure(say, standings, site.shown(contest_id)))
         return
     if standings.contest.phase is ContestPhase.BEFORE:
         await message.answer(say("standings-not-started", name=standings.contest.name))
         return
-    ctx = await _view_context(deps, chat, None)
+    ctx = await _view_context(deps, chat, None, site.name)
     text = standings_view.render(standings, 0, 0, say, time_zone=chat.time_zone, ctx=ctx)
     markup = standings_view.keyboard(
         standings, 0, 0, say, icons=deps.icons, ctx=ctx, chat_id=message.chat.id
@@ -445,7 +471,7 @@ async def on_standings(message: Message, command: CommandObject, deps: Deps) -> 
             await repos.register_live_message(
                 session,
                 message.chat.id,
-                PLATFORM,
+                site.name,
                 contest_id,
                 sent.message_id,
                 max_live=MAX_LIVE_PER_CHAT,
@@ -453,21 +479,21 @@ async def on_standings(message: Message, command: CommandObject, deps: Deps) -> 
 
 
 async def _view_context(
-    deps: Deps, chat: repos.ChatRecord, preferred: str | None
+    deps: Deps, chat: repos.ChatRecord, preferred: str | None, platform: str = PLATFORM
 ) -> standings_view.ViewContext:
     """Friends or everyone, and how many problem columns, for this chat."""
     async with deps.sessions() as session:
-        friends = frozenset(await repos.scoreboard_keys(session, chat.chat_id, PLATFORM))
+        friends = frozenset(await repos.scoreboard_keys(session, chat.chat_id, platform))
     view = standings_view.resolve_view(preferred, friends)
     return standings_view.ViewContext(view, friends, chat.table_cols)
 
 
 async def _load_standings(
-    deps: Deps, contest_id: int, *, refresh: bool = False
+    kit: PlatformKit, contest_id: int, *, refresh: bool = False
 ) -> FullStandings | str:
     """Return the standings, or the name of a failure: ``not-found`` or ``source-error``."""
     try:
-        return await deps.standings.get(contest_id, refresh=refresh)
+        return await kit.standings.get(contest_id, refresh=refresh)
     except PermanentSourceError:
         return "not-found"
     except SourceError:
@@ -475,7 +501,7 @@ async def _load_standings(
         return "source-error"
 
 
-def _failure(say: Translator, kind: str, contest_id: int) -> str:
+def _failure(say: Translator, kind: str, contest_id: int | str) -> str:
     if kind == "not-found":
         return say("standings-not-found", id=str(contest_id))
     return say("standings-source-error")
@@ -488,18 +514,25 @@ async def on_standings_page(callback: CallbackQuery, deps: Deps) -> None:
     message, chat = context
     say = _say(deps, chat)
     parts = (callback.data or "").split(":")
+    target = standings_view.parse_target(parts[1] if len(parts) > 1 else "")
+    kit = deps.kit(target[0].name) if target else None
     try:
-        contest_id, row_page, col_page = int(parts[1]), int(parts[2]), int(parts[3])
+        row_page, col_page = int(parts[2]), int(parts[3])
     except (IndexError, ValueError):
+        target = None
+    if target is None or kit is None:
         await callback.answer(say("button-expired"), show_alert=True)
         return
+    site, contest_id = target
     token = parts[4] if len(parts) > 4 and parts[4] in standings_view.TOKEN_VIEW else None
     preferred = standings_view.TOKEN_VIEW.get(token or "")
-    standings = await _load_standings(deps, contest_id, refresh=parts[-1] == "r")
+    standings = await _load_standings(kit, contest_id, refresh=parts[-1] == "r")
     if isinstance(standings, str):
-        await callback.answer(_plain(_failure(say, standings, contest_id)), show_alert=True)
+        await callback.answer(
+            _plain(_failure(say, standings, site.shown(contest_id))), show_alert=True
+        )
         return
-    ctx = await _view_context(deps, chat, preferred)
+    ctx = await _view_context(deps, chat, preferred, site.name)
     text = standings_view.render(
         standings, row_page, col_page, say, time_zone=chat.time_zone, ctx=ctx
     )
@@ -511,7 +544,7 @@ async def on_standings_page(callback: CallbackQuery, deps: Deps) -> None:
             await repos.set_live_pages(
                 session,
                 message.chat.id,
-                PLATFORM,
+                site.name,
                 contest_id,
                 message.message_id,
                 row_page,

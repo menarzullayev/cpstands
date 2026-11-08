@@ -16,7 +16,7 @@ def test_defaults_are_safe_and_valid() -> None:
     settings = make()
     assert settings.default_language == "uz"
     assert settings.supported_languages == ["uz", "ru", "en"]
-    assert settings.kep_enabled is False
+    assert settings.kep_enabled is True
     assert settings.telegram_use_webhook is False
     assert settings.cf_min_request_interval_seconds >= 2
 

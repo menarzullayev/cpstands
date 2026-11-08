@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import UTC, datetime
+from typing import Protocol
 
 import structlog
 from aiogram import Bot, Dispatcher
@@ -14,7 +15,7 @@ from aiogram.types import ErrorEvent
 from cpstands import __version__, metrics
 from cpstands.bot.alerts import AlertNotifier, AlertWatcher
 from cpstands.bot.appcmd import create_app_router
-from cpstands.bot.deps import Deps
+from cpstands.bot.deps import Deps, PlatformKit
 from cpstands.bot.donate import create_donate_router
 from cpstands.bot.handlers import create_router
 from cpstands.bot.import_friends import create_import_router
@@ -51,8 +52,10 @@ from cpstands.services.upsolve import UpsolveService
 from cpstands.services.watchlist import WatchlistService
 from cpstands.sources.codeforces.client import ClientConfig, CodeforcesClient
 from cpstands.sources.codeforces.source import CodeforcesSource
+from cpstands.sources.kep import KepClient, KepClientConfig, KepSource
 
 PLATFORM = "codeforces"
+KEP_REFRESH_AGE_S = 5.0  # the Refresh button re-reads a kep.uz table this soon
 ALLOWED_UPDATES = [
     "message",
     "callback_query",
@@ -62,6 +65,10 @@ ALLOWED_UPDATES = [
 ]
 
 log = structlog.get_logger(__name__)
+
+
+class _Worker(Protocol):
+    async def run(self) -> None: ...
 
 
 def build_dispatcher(deps: Deps, limiter: RateLimiter | None = None) -> Dispatcher:
@@ -142,10 +149,29 @@ async def run_bot(settings: Settings) -> None:
     source = ObservedSource(CodeforcesSource(client), ops)
     contests = ContestService(sessions, source)
     standings = StandingsService(source)
+    kep_client: KepClient | None = None
+    extra: dict[str, PlatformKit] = {}
+    extra_sources = {}
+    if settings.kep_enabled:
+        kep_client = KepClient(
+            KepClientConfig(
+                base_url=settings.kep_api_base,
+                min_interval_s=settings.kep_min_request_interval_seconds,
+            )
+        )
+        kep = ObservedSource(KepSource(kep_client), ops)
+        kep_standings = StandingsService(kep, min_refresh_age_s=KEP_REFRESH_AGE_S)
+        extra[kep.platform] = PlatformKit(
+            standings=kep_standings,
+            contests=ContestService(sessions, kep),
+            ratings=RatingService(kep),
+            summaries=SummaryService(kep, kep_standings),
+        )
+        extra_sources[kep.platform] = kep
     deps = Deps(
         i18n=I18n(custom_emoji=settings.custom_emoji),
         sessions=sessions,
-        watchlist=WatchlistService(sessions, source),
+        watchlist=WatchlistService(sessions, source, extra=extra_sources),
         admin=make_admin_checker(bot),
         standings=standings,
         contests=contests,
@@ -154,6 +180,7 @@ async def run_bot(settings: Settings) -> None:
         summaries=SummaryService(source, standings),
         owner_id=settings.telegram_owner_id,
         icons=settings.button_icons,
+        extra=extra,
     )
     dispatcher = build_dispatcher(deps)
     await store_api_secret(sessions, settings.telegram_bot_token.get_secret_value())
@@ -186,7 +213,27 @@ async def run_bot(settings: Settings) -> None:
     monitor = OperatorAlerts(
         bot, sessions, ops, deps.standings, deps.i18n, settings.telegram_owner_id
     )
+    background: list[asyncio.Task[None]] = []
+    for name, kit in extra.items():
+        workers: list[_Worker] = [
+            LiveUpdater(bot, sessions, kit.standings, deps.i18n, icons=deps.icons),
+            Scheduler(
+                sessions,
+                kit.contests,
+                ReminderSender(bot, sessions, deps.i18n, icons=deps.icons, ops=ops, platform=name),
+                ops=ops,
+            ),
+            AlertWatcher(sessions, kit.standings, AlertService(sessions, platform=name)),
+            SummaryWorker(sessions, kit.summaries, ops=ops),
+            UpsolveWatcher(
+                sessions, extra_sources[name], UpsolveService(sessions, platform=name), ops=ops
+            ),
+        ]
+        background += [
+            asyncio.create_task(w.run(), name=f"{name}-{type(w).__name__}") for w in workers
+        ]
     tasks = [
+        *background,
         asyncio.create_task(updater.run(), name="live-standings"),
         asyncio.create_task(scheduler.run(), name="scheduler"),
         asyncio.create_task(watcher.run(), name="alert-watcher"),
@@ -225,4 +272,6 @@ async def run_bot(settings: Settings) -> None:
             await runner.cleanup()
         await bot.session.close()
         await client.aclose()
+        if kep_client is not None:
+            await kep_client.aclose()
         await engine.dispose()

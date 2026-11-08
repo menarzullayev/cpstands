@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import re
 import time
 from collections.abc import Awaitable, Callable
 from dataclasses import replace
@@ -15,6 +14,7 @@ from aiogram.filters import Command, CommandObject
 from aiogram.types import InlineKeyboardMarkup, LinkPreviewOptions, Message
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from cpstands import platforms
 from cpstands.bot import keyboards
 from cpstands.bot.common import ensure_chat, html_link, say
 from cpstands.bot.deps import Deps
@@ -25,7 +25,7 @@ from cpstands.services.ops import OpsState
 from cpstands.services.summary import FriendResult, Summary, SummaryService
 from cpstands.sources.base import PermanentSourceError, SourceError
 
-PLATFORM = "codeforces"
+PLATFORM = platforms.CODEFORCES
 log = structlog.get_logger(__name__)
 
 TICK_S = 300.0
@@ -34,11 +34,10 @@ WINDOW = timedelta(hours=12)  # a contest that ended longer ago is not announced
 RATING_WAIT = timedelta(hours=4)  # how long to wait for the rating changes before going without
 MAX_LINES = 15
 MEDALS = {1: "🥇", 2: "🥈", 3: "🥉"}
-_ID_RE = re.compile(r"^\d{1,7}$")
 
 
-def event_key(contest_id: int) -> str:
-    return f"summary|{PLATFORM}|{contest_id}"
+def event_key(contest_id: int, platform: str = PLATFORM) -> str:
+    return f"summary|{platform}|{contest_id}"
 
 
 def _results(payload: dict[str, object]) -> list[FriendResult]:
@@ -66,7 +65,8 @@ def render_summary(
     """The text and buttons of one summary; works from a stored outbox payload."""
     tr = i18n.bound(chat.language, chat.tone)
     contest_id = int(str(payload["contest_id"]))
-    url = f"https://codeforces.com/contest/{contest_id}"
+    site = platforms.get(str(payload.get("platform", PLATFORM)))
+    url = site.contest_url(contest_id)
     results = _results(payload)
     lines = [
         tr(
@@ -80,7 +80,7 @@ def render_summary(
         line = tr(
             "summary-line",
             medal=MEDALS.get(result.rank, "▫️"),
-            handle=html_link(f"https://codeforces.com/profile/{result.handle}", result.handle),
+            handle=html_link(site.profile_url(result.handle), site.shown(result.handle)),
             rank=str(result.rank),
             solved=result.solved,
         )
@@ -96,7 +96,7 @@ def render_summary(
             "",
             tr(
                 "summary-best",
-                handle=html_link(f"https://codeforces.com/profile/{best.handle}", best.handle),
+                handle=html_link(site.profile_url(best.handle), site.shown(best.handle)),
                 delta=f"{best.delta:+d}",
             ),
         ]
@@ -107,13 +107,13 @@ def render_summary(
             [
                 keyboards.link(
                     tr("button-results"),
-                    f"{url}/standings",
+                    site.standings_url(contest_id),
                     emoji="🏆",
                     style="primary",
                     icons=icons,
                 ),
                 keyboards.app_button(
-                    tr, f"standings_{contest_id}", icons=icons, chat_id=chat.chat_id
+                    tr, f"standings_{site.slug(contest_id)}", icons=icons, chat_id=chat.chat_id
                 ),
             ]
         ]
@@ -140,6 +140,7 @@ class SummaryWorker:
         self._now = now
         self._sleep = sleep
         self._ops = ops
+        self._platform = summaries.platform
         self._done: set[int] = set()
         self._retry_at: dict[int, float] = {}
 
@@ -159,11 +160,11 @@ class SummaryWorker:
             self._ops.beat("summary")
         now = self._now()
         async with self._sessions() as session:
-            audience = await repos.summary_audience(session, PLATFORM)
+            audience = await repos.summary_audience(session, self._platform)
             if not audience:
                 return 0
             finished = await repos.finished_contests(
-                session, PLATFORM, ended_after=now - WINDOW, now=now, limit=10
+                session, self._platform, ended_after=now - WINDOW, now=now, limit=10
             )
         queued = 0
         for contest in finished:
@@ -199,7 +200,11 @@ class SummaryWorker:
                     continue
                 payload = replace(summary, results=mine).payload()
                 if await repos.enqueue_alert(
-                    session, chat_id, event_key(contest.contest_id), payload, not_before=now
+                    session,
+                    chat_id,
+                    event_key(contest.contest_id, self._platform),
+                    payload,
+                    not_before=now,
                 ):
                     queued += 1
         self._done.add(contest.contest_id)
@@ -207,10 +212,22 @@ class SummaryWorker:
         return queued
 
 
-async def _friends_of(deps: Deps, chat_id: int) -> dict[str, str]:
+async def _friends_of(deps: Deps, chat_id: int, platform: str = PLATFORM) -> dict[str, str]:
     async with deps.sessions() as session:
-        friends = await repos.list_friends(session, chat_id, PLATFORM)
+        friends = await repos.list_friends(session, chat_id, platform)
     return {f.key: f.display for f in friends if f.show_in_list}
+
+
+def parse_target(arg: str) -> tuple[platforms.Platform, int | None] | None:
+    """``""`` / ``kep`` (the latest contests) or ``1970`` / ``kep:504`` (one contest)."""
+    word = arg.strip().lower().rstrip(":")
+    if not word:
+        return platforms.DEFAULT, None
+    for site in platforms.PLATFORMS.values():
+        if site.prefix and word == site.prefix.rstrip(":"):
+            return site, None
+    found = platforms.parse_contest(arg)
+    return found if found else None
 
 
 async def on_summary(message: Message, command: CommandObject, deps: Deps) -> None:
@@ -218,23 +235,25 @@ async def on_summary(message: Message, command: CommandObject, deps: Deps) -> No
     if chat is None:
         return
     tr = say(deps, chat)
-    arg = (command.args or "").strip()
-    if arg and not _ID_RE.match(arg):
+    target = parse_target(command.args or "")
+    kit = deps.kit(target[0].name) if target else None
+    if target is None or kit is None:
         await deps.whisper.reply(message, tr("summary-usage"))
         return
-    friends = await _friends_of(deps, chat.chat_id)
+    site, contest_id = target
+    friends = await _friends_of(deps, chat.chat_id, site.name)
     if not friends:
         await deps.whisper.reply(message, tr("summary-no-friends"))
         return
-    if arg:
-        candidates = [int(arg)]
+    if contest_id is not None:
+        candidates = [contest_id]
     else:
         async with deps.sessions() as session:
-            recent = await repos.latest_finished_contests(session, PLATFORM, limit=3)
+            recent = await repos.latest_finished_contests(session, site.name, limit=3)
         candidates = [c.contest_id for c in recent]
-    for contest_id in candidates:
+    for candidate in candidates:
         try:
-            summary: Summary = await deps.summaries.summary(contest_id, friends)
+            summary: Summary = await kit.summaries.summary(candidate, friends)
         except PermanentSourceError:
             continue
         except SourceError:

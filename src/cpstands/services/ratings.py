@@ -56,6 +56,10 @@ class RatingService:
         self._cards: dict[str, tuple[RatingCard | None, float]] = {}
         self._fetched_at = self._now()
 
+    @property
+    def platform(self) -> str:
+        return self._source.platform
+
     async def get(self, handles: Sequence[str], *, refresh: bool = False) -> RatingTable:
         """Ratings of ``handles``; only the handles missing from the cache are requested."""
         async with self._lock:

@@ -101,3 +101,15 @@ store, not in PostgreSQL.
 | Secret files | Moved from the Desktop to `~/.secrets/cpstands/`. The folder ACL allows only the owner and SYSTEM. |
 | Next feature | Group mode in the Mini App. |
 | Bot-down alerting (row 3) | Done: the Healthchecks.io check `cpstands-bot` (period 2 min, grace 3 min) alerts on Telegram and by email; tested end to end. See `docs/runbooks/monitoring.md`. |
+
+## kep.uz integration (2026-11-08)
+
+| Question | Decision |
+|---|---|
+| Who gets it | Everyone, from launch. |
+| How users write it | A `kep:` prefix: `/track add kep:alice`, `/standings kep:504`, `/rating kep:alice`, `/rank kep`, `/summary kep`. kep.uz profile and contest links work too. Codeforces stays bare. |
+| Live standings | Re-read every 30 s; the Refresh button re-reads at once (at most every 5 s). |
+| Features | Reminders (also in the channel), live standings, solve alerts, rating card, summary, upsolve alerts, Mini App. |
+
+Assumption (not asked): kep.uz reminders go to channels and to the chats that follow at least one
+kep.uz handle, so Codeforces-only chats get no new messages. Evidence: EVID-022.

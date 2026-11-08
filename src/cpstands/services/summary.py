@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import time
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
+from cpstands import platforms
 from cpstands.domain.contest import (
     ContestRatingChange,
     FullStandings,
@@ -43,10 +44,12 @@ class Summary:
     participants: int
     rated: bool
     results: tuple[FriendResult, ...]
+    platform: str = platforms.CODEFORCES
 
     def payload(self) -> dict[str, object]:
         return {
             "kind": "summary",
+            "platform": self.platform,
             "contest_id": self.contest_id,
             "contest_name": self.name,
             "participants": self.participants,
@@ -114,6 +117,10 @@ class SummaryService:
         self._clock = clock
         self._changes: dict[int, tuple[dict[str, ContestRatingChange] | None, float]] = {}
 
+    @property
+    def platform(self) -> str:
+        return self._source.platform
+
     async def rating_changes(self, contest_id: int) -> dict[str, ContestRatingChange] | None:
         """Rating changes by handle key, or ``None`` while Codeforces has not published any."""
         now = self._clock()
@@ -138,4 +145,4 @@ class SummaryService:
     ) -> Summary:
         standings = await self._standings.get_shared(contest_id, max_age_s=600.0)
         changes = await self.rating_changes(contest_id) if with_ratings else None
-        return build_summary(standings, friends, changes)
+        return replace(build_summary(standings, friends, changes), platform=self.platform)

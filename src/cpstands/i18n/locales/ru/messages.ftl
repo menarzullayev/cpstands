@@ -93,6 +93,7 @@ track-usage =
     <code>/track add handle1, handle2</code> — добавить
     <code>/track remove handle</code> — убрать
     <code>/track list</code> — показать список
+    <code>/track add kep:handle</code> — пользователь kep.uz
 track-list-empty = 👥 Список пуст. Добавьте хендлы: <code>/track add tourist, jiangly</code>
 track-list-header = { $count ->
         [one] 👥 <b>Отслеживается { $count } хендл</b>
@@ -129,7 +130,7 @@ help-text =
     <b>Друзья</b>
     /track — хендлы для отслеживания
     /friends — то же самое, в личном чате
-    /rank — рейтинги отслеживаемых хендлов
+    /rank — рейтинги отслеживаемых хендлов (/rank kep — kep.uz)
     /rating — карточка рейтинга пользователя
     /summary — итоги последнего контеста для отслеживаемых хендлов
     /import — перенести друзей с Codeforces (личный чат)
@@ -144,6 +145,7 @@ standings-usage =
 
     <code>/standings 1970</code> — по номеру контеста
     <code>/standings https://codeforces.com/contest/1970</code> — по ссылке
+    <code>/standings kep:504</code> — контест kep.uz
 standings-status = { $phase ->
         [running] 🔥 <b>Идёт</b>
         [before] ⏰ <b>Ещё не начался</b>
@@ -356,7 +358,8 @@ rating-usage =
     👤 <b>Карточка рейтинга</b>
 
     <code>/rating tourist</code> — рейтинг, звание и последний контест пользователя
-rating-not-found = ❌ На Codeforces нет пользователя <b>{ $handle }</b>.
+    <code>/rating kep:handle</code> — рейтинг на kep.uz
+rating-not-found = ❌ Пользователь <b>{ $handle }</b> не найден.
 rating-source-error = ⚠️ Codeforces сейчас не отвечает. Попробуйте через минуту.
 rating-card =
     👤 <b>{ $handle }</b>
@@ -388,6 +391,7 @@ summary-usage =
 
     <code>/summary</code> — последний завершённый контест
     <code>/summary 2287</code> — контест по номеру
+    <code>/summary kep</code> — последний контест kep.uz
 summary-no-friends = 👥 Сначала добавьте хендлы: <code>/track add tourist</code>.
 summary-none = 🤷 Никто из отслеживаемых хендлов в нём не участвовал.
 summary-source-error = ⚠️ Codeforces сейчас не отвечает. Попробуйте через минуту.

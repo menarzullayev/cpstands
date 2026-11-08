@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from cpstands.bot.reminders import ReminderSender
 from cpstands.db import repos
-from cpstands.services.contests import PLATFORM, ContestService
+from cpstands.services.contests import ContestService
 from cpstands.services.ops import OpsState
 from cpstands.services.retention import RetentionService
 from cpstands.sources.base import SourceError
@@ -80,7 +80,7 @@ class Scheduler:
         for _ in range(MAX_BATCHES_PER_TICK):
             async with self._sessions() as session, session.begin():
                 claimed = await repos.claim_due_reminders(
-                    session, PLATFORM, now=self._now(), limit=BATCH
+                    session, self._contests.platform, now=self._now(), limit=BATCH
                 )
             if not claimed:
                 break

@@ -6,6 +6,7 @@ import html
 
 from aiogram.types import InlineKeyboardMarkup
 
+from cpstands import platforms
 from cpstands.bot.keyboards import button
 from cpstands.i18n import Translator
 from cpstands.services import timezone as tzs
@@ -29,7 +30,14 @@ def _cell(value: object) -> str:
     return "-" if value is None else html.escape(str(value), quote=False)
 
 
-def render(table: RatingTable, page: int, say: Translator, *, time_zone: str | None) -> str:
+def render(
+    table: RatingTable,
+    page: int,
+    say: Translator,
+    *,
+    time_zone: str | None,
+    site: platforms.Platform = platforms.DEFAULT,
+) -> str:
     """HTML of one page (0-based, clamped); the unknown handles are listed under the table."""
     total = len(table.rows)
     page = min(max(page, 0), pages(total) - 1)
@@ -62,14 +70,42 @@ def render(table: RatingTable, page: int, say: Translator, *, time_zone: str | N
         note = f"<p>{say.rich('rank-unknown', handles=names)}</p>"
     table_html = f"<table><tr>{head}</tr>{body}</table>" if rows else ""
     title = say.rich("rank-title")
+    if site.prefix:
+        title = f"{title} · {html.escape(site.label, quote=False)}"
     return f"<h1>{title}</h1><p>{status}</p>{table_html}{note}<blockquote>{footer}</blockquote>"
 
 
-def callback(page: int, *, refresh: bool = False) -> str:
-    return f"{PREFIX}{page}" + (":r" if refresh else "")
+def callback(
+    page: int, *, refresh: bool = False, site: platforms.Platform = platforms.DEFAULT
+) -> str:
+    """``rk:<page>[:r][:kep]``; Codeforces carries no platform tag."""
+    tag = site.prefix.rstrip(":")
+    return f"{PREFIX}{page}" + (":r" if refresh else "") + (f":{tag}" if tag else "")
 
 
-def keyboard(total: int, page: int, say: Translator, *, icons: bool) -> InlineKeyboardMarkup:
+_callback = callback  # the keyboard shadows the name with its own
+
+
+def platform_of(parts: list[str]) -> str:
+    """The platform named by the tag at the end of a split ``rk:`` callback."""
+    for name, site in platforms.PLATFORMS.items():
+        tag = site.prefix.rstrip(":")
+        if tag and tag in parts[2:]:
+            return name
+    return platforms.CODEFORCES
+
+
+def keyboard(
+    total: int,
+    page: int,
+    say: Translator,
+    *,
+    icons: bool,
+    site: platforms.Platform = platforms.DEFAULT,
+) -> InlineKeyboardMarkup:
+    def callback(page: int, *, refresh: bool = False) -> str:
+        return _callback(page, refresh=refresh, site=site)
+
     count = pages(total)
     page = min(max(page, 0), count - 1)
     rows = []

@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from cpstands.db import repos
 from cpstands.services.ops import OpsState
-from cpstands.services.upsolve import PLATFORM, WINDOW, UpsolveService
+from cpstands.services.upsolve import WINDOW, UpsolveService
 from cpstands.sources.base import PermanentSourceError, SourceError, SourcePort
 
 log = structlog.get_logger(__name__)
@@ -63,9 +63,13 @@ class UpsolveWatcher:
         now = self._now()
         async with self._sessions() as session:
             recent = await repos.finished_contests(
-                session, PLATFORM, ended_after=now - WINDOW, now=now, limit=MAX_CONTESTS
+                session,
+                self._service.platform,
+                ended_after=now - WINDOW,
+                now=now,
+                limit=MAX_CONTESTS,
             )
-            targets = await repos.upsolve_targets(session, PLATFORM) if recent else {}
+            targets = await repos.upsolve_targets(session, self._service.platform) if recent else {}
         for gone in set(self._next_at) - set(targets):
             del self._next_at[gone]
         if not targets:

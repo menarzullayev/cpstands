@@ -353,7 +353,7 @@ async def test_unexpected_errors_are_logged_and_answered(harness: Harness) -> No
     async def explode(*_: object, **__: object) -> object:
         raise RuntimeError("boom")
 
-    harness.dispatcher["deps"].watchlist.list = explode
+    harness.dispatcher["deps"].watchlist.list_all = explode
     await harness.say(PRIVATE, PRIVATE, "/track list")
     assert harness.session.last_text() == I18N.t(None, "error-generic")
 
@@ -627,7 +627,7 @@ async def test_upcoming_lists_the_next_two_weeks_with_links_and_times(harness: H
     text = harness.session.last_text()
     assert I18N.t(None, "upcoming-header") in text
     assert (
-        '<a href="https://codeforces.com/contests/2287">Codeforces Round &lt;1&gt; &amp; co</a>'
+        '<a href="https://codeforces.com/contest/2287">Codeforces Round &lt;1&gt; &amp; co</a>'
         in text
     )
     assert "Codeforces Round (Div. 2)" in text

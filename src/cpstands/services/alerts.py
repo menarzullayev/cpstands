@@ -16,10 +16,11 @@ from typing import Literal
 import structlog
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from cpstands import platforms
 from cpstands.db import repos
 from cpstands.domain.contest import FullStandings, ProblemStatus, StandingRow, handle_key
 
-PLATFORM = "codeforces"
+PLATFORM = platforms.CODEFORCES
 BASELINE_WINDOW_S = 600  # a contest this young is news from its first problem on
 BATCH_WINDOW_S = 15  # alerts of one poll wait this long so a chat gets one message
 VARIANTS = 3  # playful wordings per alert kind
@@ -61,6 +62,7 @@ def detect(
     standings: FullStandings,
     *,
     now: datetime,
+    platform: str = PLATFORM,
 ) -> list[Detected]:
     """The solves and system-test results that appeared between two snapshots of one row."""
     contest = standings.contest
@@ -107,7 +109,7 @@ def detect(
                 problem=label,
                 problem_name=title,
                 time_s=time_s,
-                event_key=f"{PLATFORM}|{contest.external_id}|{key}|{label}|{kind}|{time_s or 0}",
+                event_key=f"{platform}|{contest.external_id}|{key}|{label}|{kind}|{time_s or 0}",
                 occurred_at=occurred,
             )
         )
@@ -126,9 +128,11 @@ class AlertService:
         sessions: async_sessionmaker[AsyncSession],
         *,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
+        platform: str = PLATFORM,
     ) -> None:
         self._sessions = sessions
         self._now = now
+        self._platform = platform
 
     async def process(self, standings: FullStandings) -> ProcessResult:
         """Detect what changed for the followed handles and queue alerts, in one transaction."""
@@ -137,7 +141,7 @@ class AlertService:
         events = 0
         queued = 0
         async with self._sessions() as session, session.begin():
-            watched = await repos.watched_keys_of_active_chats(session, PLATFORM)
+            watched = await repos.watched_keys_of_active_chats(session, self._platform)
             matches = [
                 (row, handle)
                 for row in standings.rows
@@ -147,18 +151,20 @@ class AlertService:
             if not matches:
                 return ProcessResult(0, 0)
             keys = sorted({handle_key(handle) for _, handle in matches})
-            previous = await repos.load_snapshots(session, PLATFORM, contest_id, keys)
+            previous = await repos.load_snapshots(session, self._platform, contest_id, keys)
             by_kind = {
-                kind: await repos.watchers_of(session, PLATFORM, keys, kind)
+                kind: await repos.watchers_of(session, self._platform, keys, kind)
                 for kind in ("solve", "systest_fail")
             }
             for row, handle in matches:
                 key = handle_key(handle)
-                for event in detect(previous.get(key), row, handle, standings, now=now):
+                for event in detect(
+                    previous.get(key), row, handle, standings, now=now, platform=self._platform
+                ):
                     fresh = await repos.insert_solve_event(
                         session,
                         event_key=event.event_key,
-                        platform=PLATFORM,
+                        platform=self._platform,
                         contest_id=contest_id,
                         handle_key=key,
                         problem=event.problem,
@@ -170,7 +176,7 @@ class AlertService:
                     events += 1
                     if not event.is_alert:
                         continue
-                    payload = _payload(event, standings)
+                    payload = _payload(event, standings, self._platform)
                     for chat_id in by_kind.get(event.kind, {}).get(key, []):
                         if await repos.enqueue_alert(
                             session,
@@ -182,7 +188,7 @@ class AlertService:
                             queued += 1
                 await repos.save_snapshot(
                     session,
-                    PLATFORM,
+                    self._platform,
                     contest_id,
                     key,
                     rank=row.rank,
@@ -196,9 +202,10 @@ class AlertService:
         return ProcessResult(events, queued)
 
 
-def _payload(event: Detected, standings: FullStandings) -> dict[str, object]:
+def _payload(event: Detected, standings: FullStandings, platform: str) -> dict[str, object]:
     return {
         "kind": event.kind,
+        "platform": platform,
         "handle": event.handle,
         "contest_id": standings.contest.external_id,
         "contest_name": standings.contest.name,
