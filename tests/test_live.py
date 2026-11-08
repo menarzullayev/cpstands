@@ -266,3 +266,20 @@ def test_html_in_status_is_not_confused_with_the_table() -> None:
     stripped = re.sub(r"<p>.*?</p>", "", page, count=1)
     assert "<p>" not in stripped
     assert live.table_digest(page) == live.table_digest(page.replace("<p>x</p>", "<p>y</p>"))
+
+
+async def test_link_only_chats_get_no_callback_buttons(rig: Rig) -> None:
+    """A comment table lives in a chat whose taps are never answered: links only."""
+    await rig.register()
+    await rig.updater.tick()
+    normal = rig.edits()[-1]["reply_markup"]["inline_keyboard"]  # type: ignore[index]
+    assert any("callback_data" in b for row in normal for b in row)  # the control
+
+    rig.updater._link_only = frozenset({CHAT})
+    rig.source.standings[1970] = running(rows=61)
+    rig.clock.advance(61)
+    await rig.updater.tick()
+    linked = rig.edits()[-1]["reply_markup"]["inline_keyboard"]  # type: ignore[index]
+    buttons = [b for row in linked for b in row]
+    assert buttons
+    assert all("url" in b and "callback_data" not in b for b in buttons)

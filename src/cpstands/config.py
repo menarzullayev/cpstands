@@ -60,6 +60,8 @@ class Settings(BaseSettings):
     announce_offsets: Annotated[list[int], NoDecode] = [1440, 60]
     # Chats the bot stays silent in: it reads nothing there and answers nothing.
     silent_chats: Annotated[list[int], NoDecode] = []
+    # Live standings as a comment: <platform>:<contest>@<chat>:<message>, comma separated.
+    live_comments: Annotated[list[str], NoDecode] = []
     announce_language: str = "uz"
     # Healthchecks.io ping URL (a secret: anyone with it can fake pings). Unset turns it off.
     healthchecks_ping_url: SecretStr | None = None
@@ -79,6 +81,13 @@ class Settings(BaseSettings):
     def _split_offsets(cls, value: object) -> object:
         if isinstance(value, str):
             return [int(v) for v in value.split(",") if v.strip()]
+        return value
+
+    @field_validator("live_comments", mode="before")
+    @classmethod
+    def _split_comments(cls, value: object) -> object:
+        if isinstance(value, str):
+            return [v.strip() for v in value.split(",") if v.strip()]
         return value
 
     @field_validator("supported_languages", mode="before")

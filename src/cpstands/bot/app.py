@@ -15,6 +15,7 @@ from aiogram.types import ErrorEvent
 from cpstands import __version__, metrics
 from cpstands.bot.alerts import AlertNotifier, AlertWatcher
 from cpstands.bot.appcmd import create_app_router
+from cpstands.bot.comments import CommentPoster, parse_targets
 from cpstands.bot.deps import Deps, PlatformKit
 from cpstands.bot.donate import create_donate_router
 from cpstands.bot.handlers import create_router
@@ -215,7 +216,11 @@ async def run_bot(settings: Settings) -> None:
             language=settings.announce_language,
             time_zone=settings.default_timezone,
         )
-    updater = LiveUpdater(bot, sessions, deps.standings, deps.i18n, icons=deps.icons)
+    comment_targets = parse_targets(settings.live_comments)
+    link_only = frozenset(settings.silent_chats) | {t.chat_id for t in comment_targets}
+    updater = LiveUpdater(
+        bot, sessions, deps.standings, deps.i18n, icons=deps.icons, link_only=link_only
+    )
     sender = ReminderSender(bot, sessions, deps.i18n, icons=deps.icons, ops=ops)
     scheduler = Scheduler(sessions, contests, sender, retention=RetentionService(sessions), ops=ops)
     watcher = AlertWatcher(sessions, deps.standings, AlertService(sessions))
@@ -228,7 +233,9 @@ async def run_bot(settings: Settings) -> None:
     background: list[asyncio.Task[None]] = []
     for name, kit in extra.items():
         workers: list[_Worker] = [
-            LiveUpdater(bot, sessions, kit.standings, deps.i18n, icons=deps.icons),
+            LiveUpdater(
+                bot, sessions, kit.standings, deps.i18n, icons=deps.icons, link_only=link_only
+            ),
             Scheduler(
                 sessions,
                 kit.contests,
@@ -244,6 +251,11 @@ async def run_bot(settings: Settings) -> None:
         background += [
             asyncio.create_task(w.run(), name=f"{name}-{type(w).__name__}") for w in workers
         ]
+    if comment_targets:
+        poster = CommentPoster(
+            bot, sessions, deps.kits(), deps.i18n, comment_targets, icons=deps.icons
+        )
+        background.append(asyncio.create_task(poster.run(), name="live-comments"))
     tasks = [
         *background,
         asyncio.create_task(updater.run(), name="live-standings"),

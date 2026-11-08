@@ -113,3 +113,13 @@ store, not in PostgreSQL.
 
 Assumption (not asked): kep.uz reminders go to channels and to the chats that follow at least one
 kep.uz handle, so Codeforces-only chats get no new messages. Evidence: EVID-022.
+
+## Live standings under a kep.uz channel post (2026-11-08)
+
+- @KEPuzChannel posts an announcement one or two days before a contest, sometimes a reminder an
+  hour before, and a post after the end; in its last 100 posts there was no post at the start.
+- Decision: the live table is a comment under the announcement post. The bot replies once to the
+  post's automatic forward in @KEPuzDiscussion when the contest starts, then edits that reply
+  every 30 s until the end (`LIVE_COMMENTS=kep:504@-1001305284030:140896`).
+- The KEP.uz admins agreed. Otherwise the group stays silent (`SILENT_CHATS`): the bot answers no
+  command or button there, and the table carries link buttons only.
