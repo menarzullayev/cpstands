@@ -9,6 +9,7 @@ handles, with their real ranks) and the full table.
 from __future__ import annotations
 
 import html
+import re
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -36,6 +37,12 @@ NOOP = "st:noop"
 VIEW_TOKEN = {"friends": "f", "all": "a"}
 TOKEN_VIEW = {"f": "friends", "a": "all"}
 STYLES = ("emoji", "classic")  # owner decision 2026-11-08: emoji by default
+# Telegram keeps only the first 100 custom emoji of a message and shows the rest as plain
+# emoji (measured 2026-11-08: 201 sent, 100 kept). So solved and failed cells use plain 🟢 🔴,
+# and only the few special marks (medals, ⚡ first solves) are custom.
+MAX_CUSTOM_EMOJI = 100
+PLAIN_CELL_EMOJI = frozenset({"🟢", "🔴"})  # plain on purpose, see above
+_TAG_RE = re.compile(r'<tg-emoji emoji-id="\d+">(.*?)</tg-emoji>')
 MEDALS = {1: "🥇", 2: "🥈", 3: "🥉"}
 
 
@@ -115,7 +122,7 @@ def first_solves(standings: FullStandings) -> list[int | None]:
 
 
 def styled_cell(result: ProblemResult, *, icpc: bool, padded: bool, style: str, first: bool) -> str:
-    """A cell in the ``emoji`` style (🟢 solved, ⚡ first solve, ❌ tried) or ``classic`` one
+    """A cell in the ``emoji`` style (🟢 solved, ⚡ first solve, 🔴 tried) or ``classic`` one
     (attempts raised, the first solve marked)."""
     if style not in STYLES:
         return cell(result, icpc=icpc, padded=padded)
@@ -128,12 +135,12 @@ def styled_cell(result: ProblemResult, *, icpc: bool, padded: bool, style: str, 
         if style == "emoji":
             if first:
                 return f"{_emoji('⚡')}{tries} <b>{value}</b>{star}"
-            return f"{_emoji('🟢')}{tries} {value}{star}"
+            return f"{'🟢'}{tries} {value}{star}"
         text = f"+{tries} {value}{star}" if icpc else f"{value}{star}"
         return f"<mark>{text}</mark>" if first else text
     if result.status is ProblemStatus.REJECTED:
         if style == "emoji":
-            return f"{_emoji('❌')}<sup>{result.rejected_attempts}</sup>"
+            return f"{'🔴'}<sup>{result.rejected_attempts}</sup>"
         return f"-{result.rejected_attempts}"
     return ""
 
@@ -251,7 +258,24 @@ def render(
             empty = f"<p>{say.rich('standings-no-friends')}</p>"
         else:
             empty = f"<p>{say.rich('standings-empty')}</p>"
-    return f"<h1>{name}</h1><p>{status}</p>{table}{empty}<blockquote>{footer}</blockquote>"
+    page = f"<h1>{name}</h1><p>{status}</p>{table}{empty}<blockquote>{footer}</blockquote>"
+    return cap_custom_emoji(page)
+
+
+def cap_custom_emoji(html_text: str, limit: int = MAX_CUSTOM_EMOJI) -> str:
+    """Keep at most ``limit`` custom emoji; later ones become their plain emoji.
+
+    Telegram would do the same silently, but from the 101st on, so the look would change in the
+    middle of the table. Doing it here keeps the decision visible and testable.
+    """
+    seen = 0
+
+    def keep(match: re.Match[str]) -> str:
+        nonlocal seen
+        seen += 1
+        return match.group(0) if seen <= limit else match.group(1)
+
+    return _TAG_RE.sub(keep, html_text)
 
 
 def _clock(moment: datetime, zone: str) -> str:

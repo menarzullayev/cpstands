@@ -57,13 +57,13 @@ def test_the_emoji_style_is_the_default() -> None:
     assert view._emoji("🥇") in alice
     assert view._emoji("🥉") in carol
     assert "<td>4</td>" in dave
-    # A first solve gets ⚡ and a bold time; any other solve 🟢; a failed try ❌ with the count.
+    # A first solve gets ⚡ and a bold time; any other solve 🟢; a failed try 🔴 with the count.
     assert f"{view._emoji('⚡')} <b>00:05</b>" in alice  # A: alice was first
-    assert f"{view._emoji('🟢')} 00:15" in alice  # B: bob was first
+    assert f"{'🟢'} 00:15" in alice  # B: bob was first
     assert f"{view._emoji('⚡')}<sup>1</sup> <b>00:10</b>" in bob
-    assert f"{view._emoji('❌')}<sup>2</sup>" in carol
+    assert f"{'🔴'}<sup>2</sup>" in carol
     assert "🟢" not in dave
-    assert "❌" not in dave
+    assert "🔴" not in dave
 
 
 def test_the_classic_style_marks_first_solves_and_raises_attempts() -> None:
@@ -136,5 +136,29 @@ def test_kep_uz_names_one_first_solver_per_problem() -> None:
 def test_a_solved_cell_uses_the_owners_green_dot() -> None:
     """The owner picked a minimal green dot (2026-11-08); a plain ✅ looked like spam."""
     html = view.render(table(), 0, 0, SAY, time_zone="UTC")
-    assert '<tg-emoji emoji-id="5211182849297762045">🟢</tg-emoji> 00:15' in html
+    assert "<td>🟢 00:15</td>" in html  # plain: it does not count toward the 100 limit
     assert "✅" not in html
+
+
+def test_a_failed_problem_uses_the_owners_red_dot() -> None:
+    """The owner picked a red dot for failed tries too (2026-11-08), replacing ❌."""
+    html = view.render(table(), 0, 0, SAY, time_zone="UTC")
+    assert "<td>🔴<sup>2</sup></td>" in html
+    assert "❌" not in html
+
+
+def test_a_page_never_carries_more_than_100_custom_emoji() -> None:
+    """Telegram keeps the first 100 and shows the rest plain (measured: 201 sent, 100 kept)."""
+    from tests.support.sources import make_standings
+
+    big = make_standings(rows=60, problems=21)  # equal times: every solve ties for first
+    html = view.render(big, 0, 0, SAY, time_zone="UTC")
+    assert html.count("<tg-emoji") == view.MAX_CUSTOM_EMOJI
+    assert "⚡" in html.split("<tg-emoji")[-1]  # the rest are still shown, as plain emoji
+
+
+def test_the_cap_keeps_the_first_ones_and_unwraps_the_rest() -> None:
+    tag = '<tg-emoji emoji-id="1">⚡</tg-emoji>'
+    capped = view.cap_custom_emoji(tag * 3 + "x", limit=2)
+    assert capped == tag * 2 + "⚡x"
+    assert view.cap_custom_emoji(tag * 3, limit=5) == tag * 3  # under the limit: untouched
