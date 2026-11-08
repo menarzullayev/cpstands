@@ -181,6 +181,23 @@ class ContestRatingChange:
 
 
 @dataclass(frozen=True, slots=True)
+class Submission:
+    """One submission from ``user.status``; only what upsolve detection needs."""
+
+    submission_id: int
+    contest_id: int
+    problem_index: str
+    problem_name: str
+    verdict: str | None
+    participant_type: str
+    created_at: datetime
+
+    @property
+    def accepted(self) -> bool:
+        return self.verdict == "OK"
+
+
+@dataclass(frozen=True, slots=True)
 class RatingResult:
     ratings: tuple[UserRating, ...]
     unknown: tuple[str, ...]

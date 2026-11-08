@@ -26,6 +26,7 @@ from cpstands.bot.scheduler import Scheduler
 from cpstands.bot.settings import create_settings_router
 from cpstands.bot.summary import SummaryWorker, create_summary_router
 from cpstands.bot.telemetry import TelegramMetrics
+from cpstands.bot.upsolve import UpsolveWatcher
 from cpstands.config import Settings
 from cpstands.db import repos
 from cpstands.db.engine import create_engine, create_session_factory
@@ -40,6 +41,7 @@ from cpstands.services.ratings import RatingService
 from cpstands.services.retention import RetentionService
 from cpstands.services.standings import StandingsService
 from cpstands.services.summary import SummaryService
+from cpstands.services.upsolve import UpsolveService
 from cpstands.services.watchlist import WatchlistService
 from cpstands.sources.codeforces.client import ClientConfig, CodeforcesClient
 from cpstands.sources.codeforces.source import CodeforcesSource
@@ -142,6 +144,7 @@ async def run_bot(settings: Settings) -> None:
     watcher = AlertWatcher(sessions, deps.standings, AlertService(sessions))
     notifier = AlertNotifier(bot, sessions, deps.i18n, ops=ops, icons=deps.icons)
     summarizer = SummaryWorker(sessions, deps.summaries, ops=ops)
+    upsolver = UpsolveWatcher(sessions, source, UpsolveService(sessions), ops=ops)
     monitor = OperatorAlerts(
         bot, sessions, ops, deps.standings, deps.i18n, settings.telegram_owner_id
     )
@@ -151,6 +154,7 @@ async def run_bot(settings: Settings) -> None:
         asyncio.create_task(watcher.run(), name="alert-watcher"),
         asyncio.create_task(notifier.run(), name="alert-notifier"),
         asyncio.create_task(summarizer.run(), name="summaries"),
+        asyncio.create_task(upsolver.run(), name="upsolve"),
         asyncio.create_task(monitor.run(), name="operator-alerts"),
     ]
     runner = None

@@ -201,6 +201,14 @@ alert-solve = { $v ->
 alert-solve-neutral = { $v ->
        *[other] { $handle } solved { $problem } ({ $title }) at { $time }.
     }
+alert-upsolve = { $v ->
+        [0] 📚 { $handle } upsolved { $problem } · { $title }
+        [1] 🛠 { $handle } went back and solved { $problem } · { $title }
+       *[2] 🌱 { $handle } finished { $problem } after the round · { $title }
+    }
+alert-upsolve-neutral = { $v ->
+       *[other] { $handle } solved { $problem } ({ $title }) after the contest.
+    }
 alert-systest-fail = { $v ->
         [0] 💥 { $handle }'s { $problem } did not survive the system tests. It happens to the best! { $title } { $time }
         [1] 🧪 System tests had other plans for { $handle }'s { $problem }. Better luck next time! { $title } { $time }

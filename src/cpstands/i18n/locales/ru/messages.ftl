@@ -207,6 +207,14 @@ alert-solve = { $v ->
 alert-solve-neutral = { $v ->
        *[other] { $handle }: задача { $problem } решена ({ $title }), { $time }.
     }
+alert-upsolve = { $v ->
+        [0] 📚 { $handle } дорешал { $problem } · { $title }
+        [1] 🛠 { $handle } вернулся и решил { $problem } · { $title }
+       *[2] 🌱 { $handle } закрыл { $problem } после раунда · { $title }
+    }
+alert-upsolve-neutral = { $v ->
+       *[other] { $handle } решил { $problem } ({ $title }) после контеста.
+    }
 alert-systest-fail = { $v ->
         [0] 💥 { $problem } у { $handle } не прошла системные тесты. Бывает и у лучших! { $title } { $time }
         [1] 🧪 Системные тесты оказались строже: { $problem } у { $handle } не засчитана. В следующий раз повезёт! { $title } { $time }

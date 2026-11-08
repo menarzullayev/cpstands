@@ -201,6 +201,14 @@ alert-solve = { $v ->
 alert-solve-neutral = { $v ->
        *[other] { $handle } { $problem } masalasini yechdi ({ $title }), { $time }.
     }
+alert-upsolve = { $v ->
+        [0] 📚 { $handle } { $problem } masalasini upsolve qildi · { $title }
+        [1] 🛠 { $handle } qaytib { $problem } masalasini yechdi · { $title }
+       *[2] 🌱 { $handle } { $problem } masalasini raunddan keyin yopdi · { $title }
+    }
+alert-upsolve-neutral = { $v ->
+       *[other] { $handle } { $problem } masalasini ({ $title }) contestdan keyin yechdi.
+    }
 alert-systest-fail = { $v ->
         [0] 💥 { $handle } ning { $problem } yechimi system testdan o'tmadi. Eng yaxshilarda ham bo'ladi! { $title } { $time }
         [1] 🧪 System testlar { $handle } ning { $problem } yechimini qabul qilmadi. Keyingisida omad! { $title } { $time }

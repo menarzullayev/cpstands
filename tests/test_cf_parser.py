@@ -17,8 +17,11 @@ from cpstands.sources.base import (
 from cpstands.sources.codeforces.parser import (
     ContestUnavailableError,
     parse_contest_list,
+    parse_contest_rating_changes,
+    parse_rating_history,
     parse_standings,
     parse_user_info,
+    parse_user_status,
 )
 from tests.support.synth import handle_for, load_fixture, synthesize_standings
 
@@ -270,3 +273,78 @@ def test_largest_observed_payload_uses_little_memory() -> None:
     tracemalloc.stop()
     assert len(snapshot.results) == 200
     assert peak < 64 * 1024 * 1024
+
+
+def _ok(result: object) -> bytes:
+    return json.dumps({"status": "OK", "result": result}).encode()
+
+
+def test_rating_history_is_sorted_oldest_first_with_deltas() -> None:
+    body = _ok(
+        [
+            {
+                "contestId": 2, "contestName": "B", "rank": 5, "oldRating": 1600,
+                "newRating": 1580, "ratingUpdateTimeSeconds": 2000,
+            },
+            {
+                "contestId": 1, "contestName": "A", "rank": 9, "oldRating": 1500,
+                "newRating": 1600, "ratingUpdateTimeSeconds": 1000,
+            },
+        ]
+    )  # fmt: skip
+    history = parse_rating_history(body)
+    assert [(c.contest_id, c.delta) for c in history] == [(1, 100), (2, -20)]
+    assert parse_rating_history(_ok([])) == []
+
+
+def test_rating_history_rejects_a_malformed_entry_and_a_failed_status() -> None:
+    with pytest.raises(SourceFormatError):
+        parse_rating_history(_ok([{"contestId": 1}]))
+    with pytest.raises(PermanentSourceError):
+        parse_rating_history(json.dumps({"status": "FAILED", "comment": "handle: bad"}).encode())
+    with pytest.raises(RetryableSourceError):
+        parse_rating_history(b"<html>maintenance</html>")
+
+
+def test_contest_rating_changes_parse_and_an_unavailable_contest_is_permanent() -> None:
+    body = _ok([{"handle": "Tourist", "rank": 1, "oldRating": 3800, "newRating": 3850}])
+    (change,) = parse_contest_rating_changes(body)
+    assert (change.handle, change.delta) == ("Tourist", 50)
+    failed = {
+        "status": "FAILED",
+        "comment": "contestId: Rating changes are unavailable for this contest",
+    }
+    with pytest.raises(PermanentSourceError):
+        parse_contest_rating_changes(json.dumps(failed).encode())
+    with pytest.raises(SourceFormatError):
+        parse_contest_rating_changes(_ok([{"handle": "x"}]))
+
+
+def test_user_status_keeps_contest_submissions_newest_first_and_skips_the_rest() -> None:
+    def row(sid: object, created: object, **extra: Any) -> dict[str, Any]:
+        base = {
+            "id": sid,
+            "contestId": 1970,
+            "creationTimeSeconds": created,
+            "verdict": "OK",
+            "problem": {"index": "C", "name": "Cats"},
+            "author": {"participantType": "PRACTICE"},
+        }
+        return {**base, **extra}
+
+    body = _ok(
+        [
+            row(1, 1000),
+            row(2, 3000, verdict="WRONG_ANSWER"),
+            row(3, 2000, verdict=None),
+            {k: v for k, v in row(4, 4000).items() if k != "contestId"},  # outside any contest
+            row("x", 5000),  # no usable id
+            {"id": 6, "contestId": 1970},  # no problem or author
+        ]
+    )  # fmt: skip
+    found = parse_user_status(body)
+    assert [s.submission_id for s in found] == [2, 3, 1]
+    assert [s.accepted for s in found] == [False, False, True]
+    assert found[0].participant_type == "PRACTICE"
+    with pytest.raises(SourceFormatError):
+        parse_user_status(_ok([row(7, "soon")]))

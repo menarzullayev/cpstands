@@ -20,6 +20,7 @@ from cpstands.domain.contest import (
     RatingChange,
     RatingResult,
     StandingRow,
+    Submission,
     UserRating,
     handle_key,
 )
@@ -42,7 +43,10 @@ class FakeSource:
         ratings: dict[str, UserRating] | None = None,
         histories: dict[str, list[RatingChange]] | None = None,
         contest_changes: dict[int, list[ContestRatingChange]] | None = None,
+        submissions: dict[str, list[Submission]] | None = None,
     ) -> None:
+        self.submissions = submissions or {}
+        self.status_fetches: list[str] = []
         self.histories = histories or {}
         self.contest_changes = contest_changes or {}
         self.ratings = ratings or {}
@@ -75,6 +79,14 @@ class FakeSource:
         known = [self.ratings[handle_key(h)] for h in handles if handle_key(h) in self.ratings]
         unknown = tuple(h for h in handles if handle_key(h) not in self.ratings)
         return RatingResult(ratings=tuple(known), unknown=unknown)
+
+    async def fetch_user_submissions(self, handle: str, count: int = 50) -> tuple[Submission, ...]:
+        self.status_fetches.append(handle)
+        if self.fail:
+            raise RetryableSourceError("down")
+        if handle_key(handle) not in self._existing:
+            raise PermanentSourceError(f"handle: User with handle {handle} not found")
+        return tuple(self.submissions.get(handle_key(handle), ()))[:count]
 
     async def fetch_rating_history(self, handle: str) -> tuple[RatingChange, ...]:
         if self.fail:

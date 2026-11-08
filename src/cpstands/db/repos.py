@@ -1080,3 +1080,38 @@ async def summary_audience(session: AsyncSession, platform: str) -> dict[int, di
     for chat_id, key, display in result.all():
         audience.setdefault(int(chat_id), {})[str(key)] = str(display)
     return audience
+
+
+async def upsolve_targets(session: AsyncSession, platform: str) -> dict[str, str]:
+    """Handles somebody wants upsolve alerts for -> display spelling."""
+    result = await session.execute(
+        select(watched_handles.c.handle_key, func.min(watched_handles.c.handle_display))
+        .join(chats, chats.c.chat_id == watched_handles.c.chat_id)
+        .where(
+            watched_handles.c.platform == platform,
+            watched_handles.c.notify_upsolve.is_(True),
+            chats.c.status == "active",
+            chats.c.alerts_enabled.is_(True),
+        )
+        .group_by(watched_handles.c.handle_key)
+    )
+    return {str(key): str(display) for key, display in result.all()}
+
+
+async def upsolve_watchers(
+    session: AsyncSession, platform: str, key: str, at: datetime
+) -> list[int]:
+    """Chats that wanted upsolve alerts for ``key`` already when the solve happened."""
+    result = await session.execute(
+        select(watched_handles.c.chat_id)
+        .join(chats, chats.c.chat_id == watched_handles.c.chat_id)
+        .where(
+            watched_handles.c.platform == platform,
+            watched_handles.c.handle_key == key,
+            watched_handles.c.notify_upsolve.is_(True),
+            watched_handles.c.added_at <= at,
+            chats.c.status == "active",
+            chats.c.alerts_enabled.is_(True),
+        )
+    )
+    return [int(row[0]) for row in result.all()]

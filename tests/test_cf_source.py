@@ -8,7 +8,7 @@ import httpx
 import pytest
 
 from cpstands.domain.contest import ContestPhase
-from cpstands.sources.base import SourcePort
+from cpstands.sources.base import PermanentSourceError, SourcePort
 from cpstands.sources.codeforces import ClientConfig, CodeforcesClient, CodeforcesSource
 from tests.support.clock import FakeClock
 from tests.support.synth import load_fixture
@@ -40,6 +40,30 @@ def make_source(
             result = [{"handle": KNOWN[h.lower()]} for h in requested]
             return httpx.Response(
                 200, content=json.dumps({"status": "OK", "result": result}).encode()
+            )
+        if path.endswith("user.rating"):
+            row = {
+                "contestId": 7, "contestName": "Round", "rank": 3, "oldRating": 1500,
+                "newRating": 1530, "ratingUpdateTimeSeconds": 1_700_000_000,
+            }  # fmt: skip
+            return httpx.Response(
+                200, content=json.dumps({"status": "OK", "result": [row]}).encode()
+            )
+        if path.endswith("contest.ratingChanges"):
+            if request.url.params["contestId"] == "8":
+                body = {"status": "FAILED", "comment": "contestId: Rating changes are unavailable"}
+                return httpx.Response(400, content=json.dumps(body).encode())
+            row = {"handle": "tourist", "rank": 1, "oldRating": 3800, "newRating": 3850}
+            return httpx.Response(
+                200, content=json.dumps({"status": "OK", "result": [row]}).encode()
+            )
+        if path.endswith("user.status"):
+            row = {
+                "id": 11, "contestId": 7, "creationTimeSeconds": 1_700_000_100, "verdict": "OK",
+                "problem": {"index": "B", "name": "Bees"}, "author": {"participantType": "PRACTICE"},
+            }  # fmt: skip
+            return httpx.Response(
+                200, content=json.dumps({"status": "OK", "result": [row]}).encode()
             )
         return httpx.Response(404)
 
@@ -119,3 +143,26 @@ async def test_large_input_is_split_into_batches(monkeypatch: pytest.MonkeyPatch
     result = await source.resolve_handles(["tourist", "jiangly", "benq", "um_nik", "tourist"])
     assert set(result.known) == {"tourist", "jiangly", "benq", "um_nik"}
     assert [r.url.params["handles"] for r in seen] == ["tourist;jiangly", "benq;um_nik"]
+
+
+async def test_rating_history_asks_for_one_handle_only() -> None:
+    source, seen = make_source()
+    history = await source.fetch_rating_history("tourist")
+    assert [(c.contest_id, c.delta) for c in history] == [(7, 30)]
+    assert dict(seen[0].url.params) == {"handle": "tourist"}
+
+
+async def test_contest_rating_changes_and_an_unavailable_contest() -> None:
+    source, seen = make_source()
+    (change,) = await source.fetch_contest_rating_changes(7)
+    assert (change.handle, change.delta) == ("tourist", 50)
+    assert dict(seen[0].url.params) == {"contestId": "7"}
+    with pytest.raises(PermanentSourceError):
+        await source.fetch_contest_rating_changes(8)
+
+
+async def test_user_submissions_ask_for_a_bounded_page() -> None:
+    source, seen = make_source()
+    (submission,) = await source.fetch_user_submissions("tourist", count=30)
+    assert (submission.contest_id, submission.problem_index, submission.accepted) == (7, "B", True)
+    assert dict(seen[0].url.params) == {"handle": "tourist", "from": "1", "count": "30"}

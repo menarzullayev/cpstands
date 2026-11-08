@@ -28,6 +28,7 @@ from cpstands.domain.contest import (
     RatingChange,
     StandingRow,
     StandingsSnapshot,
+    Submission,
     UserRating,
     handle_key,
 )
@@ -365,3 +366,31 @@ def parse_contest_rating_changes(body: bytes) -> list[ContestRatingChange]:
         except (KeyError, TypeError, ValueError) as exc:
             raise SourceFormatError("malformed contest.ratingChanges entry") from exc
     return changes
+
+
+def parse_user_status(body: bytes) -> list[Submission]:
+    """Parse ``user.status`` into submissions, newest first; gym and malformed rows are skipped."""
+    found: list[Submission] = []
+    for item in _result_list(body, "user.status"):
+        problem = item.get("problem")
+        author = item.get("author")
+        if not isinstance(problem, dict) or not isinstance(author, dict):
+            continue
+        contest_id = item.get("contestId")
+        if not isinstance(contest_id, int) or not isinstance(item.get("id"), int):
+            continue  # a submission outside any contest has nothing to upsolve
+        try:
+            found.append(
+                Submission(
+                    submission_id=int(item["id"]),
+                    contest_id=contest_id,
+                    problem_index=str(problem["index"]),
+                    problem_name=str(problem.get("name", "")),
+                    verdict=str(item["verdict"]) if item.get("verdict") else None,
+                    participant_type=str(author.get("participantType", "")),
+                    created_at=datetime.fromtimestamp(float(item["creationTimeSeconds"]), tz=UTC),
+                )
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            raise SourceFormatError("malformed user.status entry") from exc
+    return sorted(found, key=lambda x: x.created_at, reverse=True)

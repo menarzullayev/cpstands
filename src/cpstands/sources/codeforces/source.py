@@ -16,6 +16,7 @@ from cpstands.domain.contest import (
     RatingChange,
     RatingResult,
     StandingsFetch,
+    Submission,
     UserRating,
     handle_key,
 )
@@ -30,6 +31,7 @@ from cpstands.sources.codeforces.parser import (
     parse_standings,
     parse_user_info,
     parse_user_ratings,
+    parse_user_status,
 )
 
 HANDLE_RE = re.compile(r"^[A-Za-z0-9_.-]{1,24}$")
@@ -131,3 +133,10 @@ class CodeforcesSource:
         """Rating changes of a finished rated contest; an unrated or unfinished one is an error."""
         raw = await self._client.fetch("contest.ratingChanges", {"contestId": str(contest_id)})
         return tuple(parse_contest_rating_changes(raw.body))
+
+    async def fetch_user_submissions(self, handle: str, count: int = 50) -> tuple[Submission, ...]:
+        """The newest ``count`` submissions of one user."""
+        raw = await self._client.fetch(
+            "user.status", {"handle": handle, "from": "1", "count": str(count)}
+        )
+        return tuple(parse_user_status(raw.body))

@@ -20,6 +20,7 @@ from cpstands.domain.contest import (
     RatingChange,
     RatingResult,
     StandingsFetch,
+    Submission,
 )
 from cpstands.sources.base import (
     PermanentSourceError,
@@ -142,6 +143,11 @@ class ObservedSource:
     async def fetch_full_standings(self, contest_id: int) -> FullStandings:
         return await self._call(
             "fetch_full_standings", lambda: self._inner.fetch_full_standings(contest_id)
+        )
+
+    async def fetch_user_submissions(self, handle: str, count: int = 50) -> tuple[Submission, ...]:
+        return await self._call(
+            "fetch_user_submissions", lambda: self._inner.fetch_user_submissions(handle, count)
         )
 
     async def fetch_rating_history(self, handle: str) -> tuple[RatingChange, ...]:

@@ -163,6 +163,8 @@ def _alert_line(say: Translator, contest_id: int, p: dict[str, object]) -> str:
     title = str(p.get("problem_name") or "")
     when = duration_text(time_s) if isinstance(time_s, int) else "-"
     variant = int(str(p.get("v", 0)))
+    if p["kind"] == "upsolve":
+        return say("alert-upsolve", handle=handle, problem=problem, title=title, v=variant)
     if p["kind"] == "systest_fail":
         return say(
             "alert-systest-fail", handle=handle, problem=problem, title=title, time=when, v=variant

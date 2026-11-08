@@ -13,6 +13,7 @@ from cpstands.domain.contest import (
     RatingChange,
     RatingResult,
     StandingsFetch,
+    Submission,
 )
 
 
@@ -70,6 +71,10 @@ class SourcePort(Protocol):
     async def fetch_ratings(self, handles: Sequence[str]) -> RatingResult: ...
 
     async def fetch_rating_history(self, handle: str) -> tuple[RatingChange, ...]: ...
+
+    async def fetch_user_submissions(
+        self, handle: str, count: int = 50
+    ) -> tuple[Submission, ...]: ...
 
     async def fetch_contest_rating_changes(
         self, contest_id: int
