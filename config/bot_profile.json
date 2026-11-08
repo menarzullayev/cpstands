@@ -134,5 +134,12 @@
       ]
     }
   },
-  "profile_photo": "assets/avatar.jpg"
+  "profile_photo": "assets/avatar.jpg",
+  "menu_button": {
+    "type": "web_app",
+    "text": "cpstands",
+    "web_app": {
+      "url": "https://app9170246912.tgcloud.ai/"
+    }
+  }
 }
