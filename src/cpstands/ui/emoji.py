@@ -42,6 +42,7 @@ ALIASES: dict[str, str] = {
 # Chosen by the owner from other sets; the bot was measured to send them (2026-11-08).
 EXTRA_IDS: dict[str, str] = {
     "🟢": "5211182849297762045",  # AttractivePack: a solved cell in standings tables
+    "🔴": "5208429100951159058",  # AttractivePack: a failed problem in standings tables
 }
 _IDS: dict[str, str] = {
     **CUSTOM_EMOJI_IDS,

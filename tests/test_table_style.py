@@ -57,13 +57,13 @@ def test_the_emoji_style_is_the_default() -> None:
     assert view._emoji("🥇") in alice
     assert view._emoji("🥉") in carol
     assert "<td>4</td>" in dave
-    # A first solve gets ⚡ and a bold time; any other solve 🟢; a failed try ❌ with the count.
+    # A first solve gets ⚡ and a bold time; any other solve 🟢; a failed try 🔴 with the count.
     assert f"{view._emoji('⚡')} <b>00:05</b>" in alice  # A: alice was first
     assert f"{view._emoji('🟢')} 00:15" in alice  # B: bob was first
     assert f"{view._emoji('⚡')}<sup>1</sup> <b>00:10</b>" in bob
-    assert f"{view._emoji('❌')}<sup>2</sup>" in carol
+    assert f"{view._emoji('🔴')}<sup>2</sup>" in carol
     assert "🟢" not in dave
-    assert "❌" not in dave
+    assert "🔴" not in dave
 
 
 def test_the_classic_style_marks_first_solves_and_raises_attempts() -> None:
@@ -138,3 +138,10 @@ def test_a_solved_cell_uses_the_owners_green_dot() -> None:
     html = view.render(table(), 0, 0, SAY, time_zone="UTC")
     assert '<tg-emoji emoji-id="5211182849297762045">🟢</tg-emoji> 00:15' in html
     assert "✅" not in html
+
+
+def test_a_failed_problem_uses_the_owners_red_dot() -> None:
+    """The owner picked a red dot for failed tries too (2026-11-08), replacing ❌."""
+    html = view.render(table(), 0, 0, SAY, time_zone="UTC")
+    assert '<tg-emoji emoji-id="5208429100951159058">🔴</tg-emoji><sup>2</sup>' in html
+    assert "❌" not in html
