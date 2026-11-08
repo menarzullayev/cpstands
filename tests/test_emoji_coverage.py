@@ -46,3 +46,12 @@ def test_a_stand_in_is_wrapped_and_keeps_its_fallback_text() -> None:
 def test_plain_typography_is_left_alone(symbol: str) -> None:
     assert decorate(symbol) == symbol
     assert custom_emoji_id(symbol) is None
+
+
+def test_buttons_are_built_through_the_helpers_so_their_icons_can_be_custom() -> None:
+    offenders = [
+        path.name
+        for path in (SRC / "bot").glob("*.py")
+        if path.name != "keyboards.py" and "InlineKeyboardButton(" in path.read_text("utf-8")
+    ]
+    assert not offenders, f"build buttons with keyboards.button/link: {offenders}"

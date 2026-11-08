@@ -10,7 +10,6 @@ from aiogram.filters import Command
 from aiogram.types import (
     CallbackQuery,
     Chat,
-    InlineKeyboardButton,
     InlineKeyboardMarkup,
     Message,
 )
@@ -68,7 +67,9 @@ async def on_privacy(message: Message, deps: Deps) -> None:
     markup = InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text=f"🔒 {say('button-privacy-policy')}", url=POLICY_URL),
+                keyboards.link(
+                    say("button-privacy-policy"), POLICY_URL, emoji="🔒", icons=deps.icons
+                ),
                 keyboards.button(say("button-delete-data"), ASK, emoji="🗑", icons=deps.icons),
             ]
         ]
