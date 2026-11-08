@@ -79,24 +79,25 @@ def _clip(name: str) -> str:
     return name if len(name) <= NAME_MAX else name[: NAME_MAX - 1] + "…"
 
 
-def _hm(seconds: int | None) -> str:
+def _hm(seconds: int | None, *, padded: bool = False) -> str:
     if seconds is None:
         return ""
-    return f"{seconds // 3600}:{seconds % 3600 // 60:02d}"
+    hours = f"{seconds // 3600:02d}" if padded else str(seconds // 3600)
+    return f"{hours}:{seconds % 3600 // 60:02d}"
 
 
 def _number(value: float) -> str:
     return f"{value:g}" if value != int(value) else str(int(value))
 
 
-def cell(result: ProblemResult, *, icpc: bool) -> str:
+def cell(result: ProblemResult, *, icpc: bool, padded: bool = False) -> str:
     """One problem cell: ``+2 3:02`` solved after 2 wrong tries, ``-3`` unsolved, blank untried."""
     if result.status in {ProblemStatus.ACCEPTED, ProblemStatus.PROVISIONAL}:
         mark = "+" if icpc else _number(result.points)
         wrong = str(result.rejected_attempts) if icpc and result.rejected_attempts else ""
         text = f"{mark}{wrong}"
         if icpc and result.time_s is not None:
-            text += f" {_hm(result.time_s)}"
+            text += f" {_hm(result.time_s, padded=padded)}"
         return text + ("*" if result.status is ProblemStatus.PROVISIONAL else "")
     if result.status is ProblemStatus.REJECTED:
         return f"-{result.rejected_attempts}"
@@ -109,13 +110,16 @@ def _phase_key(phase: ContestPhase) -> str:
     return "before" if phase is ContestPhase.BEFORE else "finished"
 
 
-def _row_html(row: StandingRow, columns: range, *, icpc: bool) -> str:
+def _row_html(row: StandingRow, columns: range, *, icpc: bool, padded: bool = False) -> str:
     cells = [
         str(row.rank),
         html.escape(_clip(row.who), quote=False),
         _number(row.points),
         str(row.penalty),
-        *(cell(row.problems[i], icpc=icpc) if i < len(row.problems) else "" for i in columns),
+        *(
+            cell(row.problems[i], icpc=icpc, padded=padded) if i < len(row.problems) else ""
+            for i in columns
+        ),
     ]
     return "<tr>" + "".join(f"<td>{c}</td>" for c in cells) + "</tr>"
 
@@ -142,7 +146,9 @@ def render(
 
     head = ["#", "Who", "=", "Pen", *(p.index for p in standings.problems[start:end])]
     header = "<tr>" + "".join(f"<th>{html.escape(h, quote=False)}</th>" for h in head) + "</tr>"
-    body = "".join(_row_html(r, range(start, end), icpc=icpc) for r in rows)
+    # kep.uz writes solve times as 01:23, Codeforces as 1:23; each table follows its site.
+    padded = standings.contest.platform == platforms.KEP
+    body = "".join(_row_html(r, range(start, end), icpc=icpc, padded=padded) for r in rows)
     zone = time_zone if time_zone and tzs.is_valid_zone(time_zone) else "UTC"
     status = say.rich(
         "standings-status",
