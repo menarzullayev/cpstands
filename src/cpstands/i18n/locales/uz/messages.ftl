@@ -129,6 +129,7 @@ help-text =
     /rating — bitta foydalanuvchi reyting kartasi
     /summary — kuzatilgan handlelarning oxirgi contestdagi natijasi
     /import — Codeforces do'stlarini ko'chirish (shaxsiy chat)
+    /donate — botni Telegram Stars bilan qo'llab-quvvatlash
 
     <b>Contestlar</b> <i>(tez orada)</i>
     /standings · /upcoming · /rank
@@ -395,3 +396,12 @@ import-none = 🤷 Codeforces'dagi do'stlar ro'yxatingiz bo'sh.
 import-done = ✅ Import qilindi: { $count } ta yangi, { $already } tasi ro'yxatda allaqachon bor edi.
 import-over-limit = 🔒 Ro'yxat limitiga sig'madi: { $count } ta.
 import-revoke = 🧹 Endi API kalitni codeforces.com/settings/api sahifasidan o'chiring: u menga keyin kerak emas.
+button-app = Ilovada ochish
+donate-text =
+    ⭐ <b>cpstands'ni qo'llab-quvvatlash</b>
+
+    Bot bepul va bepul qoladi. Agar u sizga foydali bo'lsa, Telegram Stars bilan rahmat aytishingiz mumkin. Miqdorni tanlang:
+donate-title = cpstands'ni qo'llab-quvvatlash
+donate-description = Ixtiyoriy xayriya. Barcha imkoniyatlar bepul qoladi.
+donate-label = Xayriya
+donate-thanks = 🎉 { $stars } ⭐ uchun rahmat! Bu botning ishlashiga yordam beradi.

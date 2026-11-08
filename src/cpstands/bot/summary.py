@@ -111,7 +111,8 @@ def render_summary(
                     emoji="🏆",
                     style="primary",
                     icons=icons,
-                )
+                ),
+                keyboards.app_button(tr, f"standings_{contest_id}", icons=icons),
             ]
         ]
     )

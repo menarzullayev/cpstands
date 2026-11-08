@@ -56,7 +56,9 @@ chats = Table(
     Column("summary_enabled", Boolean, nullable=False, server_default=text("true")),
     _ts("created_at", nullable=False, default_now=True),
     _ts("updated_at", nullable=False, default_now=True),
-    CheckConstraint("chat_type IN ('private','group','supergroup')", name="chats_chat_type_check"),
+    CheckConstraint(
+        "chat_type IN ('private','group','supergroup','channel')", name="chats_chat_type_check"
+    ),
     CheckConstraint("language IN ('uz','ru','en')", name="chats_language_check"),
     CheckConstraint("tone IN ('playful','neutral')", name="chats_tone_check"),
     CheckConstraint(

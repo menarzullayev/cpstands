@@ -55,6 +55,10 @@ class Settings(BaseSettings):
     custom_emoji: bool = True
     # Custom-emoji icons on buttons (Bot API 9.4); verified to render in Telegram Desktop 7.4.
     button_icons: bool = True
+    # The project channel gets contest reminders at these offsets (minutes); empty turns it off.
+    announce_channel: str = "@cpstands"
+    announce_offsets: Annotated[list[int], NoDecode] = [1440, 60]
+    announce_language: str = "uz"
     database_url: SecretStr = SecretStr(
         "postgresql+asyncpg://cpstands:cpstands@127.0.0.1:5440/cpstands"
     )
@@ -64,6 +68,13 @@ class Settings(BaseSettings):
     cf_min_request_interval_seconds: float = 2.0
     kep_api_base: str = "https://kep.uz/api"
     kep_enabled: bool = False
+
+    @field_validator("announce_offsets", mode="before")
+    @classmethod
+    def _split_offsets(cls, value: object) -> object:
+        if isinstance(value, str):
+            return [int(v) for v in value.split(",") if v.strip()]
+        return value
 
     @field_validator("supported_languages", mode="before")
     @classmethod

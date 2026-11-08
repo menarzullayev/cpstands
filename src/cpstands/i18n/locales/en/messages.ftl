@@ -129,6 +129,7 @@ help-text =
     /rating — one user's rating card
     /summary — how the followed handles did in the last contest
     /import — copy your Codeforces friends (private chat)
+    /donate — support the bot with Telegram Stars
 
     <b>Contests</b> <i>(coming soon)</i>
     /standings · /upcoming · /rank
@@ -398,3 +399,12 @@ import-none = 🤷 Your friends list on Codeforces is empty.
 import-done = ✅ Imported: { $count } new, { $already } were already in the list.
 import-over-limit = 🔒 { $count } did not fit into the list limit.
 import-revoke = 🧹 Now delete the API key at codeforces.com/settings/api: I no longer need it.
+button-app = Open in app
+donate-text =
+    ⭐ <b>Support cpstands</b>
+
+    The bot is free and stays free. If it helps you, you can thank it with Telegram Stars. Pick an amount:
+donate-title = Support cpstands
+donate-description = A voluntary donation. Every feature stays free.
+donate-label = Donation
+donate-thanks = 🎉 Thank you for { $stars } ⭐! It keeps the bot running.

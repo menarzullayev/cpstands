@@ -13,6 +13,7 @@ from sqlalchemy import text
 
 from cpstands.bot.import_gate import WAIT_S, ImportGate
 from cpstands.db import repos
+from cpstands.services.watchlist import DEFAULT_LIMIT
 from cpstands.sources.base import PermanentSourceError, RetryableSourceError
 from cpstands.sources.codeforces import friends as cf
 from tests.support.clock import FakeClock
@@ -304,7 +305,7 @@ async def test_friends_beyond_the_limit_are_reported(harness: Harness) -> None:
     harness.friends.result = ("tourist", "jiangly", "Petr")
     await start(harness)
     async with harness.sessions() as session, session.begin():
-        filler = {f"h{i}": f"h{i}" for i in range(99)}
+        filler = {f"h{i}": f"h{i}" for i in range(DEFAULT_LIMIT - 1)}
         await repos.add_handles(session, PRIVATE, "codeforces", filler)
     await harness.say(PRIVATE, PRIVATE, secret_text())
     assert I18N.t(None, "import-over-limit", count=2) in harness.session.last_text()

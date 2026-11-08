@@ -61,7 +61,7 @@ Primary: **S1 community member in groups**. Control surface: **S2 group admin**.
 | REQ-009 | System-test failures of a watched handle produce an alert in a playful tone by default; texts must not insult the named person, and each chat can switch to a neutral tone in settings. | FEAT-003 |
 | REQ-010 | Upsolved problems are reported separately from in-contest solves, when the data source permits it. | FEAT-003 |
 | REQ-011 | Admins add and remove handles by public handle, singly or in bulk; invalid handles are reported individually without rejecting valid ones. | FEAT-004 |
-| REQ-012 | A chat's watch list is limited (default 100 handles) with a clear message at the limit. | FEAT-004 |
+| REQ-012 | A chat's watch list is limited (default 200 handles; raised from 100 by owner decision 2026-11-08) with a clear message at the limit. | FEAT-004 |
 | REQ-013 | The bot never asks for Codeforces passwords or tokens, and never stores or logs an API key or secret. Owner decision 2026-11-08: the optional `/import` command (private chat only) may receive an API key and secret once, deletes that message at once, uses them for one `user.friends` call and drops them. | FEAT-004 |
 | REQ-014 | Each chat has a language (uz, ru, en) and a time zone; defaults come from the chat's first admin setup, never from guesses without confirmation. | FEAT-005 |
 | REQ-015 | All user-facing texts exist in uz, ru and en with the same meaning; a missing translation fails the build. | FEAT-005 |
@@ -135,7 +135,7 @@ Evidence: EVID-001 to EVID-013 (stage 03). Assumptions: community demand general
 
 ## Open questions
 
-- Is the default 100-handle watch-list limit right for communities of 500 members?
+- ~~Is the default 100-handle watch-list limit right?~~ Closed 2026-11-08: raised to 200.
 - Which Codeforces data path meets REQ-N01 given the standings restrictions (decided by an ADR in stage 07)?
 - Should reminders also be offered as a channel broadcast on `t.me/cpstands`?
 

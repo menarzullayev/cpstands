@@ -139,7 +139,10 @@ def test_rendered_summary_escapes_names_and_links_to_the_results() -> None:
     assert "<Round" not in body
     assert "🥇" in body
     assert "🥈" in body
-    assert urls == [f"https://codeforces.com/contest/{CID}/standings"]
+    assert urls == [
+        f"https://codeforces.com/contest/{CID}/standings",
+        f"https://t.me/cpstandsbot?startapp=standings_{CID}",
+    ]
 
 
 def test_rendered_summary_shows_rating_moves_and_the_best_gain() -> None:

@@ -77,6 +77,8 @@ const en = {
   'me.home': 'Add to home screen',
   'me.homeHint': 'Open cpstands like an app',
   'me.bot': 'Open the bot',
+  'me.donate': 'Support cpstands',
+  'me.donateHint': 'A voluntary gift in Telegram Stars',
   'me.about': 'cpstands · Codeforces in Telegram',
 
   'pr.rating': 'Rating',
@@ -210,6 +212,8 @@ const uz: Dict = {
   'me.home': 'Bosh ekranga qo‘shish',
   'me.homeHint': 'cpstands’ni ilova kabi oching',
   'me.bot': 'Botni ochish',
+  'me.donate': 'cpstands’ni qo‘llab-quvvatlash',
+  'me.donateHint': 'Telegram Stars bilan ixtiyoriy sovg‘a',
   'me.about': 'cpstands · Telegram’da Codeforces',
 
   'pr.rating': 'Rating',
@@ -340,6 +344,8 @@ const ru: Dict = {
   'me.home': 'На главный экран',
   'me.homeHint': 'Открывать cpstands как приложение',
   'me.bot': 'Открыть бота',
+  'me.donate': 'Поддержать cpstands',
+  'me.donateHint': 'Добровольный подарок звёздами Telegram',
   'me.about': 'cpstands · Codeforces в Telegram',
 
   'pr.rating': 'Рейтинг',

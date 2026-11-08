@@ -505,7 +505,9 @@ async def test_standings_sends_a_rich_table_with_navigation(harness: Harness) ->
     assert page["html"].count("<tr>") == 26  # header + 25 rows
     assert page["html"].count("<th>") == 20  # 4 fixed + 16 problems, Telegram's maximum
     rows = page["reply_markup"]["inline_keyboard"]
-    callbacks = [b["callback_data"] for row in rows for b in row]
+    callbacks = [b["callback_data"] for row in rows for b in row if "callback_data" in b]
+    app = [b["url"] for row in rows for b in row if "url" in b]
+    assert app == ["https://t.me/cpstandsbot?startapp=standings_1970"]  # opens the Mini App
     assert callbacks == [
         "st:1970:0:0:a",
         "st:1970:0:0:a",
@@ -1185,7 +1187,10 @@ async def test_rating_card_shows_rating_last_contest_and_follow_button(harness: 
     labels = [b["text"] for row in call["reply_markup"]["inline_keyboard"] for b in row]
     assert labels[0].startswith(chr(0x2795))  # a real symbol, not its code
     urls = [b["url"] for row in call["reply_markup"]["inline_keyboard"] for b in row if "url" in b]
-    assert urls == ["https://codeforces.com/profile/tourist"]
+    assert urls == [
+        "https://codeforces.com/profile/tourist",
+        "https://t.me/cpstandsbot?startapp=profile_tourist",
+    ]
 
 
 async def test_rating_follow_button_adds_once_and_disappears(harness: Harness) -> None:

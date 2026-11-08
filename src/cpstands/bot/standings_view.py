@@ -14,7 +14,7 @@ from datetime import datetime
 
 from aiogram.types import InlineKeyboardMarkup
 
-from cpstands.bot.keyboards import button
+from cpstands.bot.keyboards import app_button, button
 from cpstands.domain.contest import (
     ContestPhase,
     FullStandings,
@@ -258,7 +258,8 @@ def keyboard(
                 callback(cid, row_page, col_page, view, refresh=True),
                 emoji="🔁",
                 icons=icons,
-            )
+            ),
+            app_button(say, f"standings_{cid}", icons=icons),
         ]
     )
     return InlineKeyboardMarkup(inline_keyboard=rows)  # type: ignore[arg-type]

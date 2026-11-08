@@ -133,6 +133,7 @@ help-text =
     /rating — карточка рейтинга пользователя
     /summary — итоги последнего контеста для отслеживаемых хендлов
     /import — перенести друзей с Codeforces (личный чат)
+    /donate — поддержать бота звёздами Telegram
 
     <b>Контесты</b> <i>(скоро)</i>
     /standings · /upcoming · /rank
@@ -409,3 +410,12 @@ import-none = 🤷 Список друзей на Codeforces пуст.
 import-done = ✅ Импортировано: { $count } новых, { $already } уже были в списке.
 import-over-limit = 🔒 Не поместилось в лимит списка: { $count }.
 import-revoke = 🧹 Теперь удалите API-ключ на codeforces.com/settings/api: он мне больше не нужен.
+button-app = Открыть в приложении
+donate-text =
+    ⭐ <b>Поддержать cpstands</b>
+
+    Бот бесплатный и останется бесплатным. Если он вам помогает, можно сказать спасибо звёздами Telegram. Выберите сумму:
+donate-title = Поддержать cpstands
+donate-description = Добровольное пожертвование. Все функции остаются бесплатными.
+donate-label = Пожертвование
+donate-thanks = 🎉 Спасибо за { $stars } ⭐! Это помогает боту работать.

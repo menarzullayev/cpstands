@@ -92,7 +92,9 @@ def card_keyboard(
             icons=icons,
         )
     )
-    return InlineKeyboardMarkup(inline_keyboard=[row])
+    return InlineKeyboardMarkup(
+        inline_keyboard=[row, [keyboards.app_button(tr, f"profile_{handle}", icons=icons)]]
+    )
 
 
 async def _is_followed(deps: Deps, chat_id: int, key: str) -> bool:

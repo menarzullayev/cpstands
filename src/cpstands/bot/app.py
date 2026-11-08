@@ -14,6 +14,7 @@ from aiogram.types import ErrorEvent
 from cpstands import __version__, metrics
 from cpstands.bot.alerts import AlertNotifier, AlertWatcher
 from cpstands.bot.deps import Deps
+from cpstands.bot.donate import create_donate_router
 from cpstands.bot.handlers import create_router
 from cpstands.bot.import_friends import create_import_router
 from cpstands.bot.live import LiveUpdater
@@ -36,6 +37,7 @@ from cpstands.http_server import build_app as build_http_app
 from cpstands.i18n import I18n
 from cpstands.services.admin import AdminChecker
 from cpstands.services.alerts import AlertService
+from cpstands.services.announce import register_channel
 from cpstands.services.contests import ContestService
 from cpstands.services.ops import ObservedSource, OpsState, load_source_state, refresh_gauges
 from cpstands.services.ratings import RatingService
@@ -48,7 +50,13 @@ from cpstands.sources.codeforces.client import ClientConfig, CodeforcesClient
 from cpstands.sources.codeforces.source import CodeforcesSource
 
 PLATFORM = "codeforces"
-ALLOWED_UPDATES = ["message", "callback_query", "my_chat_member", "chat_member"]
+ALLOWED_UPDATES = [
+    "message",
+    "callback_query",
+    "my_chat_member",
+    "chat_member",
+    "pre_checkout_query",
+]
 
 log = structlog.get_logger(__name__)
 
@@ -58,6 +66,7 @@ def build_dispatcher(deps: Deps, limiter: RateLimiter | None = None) -> Dispatch
     middleware = RateLimitMiddleware(limiter or RateLimiter())
     dispatcher.message.outer_middleware(middleware)
     dispatcher.callback_query.outer_middleware(middleware)
+    dispatcher.include_router(create_donate_router())  # before /start: catches /start donate
     dispatcher.include_router(create_router())
     dispatcher.include_router(create_settings_router())
     dispatcher.include_router(create_rating_router())
@@ -140,6 +149,15 @@ async def run_bot(settings: Settings) -> None:
         icons=settings.button_icons,
     )
     dispatcher = build_dispatcher(deps)
+    if settings.announce_channel and settings.announce_offsets:
+        await register_channel(
+            bot,
+            sessions,
+            settings.announce_channel,
+            offsets=settings.announce_offsets,
+            language=settings.announce_language,
+            time_zone=settings.default_timezone,
+        )
     updater = LiveUpdater(bot, sessions, deps.standings, deps.i18n, icons=deps.icons)
     sender = ReminderSender(bot, sessions, deps.i18n, icons=deps.icons, ops=ops)
     scheduler = Scheduler(sessions, contests, sender, retention=RetentionService(sessions), ops=ops)

@@ -99,6 +99,14 @@
           "ru": "Выбрать хендлы и контесты для отслеживания",
           "uz": "Kuzatiladigan handle va contestlarni tanlash"
         }
+      },
+      "donate": {
+        "command": "donate",
+        "desc": {
+          "en": "Support the bot with Stars",
+          "ru": "Поддержать бота звёздами",
+          "uz": "Botni Stars bilan qo'llab-quvvatlash"
+        }
       }
     },
     "menus": {
@@ -108,6 +116,7 @@
         "friends",
         "rating",
         "settings",
+        "donate",
         "help"
       ],
       "private": [
@@ -116,6 +125,7 @@
         "friends",
         "rating",
         "settings",
+        "donate",
         "help"
       ],
       "group": [

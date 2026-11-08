@@ -222,3 +222,6 @@ SOURCE_PAUSED = REGISTRY.gauge("cpstands_source_paused", "1 while a source is pa
 BUILD_INFO = REGISTRY.gauge(
     "cpstands_build_info", "Always 1; the labels say which build is running.", ("commit", "version")
 )
+DONATIONS = REGISTRY.counter(
+    "cpstands_donations_stars_total", "Telegram Stars received as donations."
+)

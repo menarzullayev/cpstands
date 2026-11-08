@@ -116,3 +116,14 @@ async def test_chat_upsert_reopens_removed_chat_and_keeps_active(
         await repos.set_status(session, CHAT, "active")
         kept = await repos.upsert_chat(session, CHAT, "supergroup")
         assert kept.status == "active"
+
+
+async def test_the_default_limit_is_200(sessions: async_sessionmaker[AsyncSession]) -> None:
+    names = [f"u{i}" for i in range(201)]
+    service = WatchlistService(sessions, FakeSource(names))  # type: ignore[arg-type]
+    first = await service.add(CHAT, " ".join(names[:150]))
+    assert len(first.added) == 150
+    second = await service.add(CHAT, " ".join(names[150:]))
+    assert len(second.added) == 50  # 200 in total
+    assert second.over_limit == ("u200",)  # the 201st is refused
+    assert len(await service.list(CHAT)) == 200

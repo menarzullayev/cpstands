@@ -12,8 +12,8 @@ from cpstands.domain.contest import handle_key
 from cpstands.sources.base import SourcePort
 
 PLATFORM = "codeforces"
-DEFAULT_LIMIT = 100
-INPUT_CAP = 100  # most tokens read from one message
+DEFAULT_LIMIT = 200  # owner decision 2026-11-08 (was 100)
+INPUT_CAP = 200  # most tokens read from one message; a full /import fits
 HANDLE_RE = re.compile(r"^[A-Za-z0-9_.-]{1,24}$")
 _SPLIT_RE = re.compile(r"[,;\s]+")
 _PROFILE_PREFIX_RE = re.compile(r"^(?:https?://)?(?:www\.)?codeforces\.com/profile/", re.IGNORECASE)

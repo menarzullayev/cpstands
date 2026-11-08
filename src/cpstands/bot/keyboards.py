@@ -15,6 +15,8 @@ from cpstands.i18n import LANGUAGE_NAMES, SUPPORTED_LANGUAGES, Translator
 from cpstands.ui.emoji import custom_emoji_id
 
 MAX_CALLBACK_BYTES = 64
+# The Mini App opens on a given screen through its direct link (BotFather: Configure Mini App).
+APP_LINK = "https://t.me/cpstandsbot?startapp={route}"
 
 LANG_PREFIX = "set:lang:"
 TZ_PREFIX = "tz:set:"
@@ -55,6 +57,11 @@ def link(
     icon = custom_emoji_id(emoji) if emoji and icons else None
     label = text if icon or not emoji else f"{emoji} {text}"
     return InlineKeyboardButton(text=label, url=url, style=style, icon_custom_emoji_id=icon)
+
+
+def app_button(say: Translator, route: str, *, icons: bool = False) -> InlineKeyboardButton:
+    """Opens the Mini App on ``route`` (profile_<handle>, standings_<id>, contests, ...)."""
+    return link(say("button-app"), APP_LINK.format(route=route), emoji="📱", icons=icons)
 
 
 def language_keyboard(current: str | None = None, *, icons: bool = False) -> InlineKeyboardMarkup:

@@ -1,9 +1,9 @@
 import { useState, type ReactNode } from 'react'
-import { Bot, ChevronRight, Languages, MonitorSmartphone, Palette, Pencil, Sparkles } from 'lucide-react'
+import { Bot, ChevronRight, Languages, MonitorSmartphone, Palette, Pencil, Sparkles, Star } from 'lucide-react'
 import { LANGS } from '@/lib/i18n'
 import { useRouter } from '@/lib/router'
 import { useSettings, type Theme } from '@/lib/settings'
-import { BOT, can, haptic, tg } from '@/lib/tg'
+import { BOT, can, haptic, startParam, tg } from '@/lib/tg'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -121,6 +121,16 @@ export function Me() {
                 <ChevronRight className="size-4 text-muted-foreground" />
               </button>
             )}
+            <button className="flex w-full items-center gap-3 py-3 text-left" onClick={() => tg?.openTelegramLink(`https://t.me/${BOT}?start=donate`)}>
+              <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-warning/15 text-warning [&_svg]:size-4">
+                <Star />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-medium">{t('me.donate')}</div>
+                <div className="text-xs text-muted-foreground">{t('me.donateHint')}</div>
+              </div>
+              <ChevronRight className="size-4 text-muted-foreground" />
+            </button>
             <button className="flex w-full items-center gap-3 py-3 text-left" onClick={() => tg?.openTelegramLink(`https://t.me/${BOT}`)}>
               <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/12 text-primary [&_svg]:size-4">
                 <Bot />
@@ -135,6 +145,10 @@ export function Me() {
         <div className="flex flex-col items-center gap-1 py-4 text-xs text-muted-foreground">
           <Logo className="opacity-70" />
           <span>{t('me.about')}</span>
+          <span className="font-mono text-[10px] opacity-60">
+            {tg?.platform ?? 'web'} · v{tg?.version ?? '-'}
+            {startParam ? ` · start=${startParam}` : ''}
+          </span>
         </div>
       </Rise>
     </>

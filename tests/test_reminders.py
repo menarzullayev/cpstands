@@ -140,6 +140,7 @@ async def test_each_offset_is_sent_once_with_start_time_entities_and_buttons(rig
     assert [b["url"] for b in buttons] == [
         "https://codeforces.com/contestRegistration/2287",
         "https://codeforces.com/contest/2287",
+        "https://t.me/cpstandsbot?startapp=contests",
     ]
     preview: dict[str, object] = message["link_preview_options"]  # type: ignore[assignment]
     assert preview["is_disabled"] is True

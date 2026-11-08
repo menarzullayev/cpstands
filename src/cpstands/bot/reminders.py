@@ -94,7 +94,8 @@ def reminder_keyboard(say: object, contest_id: int, *, icons: bool = True) -> In
                     emoji="🏆",
                     icons=icons,
                 ),
-            ]
+            ],
+            [keyboards.app_button(say, "contests", icons=icons)],
         ]
     )
 
