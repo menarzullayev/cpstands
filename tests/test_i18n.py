@@ -37,6 +37,7 @@ SAMPLE_ARGS: dict[str, str | int] = {
     "view": "all",
     "level": 4,
     "cols": 16,
+    "style": "emoji",
     "summary": "on",
     "medal": "🥇",
     "already": 2,
@@ -266,6 +267,7 @@ def test_custom_emoji_wraps_known_emoji_and_leaves_others() -> None:
         reminders="on",
         level=4,
         cols=16,
+        style="emoji",
         summary="on",
         count=1,
     )

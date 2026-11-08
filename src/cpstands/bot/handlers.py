@@ -485,7 +485,7 @@ async def _view_context(
     async with deps.sessions() as session:
         friends = frozenset(await repos.scoreboard_keys(session, chat.chat_id, platform))
     view = standings_view.resolve_view(preferred, friends)
-    return standings_view.ViewContext(view, friends, chat.table_cols)
+    return standings_view.ViewContext(view, friends, chat.table_cols, chat.table_style)
 
 
 async def _load_standings(

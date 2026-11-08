@@ -67,6 +67,10 @@ settings-summary =
        *[4] hammasi
     }</b>
     📊 Jadval ustunlari: <b>{ $cols }</b>
+    📈 Jadval ko'rinishi: <b>{ $style ->
+        [classic] klassik
+       *[emoji] emoji
+    }</b>
     🏁 Xulosa: <b>{ $summary ->
         [off] o'chiq
        *[on] yoqilgan
@@ -295,6 +299,10 @@ rank-source-error = ⚠️ Codeforces hozir javob bermayapti. Bir daqiqadan keyi
 word-off = o'chiq
 button-back = Orqaga
 button-columns = Ustunlar: { $n }
+button-table-style = Ko'rinish: { $style ->
+        [classic] klassik
+       *[emoji] emoji
+    }
 button-summary = { $state ->
         [off] Xulosa: o'chiq
        *[on] Xulosa: yoqilgan

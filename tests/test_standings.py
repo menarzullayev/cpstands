@@ -53,7 +53,8 @@ def test_every_page_fits_telegram_limits_and_shows_every_row_once() -> None:
             assert html.count("<th>") <= 20
             if cp == 0:
                 seen += [part.split("</td>")[0] for part in html.split("<tr><td>")[1:]]
-    assert seen == [str(i) for i in range(1, 61)]
+    medals = [view._emoji(view.MEDALS[i]) for i in (1, 2, 3)]
+    assert seen == medals + [str(i) for i in range(4, 61)]
 
 
 def test_every_problem_column_is_reachable() -> None:

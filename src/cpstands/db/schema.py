@@ -55,6 +55,7 @@ chats = Table(
     Column("notify_level", Integer, nullable=False, server_default=text("4")),
     Column("table_cols", Integer, nullable=False, server_default=text("16")),
     Column("summary_enabled", Boolean, nullable=False, server_default=text("true")),
+    Column("table_style", Text, nullable=False, server_default="emoji"),
     _ts("created_at", nullable=False, default_now=True),
     _ts("updated_at", nullable=False, default_now=True),
     CheckConstraint(
@@ -67,6 +68,7 @@ chats = Table(
     ),
     CheckConstraint("notify_level BETWEEN 0 AND 4", name="chats_notify_level_check"),
     CheckConstraint("table_cols IN (8, 12, 16)", name="chats_table_cols_check"),
+    CheckConstraint("table_style IN ('emoji', 'classic')", name="chats_table_style_check"),
 )
 
 watched_handles = Table(

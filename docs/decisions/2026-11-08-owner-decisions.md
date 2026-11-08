@@ -123,3 +123,14 @@ kep.uz handle, so Codeforces-only chats get no new messages. Evidence: EVID-022.
   every 30 s until the end (`LIVE_COMMENTS=kep:504@-1001305284030:140896`).
 - The KEP.uz admins agreed. Otherwise the group stays silent (`SILENT_CHATS`): the bot answers no
   command or button there, and the table carries link buttons only.
+
+## Standings table style (2026-11-08)
+
+- Default (emoji): ✅ solved with the time, ⚡ and a bold time for the first solve of a problem,
+  ❌ with the number of tries, 🥇🥈🥉 for the top three, a followed handle marked in the full table.
+- Classic, chosen per chat in /settings: striped table, attempts raised (`+¹ 00:03`), the first
+  solve highlighted.
+- The first solver comes from kep.uz's own `theBest` flag (one per problem; times there are in
+  minutes). On Codeforces it is the earliest time, so equal times share it.
+- Telegram rich messages offer no text or background colours; colour comes only from custom emoji
+  and `<mark>`. Measured on Telegram Desktop with contest 502.

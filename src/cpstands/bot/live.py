@@ -153,7 +153,10 @@ class LiveUpdater:
         async with self._sessions() as session:
             friends = frozenset(await repos.scoreboard_keys(session, chat.chat_id, self._platform))
         ctx = standings_view.ViewContext(
-            standings_view.resolve_view(message.view, friends), friends, chat.table_cols
+            standings_view.resolve_view(message.view, friends),
+            friends,
+            chat.table_cols,
+            chat.table_style,
         )
         html = standings_view.render(
             standings, message.row_page, message.col_page, say, time_zone=chat.time_zone, ctx=ctx

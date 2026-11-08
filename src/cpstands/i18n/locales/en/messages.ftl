@@ -67,6 +67,10 @@ settings-summary =
        *[4] everything
     }</b>
     📊 Table columns: <b>{ $cols }</b>
+    📈 Table style: <b>{ $style ->
+        [classic] classic
+       *[emoji] emoji
+    }</b>
     🏁 Summary: <b>{ $summary ->
         [off] off
        *[on] on
@@ -295,6 +299,10 @@ rank-source-error = ⚠️ Codeforces does not answer right now. Try again in a 
 word-off = off
 button-back = Back
 button-columns = Columns: { $n }
+button-table-style = Style: { $style ->
+        [classic] classic
+       *[emoji] emoji
+    }
 button-summary = { $state ->
         [off] Summary: off
        *[on] Summary: on

@@ -34,6 +34,7 @@ class ChatRecord:
     notify_level: int = 4
     table_cols: int = 16
     summary_enabled: bool = True
+    table_style: str = "emoji"
 
 
 _CHAT_COLUMNS = (
@@ -48,6 +49,7 @@ _CHAT_COLUMNS = (
     chats.c.notify_level,
     chats.c.table_cols,
     chats.c.summary_enabled,
+    chats.c.table_style,
 )
 
 
@@ -64,6 +66,7 @@ def _record(row: RowMapping) -> ChatRecord:
         notify_level=int(row["notify_level"]),
         table_cols=int(row["table_cols"]),
         summary_enabled=bool(row["summary_enabled"]),
+        table_style=str(row["table_style"]),
     )
 
 
@@ -142,6 +145,10 @@ async def set_reminder_offsets(session: AsyncSession, chat_id: int, offsets: Seq
 
 async def set_table_cols(session: AsyncSession, chat_id: int, cols: int) -> bool:
     return await _update_chat(session, chat_id, table_cols=cols)
+
+
+async def set_table_style(session: AsyncSession, chat_id: int, style: str) -> bool:
+    return await _update_chat(session, chat_id, table_style=style)
 
 
 async def set_summary_enabled(session: AsyncSession, chat_id: int, enabled: bool) -> bool:
