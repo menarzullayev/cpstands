@@ -100,4 +100,4 @@ store, not in PostgreSQL.
 | Local production database | Deleted after a final token-free dump (`~/backups/cpstands/localdb-final-*.dump`). The compose `db` service is now `profiles: ["dev"]`, used for tests only. Production needs `CPSTANDS_DATABASE_URL`, with no fallback. |
 | Secret files | Moved from the Desktop to `~/.secrets/cpstands/`. The folder ACL allows only the owner and SYSTEM. |
 | Next feature | Group mode in the Mini App. |
-
+| Bot-down alerting (row 3) | Done: the Healthchecks.io check `cpstands-bot` (period 2 min, grace 3 min) alerts on Telegram and by email; tested end to end. See `docs/runbooks/monitoring.md`. |
