@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { RotateCw, Share2, UserPlus } from 'lucide-react'
 import { useCall } from '@/lib/api'
+import { useFriendHandles } from '@/lib/friends'
 import { cfUrl, LIVE_PHASES, type StandingsAnswer } from '@/lib/cf'
 import { routeParam, useRouter } from '@/lib/router'
 import { useSettings } from '@/lib/settings'
@@ -30,7 +31,8 @@ export function Standings({ contestId: fixed }: { contestId?: number }) {
   const { t, me, fmt } = useSettings()
   const { go } = useRouter()
   const [picked, setPicked] = useState<number | undefined>(fixed)
-  const input = { me: me || undefined, contestId: picked }
+  const handles = useFriendHandles()
+  const input = handles === null ? null : { me: me || undefined, contestId: picked, handles }
   const { data, error, loading, reload, refreshing } = useCall<StandingsAnswer>('standings', input, 60_000)
 
   if (error === 'NO_FRIENDS')
@@ -40,7 +42,7 @@ export function Standings({ contestId: fixed }: { contestId?: number }) {
       </Empty>
     )
   if (error) return <ErrorState code={error} onRetry={reload} />
-  if (loading || !data) return <Loading lines={8} />
+  if (loading || !data || input === null) return <Loading lines={8} />
 
   const c = data.contest
   const icpc = c?.type === 'ICPC'

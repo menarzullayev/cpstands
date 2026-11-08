@@ -4,7 +4,7 @@
 import { EndpointError } from 'sdk';
 import { cached, callCf, checkHandle } from '../lib/cf.js';
 import { streamStandings } from '../lib/standings.js';
-import { callerId, listHandles } from '../lib/friends.js';
+import { callerId, handlesFor } from '../lib/friends.js';
 
 const LIVE = new Set(['CODING', 'PENDING_SYSTEM_TEST', 'SYSTEM_TEST']);
 
@@ -48,7 +48,7 @@ async function table(contest, handles) {
 export default async function (input, ctx) {
   const userId = callerId(ctx);
   const me = typeof input?.me === 'string' && input.me ? checkHandle(input.me) : null;
-  const handles = [...new Map([...(me ? [me] : []), ...(await listHandles(userId))].map((h) => [h.toLowerCase(), h])).values()];
+  const handles = [...new Map([...(me ? [me] : []), ...(await handlesFor(userId, input, checkHandle))].map((h) => [h.toLowerCase(), h])).values()];
   if (!handles.length) throw new EndpointError('No friends yet', { code: 'NO_FRIENDS' });
 
   const contests = await contestList();

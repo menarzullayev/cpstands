@@ -39,6 +39,7 @@ from cpstands.services.admin import AdminChecker
 from cpstands.services.alerts import AlertService
 from cpstands.services.announce import register_channel
 from cpstands.services.contests import ContestService
+from cpstands.services.heartbeat import Heartbeat, store_api_secret
 from cpstands.services.ops import ObservedSource, OpsState, load_source_state, refresh_gauges
 from cpstands.services.ratings import RatingService
 from cpstands.services.retention import RetentionService
@@ -149,6 +150,8 @@ async def run_bot(settings: Settings) -> None:
         icons=settings.button_icons,
     )
     dispatcher = build_dispatcher(deps)
+    await store_api_secret(sessions, settings.telegram_bot_token.get_secret_value())
+    heartbeat = Heartbeat(sessions, commit=settings.git_sha, version=__version__)
     if settings.announce_channel and settings.announce_offsets:
         await register_channel(
             bot,
@@ -176,6 +179,7 @@ async def run_bot(settings: Settings) -> None:
         asyncio.create_task(summarizer.run(), name="summaries"),
         asyncio.create_task(upsolver.run(), name="upsolve"),
         asyncio.create_task(monitor.run(), name="operator-alerts"),
+        asyncio.create_task(heartbeat.run(), name="heartbeat"),
     ]
     runner = None
     if settings.http_port:

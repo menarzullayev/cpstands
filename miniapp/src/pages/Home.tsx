@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Activity as ActivityIcon, ArrowDownRight, ArrowUpRight, ListTodo, Radio, UserPlus, Zap } from 'lucide-react'
 import { useCall } from '@/lib/api'
+import { useFriendHandles } from '@/lib/friends'
 import { cfUrl, nextRank, ratingColor, type Activity, type ActivityEvent, type Comparison, type ContestList } from '@/lib/cf'
 import { useRouter } from '@/lib/router'
 import { useSettings } from '@/lib/settings'
@@ -145,7 +146,12 @@ function EventRow({ e }: { e: ActivityEvent }) {
 function FriendsActivity() {
   const { t, me } = useSettings()
   const { go } = useRouter()
-  const { data, error, loading, reload } = useCall<Activity>('activity', { me: me || undefined }, 120_000)
+  const handles = useFriendHandles()
+  const { data, error, loading, reload } = useCall<Activity>(
+    'activity',
+    handles === null ? null : { me: me || undefined, handles },
+    120_000,
+  )
   const [all, setAll] = useState(false)
   // The endpoint refreshes a few handles per call; ask again while some are still pending.
   useEffect(() => {

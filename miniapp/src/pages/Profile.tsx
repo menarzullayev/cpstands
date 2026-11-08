@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Check, ExternalLink, GitCompareArrows, ListTodo, MapPin, UserPlus } from 'lucide-react'
-import { call, forget, useCall } from '@/lib/api'
-import { cfUrl, ratingColor, VERDICT_SHORT, type Comparison, type FriendsAnswer, type Profile as P } from '@/lib/cf'
+import { useCall } from '@/lib/api'
+import { useFriends } from '@/lib/friends'
+import { cfUrl, ratingColor, VERDICT_SHORT, type Comparison, type Profile as P } from '@/lib/cf'
 import { useRouter } from '@/lib/router'
 import { useSettings } from '@/lib/settings'
 import { haptic, openLink } from '@/lib/tg'
@@ -14,22 +15,19 @@ import { ShareBar } from '@/components/ShareBar'
 
 function FollowButton({ handle }: { handle: string }) {
   const { t, me } = useSettings()
-  const friends = useCall<FriendsAnswer>('friends', { action: 'list' }, 300_000)
+  const friends = useFriends()
   const [busy, setBusy] = useState(false)
   if (me && me.toLowerCase() === handle.toLowerCase()) return null
-  const following = friends.data?.friends.some((f) => f.handle.toLowerCase() === handle.toLowerCase())
+  const following = friends.friends?.some((f) => f.handle.toLowerCase() === handle.toLowerCase())
   return (
     <Button
       size="sm"
       variant={following ? 'secondary' : 'default'}
-      disabled={busy || !friends.data}
+      disabled={busy || friends.friends === null}
       onClick={async () => {
         setBusy(true)
         try {
-          const res = await call<FriendsAnswer>('friends', { action: following ? 'remove' : 'add', handles: [handle] })
-          friends.set(res)
-          forget('activity')
-          forget('standings')
+          await friends.change(following ? 'remove' : 'add', [handle])
           haptic.success()
         } catch {
           haptic.error()

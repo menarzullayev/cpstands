@@ -3,7 +3,7 @@
 import { db, EndpointError } from 'sdk';
 import { eq } from 'sdk/db';
 import { cached, callCf, checkHandle, now } from '../lib/cf.js';
-import { callerId, listHandles } from '../lib/friends.js';
+import { callerId, handlesFor } from '../lib/friends.js';
 import { cfCache } from '../schema.js';
 
 const FRESH_PER_CALL = 2;
@@ -55,7 +55,7 @@ export default async function (input, ctx) {
   const period = input?.period === 'month' ? 'month' : 'week';
   const since = now() - PERIODS[period];
   const me = typeof input?.me === 'string' && input.me ? checkHandle(input.me) : null;
-  const handles = [...new Map([...(me ? [me] : []), ...(await listHandles(userId))].map((h) => [h.toLowerCase(), h])).values()];
+  const handles = [...new Map([...(me ? [me] : []), ...(await handlesFor(userId, input, checkHandle))].map((h) => [h.toLowerCase(), h])).values()];
   if (!handles.length) throw new EndpointError('No friends yet', { code: 'NO_FRIENDS' });
 
   const rows = [];

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Crown, Medal } from 'lucide-react'
 import { useCall } from '@/lib/api'
+import { useFriendHandles } from '@/lib/friends'
 import type { Leaderboard } from '@/lib/cf'
 import { useRouter } from '@/lib/router'
 import { useSettings } from '@/lib/settings'
@@ -14,7 +15,12 @@ export function LeaderboardPanel() {
   const { t, me } = useSettings()
   const { push } = useRouter()
   const [period, setPeriod] = useState<'week' | 'month'>('week')
-  const { data, error, loading, reload } = useCall<Leaderboard>('leaderboard', { period, me: me || undefined }, 300_000)
+  const handles = useFriendHandles()
+  const { data, error, loading, reload } = useCall<Leaderboard>(
+    'leaderboard',
+    handles === null ? null : { period, me: me || undefined, handles },
+    300_000,
+  )
   useEffect(() => {
     if (!data?.pending) return
     const id = setTimeout(reload, 3000)

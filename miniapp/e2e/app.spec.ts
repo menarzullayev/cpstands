@@ -127,3 +127,10 @@ test('the friends leaderboard switches between week and month', async ({ page })
   const calls = await page.evaluate(() => (window as unknown as { __tg: { calls: { name: string; input: { period?: string } }[] } }).__tg.calls)
   expect(calls.filter((c) => c.name === 'leaderboard').map((c) => c.input.period)).toEqual(['week', 'month'])
 })
+
+test('the status page reports the Mini App backend and Codeforces', async ({ page }) => {
+  await mockTelegram(page, { startParam: 'status' })
+  await page.goto('/')
+  await expect(page.getByText('Codeforces API: Answering')).toBeVisible()
+  await expect(page.getByText('app9170246912.tgcloud.ai')).toBeVisible()
+})

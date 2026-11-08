@@ -5,7 +5,7 @@
 // next request (the answer says how many are still pending).
 import { EndpointError } from 'sdk';
 import { cached, callCf, checkHandle, now } from '../lib/cf.js';
-import { callerId, listHandles } from '../lib/friends.js';
+import { callerId, handlesFor } from '../lib/friends.js';
 import { db } from 'sdk';
 import { eq } from 'sdk/db';
 import { cfCache } from '../schema.js';
@@ -62,7 +62,7 @@ async function ratingChanges(handle) {
 export default async function (input, ctx) {
   const userId = callerId(ctx);
   const extra = typeof input?.me === 'string' && input.me ? [checkHandle(input.me)] : [];
-  const handles = [...new Map([...extra, ...(await listHandles(userId))].map((h) => [h.toLowerCase(), h])).values()];
+  const handles = [...new Map([...extra, ...(await handlesFor(userId, input, checkHandle))].map((h) => [h.toLowerCase(), h])).values()];
   const since = now() - WINDOW;
   const events = [];
   let fresh = 0;

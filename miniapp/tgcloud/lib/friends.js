@@ -46,3 +46,17 @@ export async function removeHandles(userId, handles) {
     .run();
   return res.rowsAffected ?? 0;
 }
+
+/**
+ * The handles an endpoint works on: the list the client sends (read from the bot's database
+ * through the Mini App API), or else this platform's own list. Always validated and capped.
+ */
+export async function handlesFor(userId, input, checkHandle) {
+  if (Array.isArray(input?.handles)) {
+    if (input.handles.length > MAX_FRIENDS) {
+      throw new EndpointError('Too many handles', { code: 'BAD_COUNT' });
+    }
+    return input.handles.map(checkHandle);
+  }
+  return listHandles(userId);
+}

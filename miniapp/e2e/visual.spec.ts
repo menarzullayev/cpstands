@@ -14,6 +14,7 @@ const screens: { name: string; opts?: MockOptions; tab?: string; wait: string }[
   { name: 'profile', opts: { startParam: 'profile_tourist' }, wait: 'Recent submissions' },
   { name: 'compare', opts: { startParam: 'compare_tourist-jiangly-Petr' }, wait: 'Head to head' },
   { name: 'upsolve', opts: { startParam: 'upsolve_tourist' }, wait: 'Upsolve' },
+  { name: 'status', opts: { startParam: 'status' }, wait: 'Codeforces API: Answering' },
   { name: 'home-light', opts: { storage: { theme: 'light' } }, wait: 'My rating' },
   { name: 'profile-light', opts: { startParam: 'profile_tourist', storage: { theme: 'light' } }, wait: 'Recent submissions' },
 ]

@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { Bot, ChevronRight, Languages, MonitorSmartphone, Palette, Pencil, Sparkles, Star } from 'lucide-react'
+import { Activity, Bot, ChevronRight, Languages, MonitorSmartphone, Palette, Pencil, Sparkles, Star } from 'lucide-react'
 import { LANGS } from '@/lib/i18n'
 import { useRouter } from '@/lib/router'
 import { useSettings, type Theme } from '@/lib/settings'
@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Logo, Panel, Rise } from '@/components/kit'
+import { BotSettings } from '@/components/BotSettings'
+import { dbReady } from '@/lib/db'
 
 function Segmented<V extends string>({ value, options, onChange }: { value: V; options: { value: V; label: string }[]; onChange: (v: V) => void }) {
   return (
@@ -141,7 +143,21 @@ export function Me() {
           </div>
         </Panel>
       </Rise>
-      <Rise i={2}>
+      {dbReady && (
+        <Rise i={2}>
+          <BotSettings />
+        </Rise>
+      )}
+      <Rise i={3}>
+        <button className="flex w-full items-center gap-3 rounded-2xl border bg-card/90 p-4 text-left" onClick={() => push({ name: 'status' })}>
+          <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-success/15 text-success [&_svg]:size-4">
+            <Activity />
+          </div>
+          <div className="min-w-0 flex-1 text-sm font-medium">{t('st.open')}</div>
+          <ChevronRight className="size-4 text-muted-foreground" />
+        </button>
+      </Rise>
+      <Rise i={4}>
         <div className="flex flex-col items-center gap-1 py-4 text-xs text-muted-foreground">
           <Logo className="opacity-70" />
           <span>{t('me.about')}</span>

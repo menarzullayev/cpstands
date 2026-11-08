@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { ChevronRight, GitCompareArrows, Loader2, Plus, Trash2, Users } from 'lucide-react'
-import { call, forget, useCall } from '@/lib/api'
-import type { FriendsAnswer } from '@/lib/cf'
+import { useFriends } from '@/lib/friends'
 import { errorKey } from '@/lib/i18n'
 import { useRouter } from '@/lib/router'
 import { useSettings } from '@/lib/settings'
@@ -15,21 +14,16 @@ import { cn } from '@/lib/utils'
 export function Friends() {
   const { t, fmt } = useSettings()
   const { push } = useRouter()
-  const list = useCall<FriendsAnswer>('friends', { action: 'list' }, 300_000)
+  const list = useFriends()
   const [draft, setDraft] = useState('')
-  const [busy, setBusy] = useState(false)
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null)
   const [editing, setEditing] = useState(false)
   const [view, setView] = useState<'list' | 'board'>('list')
 
   const change = async (action: 'add' | 'remove', handles: string[]) => {
-    setBusy(true)
     setNote(null)
     try {
-      const res = await call<FriendsAnswer>('friends', { action, handles })
-      list.set(res)
-      forget('activity')
-      forget('standings')
+      const res = await list.change(action, handles)
       if (action === 'add') {
         haptic.success()
         const parts = [
@@ -43,8 +37,6 @@ export function Friends() {
     } catch (e) {
       haptic.error()
       setNote({ ok: false, text: t(errorKey(e instanceof ApiError ? e.code : 'generic')) })
-    } finally {
-      setBusy(false)
     }
   }
 
@@ -53,7 +45,8 @@ export function Friends() {
     if (handles.length) void change('add', handles)
   }
 
-  const friends = list.data?.friends ?? []
+  const busy = list.busy
+  const friends = list.friends ?? []
   const switcher = (
     <div className="grid grid-cols-2 rounded-xl border bg-muted/50 p-1">
       {(['list', 'board'] as const).map((v) => (
@@ -104,14 +97,14 @@ export function Friends() {
       </Rise>
       {list.error ? (
         <ErrorState code={list.error} onRetry={list.reload} />
-      ) : list.loading || !list.data ? (
+      ) : list.friends === null ? (
         <Loading lines={6} />
       ) : friends.length === 0 ? (
         <Empty icon={<Users />}>{t('fr.empty')}</Empty>
       ) : (
         <Rise i={1}>
           <Panel
-            title={`${t('fr.title')} · ${t('fr.count', friends.length, list.data.max)}`}
+            title={`${t('fr.title')} · ${t('fr.count', friends.length, list.max)}`}
             extra={
               <div className="flex gap-1">
                 {friends.length >= 2 && (
