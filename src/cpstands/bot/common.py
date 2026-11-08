@@ -29,7 +29,8 @@ async def ensure_chat(deps: Deps, chat: Chat) -> repos.ChatRecord | None:
     if chat_type is None:
         return None
     async with deps.sessions() as session, session.begin():
-        return await repos.upsert_chat(session, chat.id, chat_type)
+        title = chat.title[:255] if chat.title else None  # groups only; private chats have none
+        return await repos.upsert_chat(session, chat.id, chat_type, title)
 
 
 async def is_admin(deps: Deps, chat: Chat, user_id: int | None) -> bool:

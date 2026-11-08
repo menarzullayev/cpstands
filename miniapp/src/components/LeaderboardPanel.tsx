@@ -11,14 +11,15 @@ import { ErrorState, Handle, Loading, Panel, Rise } from '@/components/kit'
 const PLACE = ['text-warning', 'text-[#cbd5e1]', 'text-[#d97706]']
 
 /** Friends ranked by problems solved, then rating gained, in the last week or month. */
-export function LeaderboardPanel() {
+export function LeaderboardPanel({ group }: { group?: string[] } = {}) {
   const { t, me } = useSettings()
   const { push } = useRouter()
   const [period, setPeriod] = useState<'week' | 'month'>('week')
-  const handles = useFriendHandles()
+  const friends = useFriendHandles()
+  const handles = group ?? friends
   const { data, error, loading, reload } = useCall<Leaderboard>(
     'leaderboard',
-    handles === null ? null : { period, me: me || undefined, handles },
+    handles === null ? null : { period, me: group ? undefined : me || undefined, handles },
     300_000,
   )
   useEffect(() => {

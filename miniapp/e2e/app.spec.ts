@@ -170,3 +170,24 @@ test('the status page shows the bot heartbeat from the database', async ({ page 
   await expect(page.getByText('Bot: Running')).toBeVisible()
   await expect(page.getByText('Active chats')).toBeVisible()
 })
+
+test('a signed group link opens the group view with its standings, leaderboard and handles', async ({ page }) => {
+  await mockTelegram(page, { startParam: 'g1001234567890_0123456789abcdef_s2279' })
+  await page.goto('/')
+  await expect(page.getByText('Toshkent CP klubi')).toBeVisible()
+  await expect(page.getByText('Codeforces Round 1133 (Div. 1)').first()).toBeVisible()
+  await page.getByRole('button', { name: 'Leaderboard', exact: true }).click()
+  await expect(page.getByText('jiangly').first()).toBeVisible()
+  await page.getByRole('button', { name: 'Handles', exact: true }).click()
+  await expect(page.getByText('Benq').first()).toBeVisible()
+  // The group's handles are sent, never the viewer's own handle.
+  const calls = await page.evaluate(() => (window as unknown as { __tg: { calls: { name: string; input: { me?: string } }[] } }).__tg.calls)
+  expect(calls.filter((c) => c.name === 'standings' || c.name === 'leaderboard').every((c) => c.input.me === undefined)).toBe(true)
+})
+
+test('a malformed group link opens Home instead', async ({ page }) => {
+  await mockTelegram(page, { startParam: 'g12_nothex' })
+  await page.goto('/')
+  await expect(page.getByText('My rating')).toBeVisible()
+})
+

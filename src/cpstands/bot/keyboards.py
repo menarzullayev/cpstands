@@ -12,11 +12,10 @@ from typing import Literal
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from cpstands.i18n import LANGUAGE_NAMES, SUPPORTED_LANGUAGES, Translator
+from cpstands.services import applink
 from cpstands.ui.emoji import custom_emoji_id
 
 MAX_CALLBACK_BYTES = 64
-# The Mini App opens on a given screen through its direct link (BotFather: Configure Mini App).
-APP_LINK = "https://t.me/cpstandsbot?startapp={route}"
 
 LANG_PREFIX = "set:lang:"
 TZ_PREFIX = "tz:set:"
@@ -59,9 +58,11 @@ def link(
     return InlineKeyboardButton(text=label, url=url, style=style, icon_custom_emoji_id=icon)
 
 
-def app_button(say: Translator, route: str, *, icons: bool = False) -> InlineKeyboardButton:
-    """Opens the Mini App on ``route`` (profile_<handle>, standings_<id>, contests, ...)."""
-    return link(say("button-app"), APP_LINK.format(route=route), emoji="📱", icons=icons)
+def app_button(
+    say: Translator, route: str, *, icons: bool = False, chat_id: int | None = None
+) -> InlineKeyboardButton:
+    """Opens the Mini App on ``route``; in a group, on that group's signed view."""
+    return link(say("button-app"), applink.link(route, chat_id), emoji="📱", icons=icons)
 
 
 def language_keyboard(current: str | None = None, *, icons: bool = False) -> InlineKeyboardMarkup:

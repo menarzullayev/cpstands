@@ -163,7 +163,13 @@ class LiveUpdater:
             return
         await self._respect_chat_gap(message.chat_id)
         markup = standings_view.keyboard(
-            standings, message.row_page, message.col_page, say, icons=self._icons, ctx=ctx
+            standings,
+            message.row_page,
+            message.col_page,
+            say,
+            icons=self._icons,
+            ctx=ctx,
+            chat_id=message.chat_id,
         )
         try:
             await self._bot.edit_message_text(

@@ -67,13 +67,16 @@ def _record(row: RowMapping) -> ChatRecord:
     )
 
 
-async def upsert_chat(session: AsyncSession, chat_id: int, chat_type: str) -> ChatRecord:
-    """Create the chat or refresh its type; a chat that was removed starts onboarding again."""
-    base = insert(chats).values(chat_id=chat_id, chat_type=chat_type)
+async def upsert_chat(
+    session: AsyncSession, chat_id: int, chat_type: str, title: str | None = None
+) -> ChatRecord:
+    """Create the chat or refresh its type and title; a removed chat starts onboarding again."""
+    base = insert(chats).values(chat_id=chat_id, chat_type=chat_type, title=title)
     statement = base.on_conflict_do_update(
         index_elements=[chats.c.chat_id],
         set_={
             "chat_type": base.excluded.chat_type,
+            "title": func.coalesce(base.excluded.title, chats.c.title),
             "status": text(
                 "CASE WHEN chats.status IN ('removed','deleted') "
                 "THEN 'onboarding' ELSE chats.status END"

@@ -15,6 +15,7 @@ const screens: { name: string; opts?: MockOptions; tab?: string; wait: string }[
   { name: 'compare', opts: { startParam: 'compare_tourist-jiangly-Petr' }, wait: 'Head to head' },
   { name: 'upsolve', opts: { startParam: 'upsolve_tourist' }, wait: 'Upsolve' },
   { name: 'status', opts: { startParam: 'status' }, wait: 'Codeforces API: Answering' },
+  { name: 'group', opts: { startParam: 'g1001234567890_0123456789abcdef_s2279' }, wait: 'Toshkent CP klubi' },
   { name: 'home-light', opts: { storage: { theme: 'light' } }, wait: 'My rating' },
   { name: 'profile-light', opts: { startParam: 'profile_tourist', storage: { theme: 'light' } }, wait: 'Recent submissions' },
 ]

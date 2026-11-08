@@ -112,7 +112,9 @@ def render_summary(
                     style="primary",
                     icons=icons,
                 ),
-                keyboards.app_button(tr, f"standings_{contest_id}", icons=icons),
+                keyboards.app_button(
+                    tr, f"standings_{contest_id}", icons=icons, chat_id=chat.chat_id
+                ),
             ]
         ]
     )

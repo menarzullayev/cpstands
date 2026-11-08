@@ -431,7 +431,9 @@ async def on_standings(message: Message, command: CommandObject, deps: Deps) -> 
         return
     ctx = await _view_context(deps, chat, None)
     text = standings_view.render(standings, 0, 0, say, time_zone=chat.time_zone, ctx=ctx)
-    markup = standings_view.keyboard(standings, 0, 0, say, icons=deps.icons, ctx=ctx)
+    markup = standings_view.keyboard(
+        standings, 0, 0, say, icons=deps.icons, ctx=ctx, chat_id=message.chat.id
+    )
     sent = await message.bot.send_rich_message(  # type: ignore[union-attr]
         message.chat.id,
         InputRichMessage(html=text),
@@ -501,7 +503,9 @@ async def on_standings_page(callback: CallbackQuery, deps: Deps) -> None:
     text = standings_view.render(
         standings, row_page, col_page, say, time_zone=chat.time_zone, ctx=ctx
     )
-    markup = standings_view.keyboard(standings, row_page, col_page, say, icons=deps.icons, ctx=ctx)
+    markup = standings_view.keyboard(
+        standings, row_page, col_page, say, icons=deps.icons, ctx=ctx, chat_id=chat.chat_id
+    )
     if standings.contest.phase.is_active:
         async with deps.sessions() as session, session.begin():
             await repos.set_live_pages(

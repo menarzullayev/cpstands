@@ -40,6 +40,7 @@ chats = Table(
     metadata,
     Column("chat_id", BigInteger, primary_key=True, autoincrement=False),
     Column("chat_type", Text, nullable=False),
+    Column("title", Text),
     Column("language", Text),
     Column("time_zone", Text),
     Column("tone", Text, nullable=False, server_default="playful"),

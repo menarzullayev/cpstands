@@ -106,6 +106,12 @@ export async function mockTelegram(page: Page, opts: MockOptions = {}) {
           case 'app_settings_update':
             Object.assign(settings, body.patch)
             return settings
+          case 'app_group':
+            if (!/^g\d+_[0-9a-f]{16}/.test(opts.startParam ?? '')) return null
+            return {
+              chatId: -1001234567890, title: 'Toshkent CP klubi', language: 'uz', timeZone: 'Asia/Tashkent',
+              contestId: 2279, viewer: 1, handles: data.friends.friends.map((f) => f.handle),
+            }
           case 'app_status':
             return {
               now: now(), chats: 2, handles: 3, remindersSent24h: 1, liveContests: 0,

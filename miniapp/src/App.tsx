@@ -14,6 +14,7 @@ import { Friends } from '@/pages/Friends'
 import { Me } from '@/pages/Me'
 import { Upsolve } from '@/pages/Upsolve'
 import { Status } from '@/pages/Status'
+import { GroupView } from '@/pages/Group'
 
 // Pages with charts load Recharts only when opened.
 const Profile = lazy(() => import('@/pages/Profile'))
@@ -68,6 +69,7 @@ function Screen() {
   if (top?.name === 'standings') return <Standings contestId={top.contestId} />
   if (top?.name === 'upsolve') return <Upsolve handle={top.handle} />
   if (top?.name === 'status') return <Status />
+  if (top?.name === 'group') return <GroupView />
   switch (tab) {
     case 'home':
       return <Home />

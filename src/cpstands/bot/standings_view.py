@@ -190,6 +190,7 @@ def keyboard(
     *,
     icons: bool,
     ctx: ViewContext | None = None,
+    chat_id: int | None = None,
 ) -> InlineKeyboardMarkup:
     ctx = ctx or ViewContext()
     cid = standings.contest.external_id
@@ -259,7 +260,7 @@ def keyboard(
                 emoji="🔁",
                 icons=icons,
             ),
-            app_button(say, f"standings_{cid}", icons=icons),
+            app_button(say, f"standings_{cid}", icons=icons, chat_id=chat_id),
         ]
     )
     return InlineKeyboardMarkup(inline_keyboard=rows)  # type: ignore[arg-type]

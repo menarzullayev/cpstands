@@ -27,12 +27,14 @@ function Cell({ c, icpc }: { c: StandingsAnswer['rows'][number]['cells'][number]
   )
 }
 
-export function Standings({ contestId: fixed }: { contestId?: number }) {
+/** A group passes its own handles (and no personal handle); otherwise the user's friends. */
+export function Standings({ contestId: fixed, group }: { contestId?: number; group?: string[] }) {
   const { t, me, fmt } = useSettings()
   const { go } = useRouter()
   const [picked, setPicked] = useState<number | undefined>(fixed)
-  const handles = useFriendHandles()
-  const input = handles === null ? null : { me: me || undefined, contestId: picked, handles }
+  const friends = useFriendHandles()
+  const handles = group ?? friends
+  const input = handles === null ? null : { me: group ? undefined : me || undefined, contestId: picked, handles }
   const { data, error, loading, reload, refreshing } = useCall<StandingsAnswer>('standings', input, 60_000)
 
   if (error === 'NO_FRIENDS')

@@ -71,10 +71,12 @@ def render_reminder(
     else:
         left = {4320: "d3", 1440: "day", 120: "h2", 60: "hour"}.get(offset_min, "minutes")
         text = say("reminder", name=name, start=start, left=left, minutes=offset_min)
-    return text, reminder_keyboard(say, contest.contest_id)
+    return text, reminder_keyboard(say, contest.contest_id, chat_id=chat.chat_id)
 
 
-def reminder_keyboard(say: object, contest_id: int, *, icons: bool = True) -> InlineKeyboardMarkup:
+def reminder_keyboard(
+    say: object, contest_id: int, *, icons: bool = True, chat_id: int | None = None
+) -> InlineKeyboardMarkup:
     from cpstands.i18n import Translator
 
     assert isinstance(say, Translator)
@@ -95,7 +97,7 @@ def reminder_keyboard(say: object, contest_id: int, *, icons: bool = True) -> In
                     icons=icons,
                 ),
             ],
-            [keyboards.app_button(say, "contests", icons=icons)],
+            [keyboards.app_button(say, "contests", icons=icons, chat_id=chat_id)],
         ]
     )
 
@@ -126,7 +128,7 @@ class ReminderSender:
         text, markup = render_reminder(self._i18n, chat, contest, claimed.offset_min)
         if markup is not None and not self._icons:
             say = self._i18n.bound(chat.language, chat.tone)
-            markup = reminder_keyboard(say, claimed.contest_id, icons=False)
+            markup = reminder_keyboard(say, claimed.contest_id, icons=False, chat_id=chat.chat_id)
         try:
             await self._bot.send_message(
                 claimed.chat_id,

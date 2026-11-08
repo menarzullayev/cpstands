@@ -130,6 +130,7 @@ help-text =
     /summary — kuzatilgan handlelarning oxirgi contestdagi natijasi
     /import — Codeforces do'stlarini ko'chirish (shaxsiy chat)
     /donate — botni Telegram Stars bilan qo'llab-quvvatlash
+    /app — Mini App'ni ochish
 
     <b>Contestlar</b> <i>(tez orada)</i>
     /standings · /upcoming · /rank
@@ -405,3 +406,5 @@ donate-title = cpstands'ni qo'llab-quvvatlash
 donate-description = Ixtiyoriy xayriya. Barcha imkoniyatlar bepul qoladi.
 donate-label = Xayriya
 donate-thanks = 🎉 { $stars } ⭐ uchun rahmat! Bu botning ishlashiga yordam beradi.
+app-text = 📱 cpstands ilovada: contestlar, jonli natijalar, do'stlaringiz va statistika.
+app-text-group = 📱 Bu guruh ilovada: kuzatilayotgan handle'lar, natijalar va reyting.

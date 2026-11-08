@@ -130,6 +130,7 @@ help-text =
     /summary — how the followed handles did in the last contest
     /import — copy your Codeforces friends (private chat)
     /donate — support the bot with Telegram Stars
+    /app — open the Mini App
 
     <b>Contests</b> <i>(coming soon)</i>
     /standings · /upcoming · /rank
@@ -408,3 +409,5 @@ donate-title = Support cpstands
 donate-description = A voluntary donation. Every feature stays free.
 donate-label = Donation
 donate-thanks = 🎉 Thank you for { $stars } ⭐! It keeps the bot running.
+app-text = 📱 cpstands in an app: contests, live standings, your friends and statistics.
+app-text-group = 📱 This group in the app: its followed handles, standings and leaderboard.

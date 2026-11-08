@@ -13,6 +13,7 @@ from aiogram.types import ErrorEvent
 
 from cpstands import __version__, metrics
 from cpstands.bot.alerts import AlertNotifier, AlertWatcher
+from cpstands.bot.appcmd import create_app_router
 from cpstands.bot.deps import Deps
 from cpstands.bot.donate import create_donate_router
 from cpstands.bot.handlers import create_router
@@ -35,6 +36,7 @@ from cpstands.db.engine import create_engine, create_session_factory
 from cpstands.http_server import ReadinessChecker, start_server
 from cpstands.http_server import build_app as build_http_app
 from cpstands.i18n import I18n
+from cpstands.services import applink
 from cpstands.services.admin import AdminChecker
 from cpstands.services.alerts import AlertService
 from cpstands.services.announce import register_channel
@@ -67,6 +69,7 @@ def build_dispatcher(deps: Deps, limiter: RateLimiter | None = None) -> Dispatch
     middleware = RateLimitMiddleware(limiter or RateLimiter())
     dispatcher.message.outer_middleware(middleware)
     dispatcher.callback_query.outer_middleware(middleware)
+    dispatcher.include_router(create_app_router())
     dispatcher.include_router(create_donate_router())  # before /start: catches /start donate
     dispatcher.include_router(create_router())
     dispatcher.include_router(create_settings_router())
@@ -129,6 +132,7 @@ async def run_bot(settings: Settings) -> None:
         default=DefaultBotProperties(parse_mode=ParseMode.HTML),
     )
     bot.session.middleware(TelegramMetrics())
+    applink.configure(settings.telegram_bot_token.get_secret_value())
     sessions = create_session_factory(engine)
     ops = OpsState()
     metrics.BUILD_INFO.set(1, commit=settings.git_sha, version=__version__)

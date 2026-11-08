@@ -8,6 +8,7 @@ export type Inner =
   | { name: 'standings'; contestId: number }
   | { name: 'upsolve'; handle: string }
   | { name: 'status' }
+  | { name: 'group'; param: string }
 
 interface Router {
   tab: Tab
@@ -31,6 +32,8 @@ export function parseStart(param: string): { tab: Tab; stack: Inner[] } {
     if (HANDLE.test(handle)) return { tab: 'home', stack: [{ name: 'profile', handle }] }
   }
   if (param === 'status') return { tab: 'me', stack: [{ name: 'status' }] }
+  // A signed group link from the bot: g<id>_<signature>[_s<contest>]; the database checks it.
+  if (/^g\d{1,15}_[0-9a-f]{16}(_s\d{1,7})?$/.test(param)) return { tab: 'home', stack: [{ name: 'group', param }] }
   if (kind === 'upsolve') {
     const handle = param.slice('upsolve_'.length)
     if (HANDLE.test(handle)) return { tab: 'home', stack: [{ name: 'upsolve', handle }] }
@@ -53,6 +56,7 @@ export function routeParam(route: Inner | Tab): string {
   if (route.name === 'compare') return `compare_${route.handles.join('-')}`
   if (route.name === 'upsolve') return `upsolve_${route.handle}`
   if (route.name === 'status') return 'status'
+  if (route.name === 'group') return route.param
   return `standings_${route.contestId}`
 }
 
