@@ -28,6 +28,7 @@ from cpstands.bot.rating_card import create_rating_router
 from cpstands.bot.reminders import ReminderSender
 from cpstands.bot.scheduler import Scheduler
 from cpstands.bot.settings import create_settings_router
+from cpstands.bot.silence import SilenceMiddleware
 from cpstands.bot.summary import SummaryWorker, create_summary_router
 from cpstands.bot.telemetry import TelegramMetrics
 from cpstands.bot.upsolve import UpsolveWatcher
@@ -71,8 +72,19 @@ class _Worker(Protocol):
     async def run(self) -> None: ...
 
 
-def build_dispatcher(deps: Deps, limiter: RateLimiter | None = None) -> Dispatcher:
+def build_dispatcher(
+    deps: Deps, limiter: RateLimiter | None = None, *, silent_chats: tuple[int, ...] = ()
+) -> Dispatcher:
     dispatcher = Dispatcher(deps=deps)
+    if silent_chats:
+        silence = SilenceMiddleware(silent_chats)
+        for observer in (
+            dispatcher.message,
+            dispatcher.callback_query,
+            dispatcher.my_chat_member,
+            dispatcher.chat_member,
+        ):
+            observer.outer_middleware(silence)
     middleware = RateLimitMiddleware(limiter or RateLimiter())
     dispatcher.message.outer_middleware(middleware)
     dispatcher.callback_query.outer_middleware(middleware)
@@ -182,7 +194,7 @@ async def run_bot(settings: Settings) -> None:
         icons=settings.button_icons,
         extra=extra,
     )
-    dispatcher = build_dispatcher(deps)
+    dispatcher = build_dispatcher(deps, silent_chats=tuple(settings.silent_chats))
     await store_api_secret(sessions, settings.telegram_bot_token.get_secret_value())
     heartbeat = Heartbeat(
         sessions,

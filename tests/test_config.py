@@ -104,3 +104,10 @@ def test_database_driver_must_be_asyncpg() -> None:
 def test_owner_id_must_be_positive() -> None:
     with pytest.raises(ValidationError):
         make(telegram_owner_id=-5)
+
+
+def test_silent_chats_are_read_as_a_comma_list(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("SILENT_CHATS", "-1001305284030, -1002")
+    assert make().silent_chats == [-1001305284030, -1002]
+    monkeypatch.delenv("SILENT_CHATS")
+    assert make().silent_chats == []

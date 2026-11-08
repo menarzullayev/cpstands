@@ -1282,3 +1282,20 @@ async def test_summary_reports_a_source_failure(harness: Harness) -> None:
     harness.source.fail = True
     await harness.say(PRIVATE, PRIVATE, "/summary 3001")
     assert harness.session.last_text() == I18N.t(None, "summary-source-error")
+
+
+async def test_a_silent_chat_gets_no_answer_of_any_kind(harness: Harness) -> None:
+    """Commands, button taps and a re-join in a silent chat call no Telegram method at all."""
+    harness.dispatcher = build_dispatcher(
+        harness.dispatcher["deps"], RateLimiter(per_user=1), silent_chats=(GROUP,)
+    )
+    for text in ("/help", "/start", "/standings 1970", "/upcoming", "/help"):
+        await harness.say(GROUP, ADMIN, text)  # the last one would also hit the rate limit
+    await harness.tap(GROUP, ADMIN, "help:track")
+    await harness.feed(my_chat_member_update(harness.uid(), GROUP, "left", "member"))
+    assert harness.session.calls == []
+    assert await harness.chat(GROUP) is None  # nothing about the chat is even stored
+
+    # The control: the same dispatcher still answers everywhere else.
+    await harness.say(PRIVATE, PRIVATE, "/help")
+    assert harness.session.last_text() == I18N.t(None, "help-text")

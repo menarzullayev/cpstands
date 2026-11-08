@@ -58,6 +58,8 @@ class Settings(BaseSettings):
     # The project channel gets contest reminders at these offsets (minutes); empty turns it off.
     announce_channel: str = "@cpstands"
     announce_offsets: Annotated[list[int], NoDecode] = [1440, 60]
+    # Chats the bot stays silent in: it reads nothing there and answers nothing.
+    silent_chats: Annotated[list[int], NoDecode] = []
     announce_language: str = "uz"
     # Healthchecks.io ping URL (a secret: anyone with it can fake pings). Unset turns it off.
     healthchecks_ping_url: SecretStr | None = None
@@ -72,7 +74,7 @@ class Settings(BaseSettings):
     kep_min_request_interval_seconds: float = 1.5
     kep_enabled: bool = True  # owner decision 2026-11-08: kep.uz for everyone
 
-    @field_validator("announce_offsets", mode="before")
+    @field_validator("announce_offsets", "silent_chats", mode="before")
     @classmethod
     def _split_offsets(cls, value: object) -> object:
         if isinstance(value, str):
