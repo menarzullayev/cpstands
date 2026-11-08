@@ -12,6 +12,8 @@ const calls = {
   friends: ['friends', `{action:'add',handles:['jiangly','Petr','ksun48','Benq']}`],
   activity: ['activity', `{me:'tourist'}`],
   standings: ['standings', `{me:'tourist',contestId:2279}`],
+  upsolve: ['upsolve', `{handle:'tourist'}`],
+  leaderboard: ['leaderboard', `{period:'month',me:'tourist'}`],
 }
 
 function run(name, input) {
@@ -28,7 +30,12 @@ function run(name, input) {
 
 for (const [key, [name, input]] of Object.entries(calls)) {
   let value = run(name, input)
-  if (key === 'activity' && value.pending) value = run(name, input) // second pass fills the cache
+  // Endpoints that refresh a few handles per call: ask until nothing is pending.
+  for (let i = 0; i < 4 && value.pending; i++) value = run(name, input)
   writeFileSync(new URL(`./fixtures/${key}.json`, import.meta.url), JSON.stringify(value, null, 1))
   console.log('captured', key)
 }
+
+// The capture user's friend list is test data only: clear it again.
+run('friends', `{action:'remove',handles:['jiangly','Petr','ksun48','Benq']}`)
+console.log('cleaned up the capture user')

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, ExternalLink, GitCompareArrows, MapPin, UserPlus } from 'lucide-react'
+import { Check, ExternalLink, GitCompareArrows, ListTodo, MapPin, UserPlus } from 'lucide-react'
 import { call, forget, useCall } from '@/lib/api'
 import { cfUrl, ratingColor, VERDICT_SHORT, type Comparison, type FriendsAnswer, type Profile as P } from '@/lib/cf'
 import { useRouter } from '@/lib/router'
@@ -78,6 +78,9 @@ export default function Profile({ handle }: { handle: string }) {
             <FollowButton handle={u.handle} />
             <Button size="sm" variant="outline" onClick={() => push({ name: 'compare', handles: [u.handle] })}>
               <GitCompareArrows /> {t('pr.compare')}
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => push({ name: 'upsolve', handle: u.handle })}>
+              <ListTodo /> {t('up.title')}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => openLink(cfUrl.profile(u.handle))}>
               <ExternalLink /> CF

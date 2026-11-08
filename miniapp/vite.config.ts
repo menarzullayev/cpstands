@@ -8,4 +8,6 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: { alias: { '@': path.resolve(import.meta.dirname, 'src') } },
+  // The real limit is the gzip budget in scripts/budget.mjs; this only silences Vite's raw-size hint.
+  build: { chunkSizeWarningLimit: 700 },
 })

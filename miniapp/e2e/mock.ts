@@ -8,6 +8,8 @@ import compare from './fixtures/compare.json' with { type: 'json' }
 import friends from './fixtures/friends.json' with { type: 'json' }
 import activity from './fixtures/activity.json' with { type: 'json' }
 import standings from './fixtures/standings.json' with { type: 'json' }
+import upsolve from './fixtures/upsolve.json' with { type: 'json' }
+import leaderboard from './fixtures/leaderboard.json' with { type: 'json' }
 
 /** The moment the fixtures were captured; the page clock is frozen here. */
 export const NOW = new Date('2026-11-08T10:06:00Z')
@@ -23,7 +25,7 @@ export interface MockOptions {
 export async function mockTelegram(page: Page, opts: MockOptions = {}) {
   await page.route('https://telegram.org/**', (r) => r.fulfill({ status: 200, contentType: 'text/javascript', body: '' }))
   await page.clock.setFixedTime(NOW)
-  const data = { contests, profile, compareOne, compare, friends, activity, standings }
+  const data = { contests, profile, compareOne, compare, friends, activity, standings, upsolve, leaderboard }
   await page.addInitScript(
     ([data, opts]) => {
       const store: Record<string, string> = { me: 'tourist', effects: '0', ...(opts.storage ?? {}) }
@@ -51,6 +53,11 @@ export async function mockTelegram(page: Page, opts: MockOptions = {}) {
           }
           case 'activity':
             return list.length ? data.activity : { events: [], pending: 0, handles: 1 }
+          case 'upsolve':
+            return data.upsolve
+          case 'leaderboard':
+            if (!list.length) throw { type: 'ENDPOINT_ERROR', message: 'No friends', parameters: { code: 'NO_FRIENDS' } }
+            return { ...data.leaderboard, period: input.period }
           case 'standings':
             if (!list.length) throw { type: 'ENDPOINT_ERROR', message: 'No friends', parameters: { code: 'NO_FRIENDS' } }
             return data.standings

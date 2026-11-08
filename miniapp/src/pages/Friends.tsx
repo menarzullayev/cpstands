@@ -9,6 +9,8 @@ import { ApiError, haptic } from '@/lib/tg'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, Empty, ErrorState, Handle, Loading, Panel, Rise } from '@/components/kit'
+import { LeaderboardPanel } from '@/components/LeaderboardPanel'
+import { cn } from '@/lib/utils'
 
 export function Friends() {
   const { t, fmt } = useSettings()
@@ -18,6 +20,7 @@ export function Friends() {
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null)
   const [editing, setEditing] = useState(false)
+  const [view, setView] = useState<'list' | 'board'>('list')
 
   const change = async (action: 'add' | 'remove', handles: string[]) => {
     setBusy(true)
@@ -51,8 +54,31 @@ export function Friends() {
   }
 
   const friends = list.data?.friends ?? []
+  const switcher = (
+    <div className="grid grid-cols-2 rounded-xl border bg-muted/50 p-1">
+      {(['list', 'board'] as const).map((v) => (
+        <button
+          key={v}
+          onClick={() => setView(v)}
+          className={cn('rounded-lg py-1.5 text-sm font-medium', view === v ? 'bg-primary text-primary-foreground' : 'text-muted-foreground')}
+        >
+          {t(v === 'list' ? 'fr.list' : 'fr.board')}
+        </button>
+      ))}
+    </div>
+  )
+  if (view === 'board')
+    return (
+      <>
+        {switcher}
+        <Rise i={0}>
+          <LeaderboardPanel />
+        </Rise>
+      </>
+    )
   return (
     <>
+      {switcher}
       <Rise i={0}>
         <form
           className="flex gap-2"

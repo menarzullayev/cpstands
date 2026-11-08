@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Activity as ActivityIcon, ArrowDownRight, ArrowUpRight, ChevronRight, Radio, UserPlus, Zap } from 'lucide-react'
+import { Activity as ActivityIcon, ArrowDownRight, ArrowUpRight, ListTodo, Radio, UserPlus, Zap } from 'lucide-react'
 import { useCall } from '@/lib/api'
 import { cfUrl, nextRank, ratingColor, type Activity, type ActivityEvent, type Comparison, type ContestList } from '@/lib/cf'
 import { useRouter } from '@/lib/router'
@@ -58,7 +58,14 @@ function MyRating() {
   const progress = next ? ((rating - prevFrom) / (next.from - prevFrom)) * 100 : 100
   const delta = last ? last.rating - last.old : 0
   return (
-    <Panel title={t('home.myRating')} extra={<ChevronRight className="size-4 text-muted-foreground" />}>
+    <Panel
+      title={t('home.myRating')}
+      extra={
+        <Button size="xs" variant="outline" onClick={() => push({ name: 'upsolve', handle: s.handle })}>
+          <ListTodo /> {t('up.title')}
+        </Button>
+      }
+    >
       <button className="block w-full text-left" onClick={() => push({ name: 'profile', handle: s.handle })}>
         <div className="flex items-end justify-between gap-3">
           <div>

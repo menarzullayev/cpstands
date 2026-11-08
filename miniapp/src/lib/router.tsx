@@ -6,6 +6,7 @@ export type Inner =
   | { name: 'profile'; handle: string }
   | { name: 'compare'; handles: string[] }
   | { name: 'standings'; contestId: number }
+  | { name: 'upsolve'; handle: string }
 
 interface Router {
   tab: Tab
@@ -28,6 +29,10 @@ export function parseStart(param: string): { tab: Tab; stack: Inner[] } {
     const handle = param.slice('profile_'.length)
     if (HANDLE.test(handle)) return { tab: 'home', stack: [{ name: 'profile', handle }] }
   }
+  if (kind === 'upsolve') {
+    const handle = param.slice('upsolve_'.length)
+    if (HANDLE.test(handle)) return { tab: 'home', stack: [{ name: 'upsolve', handle }] }
+  }
   if (kind === 'compare') {
     const handles = param.slice('compare_'.length).split('-').filter((h) => HANDLE.test(h)).slice(0, 6)
     if (handles.length) return { tab: 'friends', stack: [{ name: 'compare', handles }] }
@@ -44,6 +49,7 @@ export function routeParam(route: Inner | Tab): string {
   if (typeof route === 'string') return route
   if (route.name === 'profile') return `profile_${route.handle}`
   if (route.name === 'compare') return `compare_${route.handles.join('-')}`
+  if (route.name === 'upsolve') return `upsolve_${route.handle}`
   return `standings_${route.contestId}`
 }
 

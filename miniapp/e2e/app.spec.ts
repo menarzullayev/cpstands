@@ -108,3 +108,22 @@ test('outside Telegram the app says where to open it', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByText('Open this app from @cpstandsbot in Telegram.').first()).toBeVisible()
 })
+
+test('an upsolve link opens the upsolve list', async ({ page }) => {
+  await mockTelegram(page, { startParam: 'upsolve_tourist' })
+  await page.goto('/')
+  await expect(page.getByText('Problems you tried in a contest but did not solve there')).toBeVisible()
+  await page.getByRole('button', { name: 'All', exact: true }).click()
+  await expect(page.locator('li button').first()).toBeVisible()
+})
+
+test('the friends leaderboard switches between week and month', async ({ page }) => {
+  await mockTelegram(page)
+  await page.goto('/')
+  await page.getByRole('navigation').getByRole('button', { name: 'Friends', exact: true }).click()
+  await page.getByRole('button', { name: 'Leaderboard', exact: true }).click()
+  await expect(page.getByText('jiangly').first()).toBeVisible()
+  await page.getByRole('button', { name: 'Month', exact: true }).click()
+  const calls = await page.evaluate(() => (window as unknown as { __tg: { calls: { name: string; input: { period?: string } }[] } }).__tg.calls)
+  expect(calls.filter((c) => c.name === 'leaderboard').map((c) => c.input.period)).toEqual(['week', 'month'])
+})

@@ -1,0 +1,164 @@
+{
+ "handle": "tourist",
+ "todo": 0,
+ "upsolved": 2,
+ "contests": [
+  {
+   "contestId": 2219,
+   "name": "Codeforces Round 1093 (Div. 1)",
+   "time": 1776098101,
+   "virtual": false,
+   "problems": [
+    {
+     "index": "A",
+     "name": "Grid L",
+     "rating": 1400,
+     "tags": [
+      "brute force",
+      "constructive algorithms",
+      "math"
+     ],
+     "status": "solved"
+    },
+    {
+     "index": "B1",
+     "name": "Unique Values (Easy version)",
+     "rating": 1900,
+     "tags": [
+      "binary search",
+      "constructive algorithms",
+      "divide and conquer"
+     ],
+     "status": "solved"
+    },
+    {
+     "index": "C",
+     "name": "Coloring a Red Black Tree",
+     "rating": 2300,
+     "tags": [
+      "dfs and similar",
+      "dp",
+      "greedy"
+     ],
+     "status": "solved"
+    },
+    {
+     "index": "D",
+     "name": "MEX Replacement on Tree",
+     "rating": 2700,
+     "tags": [
+      "data structures",
+      "implementation",
+      "math"
+     ],
+     "status": "upsolved"
+    },
+    {
+     "index": "E",
+     "name": "Weird Chessboard",
+     "rating": 3500,
+     "tags": [
+      "constructive algorithms",
+      "math"
+     ],
+     "status": "solved"
+    }
+   ]
+  },
+  {
+   "contestId": 2196,
+   "name": "Codeforces Round 1079 (Div. 1)",
+   "time": 1770831249,
+   "virtual": false,
+   "problems": [
+    {
+     "index": "A",
+     "name": "Game with a Fraction",
+     "rating": 1200,
+     "tags": [
+      "games",
+      "math"
+     ],
+     "status": "solved"
+    },
+    {
+     "index": "B",
+     "name": "Another Problem about Beautiful Pairs",
+     "rating": 1600,
+     "tags": [
+      "brute force",
+      "math",
+      "two pointers"
+     ],
+     "status": "solved"
+    },
+    {
+     "index": "C1",
+     "name": "Interactive Graph (Simple Version)",
+     "rating": 1800,
+     "tags": [
+      "binary search",
+      "combinatorics",
+      "dfs and similar"
+     ],
+     "status": "solved"
+    },
+    {
+     "index": "C2",
+     "name": "Interactive Graph (Hard Version)",
+     "rating": 2000,
+     "tags": [
+      "combinatorics",
+      "dfs and similar",
+      "dp"
+     ],
+     "status": "solved"
+    },
+    {
+     "index": "D",
+     "name": "Double Bracket Sequence",
+     "rating": 2500,
+     "tags": [
+      "data structures",
+      "dp",
+      "expression parsing"
+     ],
+     "status": "solved"
+    },
+    {
+     "index": "E1",
+     "name": "Fuzzy Concatenation (Easy Version)",
+     "rating": 2900,
+     "tags": [
+      "binary search",
+      "bitmasks",
+      "brute force"
+     ],
+     "status": "solved"
+    },
+    {
+     "index": "E2",
+     "name": "Fuzzy Concatenation (Hard version)",
+     "rating": 3000,
+     "tags": [
+      "binary search",
+      "bitmasks",
+      "data structures"
+     ],
+     "status": "solved"
+    },
+    {
+     "index": "F",
+     "name": "Indivisible",
+     "rating": 3300,
+     "tags": [
+      "brute force",
+      "constructive algorithms",
+      "graphs"
+     ],
+     "status": "upsolved"
+    }
+   ]
+  }
+ ]
+}

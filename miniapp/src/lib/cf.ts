@@ -111,6 +111,25 @@ export interface Profile {
   }
 }
 
+export interface UpsolveAnswer {
+  handle: string
+  todo: number
+  upsolved: number
+  contests: {
+    contestId: number
+    name: string
+    time: number
+    virtual: boolean
+    problems: { index: string; name: string; rating: number | null; tags: string[]; status: 'solved' | 'upsolved' | 'todo' }[]
+  }[]
+}
+export interface Leaderboard {
+  period: 'week' | 'month'
+  rows: { handle: string; rating: number | null; delta: number; contests: number; best: number | null; solved: number }[]
+  pending: number
+  me: string | null
+}
+
 export const RANKS: { from: number; name: string; color: string }[] = [
   { from: 0, name: 'newbie', color: 'var(--r-newbie)' },
   { from: 1200, name: 'pupil', color: 'var(--r-pupil)' },
