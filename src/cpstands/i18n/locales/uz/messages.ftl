@@ -68,8 +68,8 @@ settings-summary =
     }</b>
     📊 Jadval ustunlari: <b>{ $cols }</b>
     📈 Jadval ko'rinishi: <b>{ $style ->
-        [classic] klassik
-       *[emoji] emoji
+       *[classic] klassik
+        [emoji] emoji
     }</b>
     🏁 Xulosa: <b>{ $summary ->
         [off] o'chiq
@@ -300,8 +300,8 @@ word-off = o'chiq
 button-back = Orqaga
 button-columns = Ustunlar: { $n }
 button-table-style = Ko'rinish: { $style ->
-        [classic] klassik
-       *[emoji] emoji
+       *[classic] klassik
+        [emoji] emoji
     }
 button-summary = { $state ->
         [off] Xulosa: o'chiq

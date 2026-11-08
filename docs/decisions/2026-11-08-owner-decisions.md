@@ -134,3 +134,10 @@ kep.uz handle, so Codeforces-only chats get no new messages. Evidence: EVID-022.
   minutes). On Codeforces it is the earliest time, so equal times share it.
 - Telegram rich messages offer no text or background colours; colour comes only from custom emoji
   and `<mark>`. Measured on Telegram Desktop with contest 502.
+
+Update (later on 2026-11-08):
+- The classic striped table is the default; the emoji style is the /settings option. Migration
+  0008 moved all 6 chats (none had picked a style yet).
+- Emoji style cells use plain 🟢 and 🔴: Telegram keeps only the first 100 custom emoji of a
+  message (measured: 201 sent, 100 kept). Medals and ⚡ stay custom; a page never carries more
+  than 100.

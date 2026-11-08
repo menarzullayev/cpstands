@@ -568,7 +568,7 @@ async def test_cf_type_contests_show_points_not_times(harness: Harness) -> None:
     await harness.say(PRIVATE, PRIVATE, "/standings 1972")
     html = harness.session.rich()[-1]["html"]
     table = html.split("<table", 1)[1].split("</table>")[0]
-    assert re.search(r"> ?(<b>)?500(</b>)?</td>", table)  # points after the 🟢 or ⚡, not a time
+    assert re.search(r">(<mark>)?500(</mark>)?</td>", table)  # points (first solve marked), no time
     assert ":" not in re.sub(r"<[^>]+>", "", table)
 
 
@@ -877,7 +877,7 @@ async def test_settings_hub_shows_every_setting_with_its_button(harness: Harness
         assert line in text
     assert _callbacks(sent) == [
         "set:menu:lang", "set:menu:tz", "set:tone:neutral", "set:menu:rem",
-        "set:menu:alr", "set:cols:8", "set:sum:off", "fr:l:0", "set:style:classic",
+        "set:menu:alr", "set:cols:8", "set:sum:off", "fr:l:0", "set:style:emoji",
     ]  # fmt: skip
 
 
@@ -1311,31 +1311,31 @@ async def test_the_table_style_is_switched_in_settings(harness: Harness) -> None
     await harness.say(PRIVATE, PRIVATE, "/settings")
     chat = await harness.chat(PRIVATE)
     assert chat is not None
-    assert chat.table_style == "emoji"
-    await harness.tap(PRIVATE, PRIVATE, "set:style:classic")
+    assert chat.table_style == "classic"  # the default
+    await harness.tap(PRIVATE, PRIVATE, "set:style:emoji")
     chat = await harness.chat(PRIVATE)
     assert chat is not None
-    assert chat.table_style == "classic"
+    assert chat.table_style == "emoji"
     text = harness.session.sent("EditMessageText")[-1]["text"]
-    assert "Jadval ko'rinishi: <b>klassik</b>" in text
+    assert "Jadval ko'rinishi: <b>emoji</b>" in text
 
     await harness.say(PRIVATE, PRIVATE, "/standings 1970")
-    assert "<table bordered striped>" in harness.session.rich()[-1]["html"]
+    assert "<table bordered compact>" in harness.session.rich()[-1]["html"]
 
     before = len(harness.session.alerts())
     await harness.tap(PRIVATE, PRIVATE, "set:style:neon")  # not a style
     assert len(harness.session.alerts()) == before + 1
     chat = await harness.chat(PRIVATE)
     assert chat is not None
-    assert chat.table_style == "classic"
+    assert chat.table_style == "emoji"
 
 
 async def test_only_an_admin_switches_a_groups_table_style(harness: Harness) -> None:
     await harness.say(GROUP, ADMIN, "/settings")
-    await harness.tap(GROUP, MEMBER, "set:style:classic")
+    await harness.tap(GROUP, MEMBER, "set:style:emoji")
     chat = await harness.chat(GROUP)
     assert chat is not None
-    assert chat.table_style == "emoji"
+    assert chat.table_style == "classic"
 
 
 async def test_the_database_refuses_an_unknown_table_style(harness: Harness) -> None:

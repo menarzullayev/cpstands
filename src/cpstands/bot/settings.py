@@ -93,7 +93,7 @@ def _hub_keyboard(deps: Deps, chat: repos.ChatRecord, tr: Translator) -> InlineK
     other_tone = "neutral" if chat.tone == "playful" else "playful"
     next_cols = COLUMN_CHOICES[(COLUMN_CHOICES.index(chat.table_cols) + 1) % len(COLUMN_CHOICES)]
     next_summary = "off" if chat.summary_enabled else "on"
-    next_style = "classic" if chat.table_style == "emoji" else "emoji"
+    next_style = "emoji" if chat.table_style == "classic" else "classic"
     state = "on" if chat.summary_enabled else "off"
     b = keyboards.button
     return InlineKeyboardMarkup(

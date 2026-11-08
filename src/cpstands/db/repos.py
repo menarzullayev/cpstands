@@ -34,7 +34,7 @@ class ChatRecord:
     notify_level: int = 4
     table_cols: int = 16
     summary_enabled: bool = True
-    table_style: str = "emoji"
+    table_style: str = "classic"
 
 
 _CHAT_COLUMNS = (
