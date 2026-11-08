@@ -31,7 +31,6 @@ from cpstands.db import repos
 from cpstands.domain.contest import FullStandings
 from cpstands.i18n import I18n
 from cpstands.services.standings import StandingsService
-from cpstands.services.watchlist import PLATFORM
 from cpstands.sources.base import PermanentSourceError, SourceError
 
 log = structlog.get_logger(__name__)
@@ -83,6 +82,7 @@ class LiveUpdater:
         self._clock = clock
         self._now = now
         self._sleep = sleep
+        self._platform = standings.platform
         self._next_due: dict[int, float] = {}
         self._failures: dict[int, int] = {}
         self._last_edit: dict[int, float] = {}
@@ -101,7 +101,7 @@ class LiveUpdater:
     async def tick(self) -> None:
         """One pass: update every live contest whose next fetch is due."""
         async with self._sessions() as session:
-            contests = await repos.live_contest_ids(session, PLATFORM)
+            contests = await repos.live_contest_ids(session, self._platform)
         for gone in set(self._next_due) - set(contests):
             self._next_due.pop(gone, None)
             self._failures.pop(gone, None)
@@ -127,7 +127,7 @@ class LiveUpdater:
         active = standings.contest.phase.is_active
         self._next_due[contest_id] = self._clock() + fetch_delay(standings, self._now())
         async with self._sessions() as session:
-            messages = await repos.live_messages(session, PLATFORM, contest_id)
+            messages = await repos.live_messages(session, self._platform, contest_id)
         for message in messages:
             await self._edit(message, standings, final=not active)
         if not active:
@@ -135,8 +135,8 @@ class LiveUpdater:
 
     async def _freeze_all(self, contest_id: int) -> None:
         async with self._sessions() as session, session.begin():
-            for message in await repos.live_messages(session, PLATFORM, contest_id):
-                await repos.mark_live_message(session, PLATFORM, message, state="orphaned")
+            for message in await repos.live_messages(session, self._platform, contest_id):
+                await repos.mark_live_message(session, self._platform, message, state="orphaned")
 
     async def _edit(
         self, message: repos.LiveMessage, standings: FullStandings, *, final: bool
@@ -148,7 +148,7 @@ class LiveUpdater:
             return
         say = self._i18n.bound(chat.language, chat.tone)
         async with self._sessions() as session:
-            friends = frozenset(await repos.scoreboard_keys(session, chat.chat_id, PLATFORM))
+            friends = frozenset(await repos.scoreboard_keys(session, chat.chat_id, self._platform))
         ctx = standings_view.ViewContext(
             standings_view.resolve_view(message.view, friends), friends, chat.table_cols
         )
@@ -218,5 +218,5 @@ class LiveUpdater:
     ) -> None:
         async with self._sessions() as session, session.begin():
             await repos.mark_live_message(
-                session, PLATFORM, message, state=state, last_hash=last_hash, edited=edited
+                session, self._platform, message, state=state, last_hash=last_hash, edited=edited
             )

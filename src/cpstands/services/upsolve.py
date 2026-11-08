@@ -16,11 +16,12 @@ from datetime import UTC, datetime, timedelta
 import structlog
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from cpstands import platforms
 from cpstands.db import repos
 from cpstands.domain.contest import Submission, handle_key
 from cpstands.services.alerts import BATCH_WINDOW_S, variant_of
 
-PLATFORM = "codeforces"
+PLATFORM = platforms.CODEFORCES
 WINDOW = timedelta(hours=72)  # contests that ended longer ago are not watched for upsolving
 FRESH = timedelta(minutes=90)  # an older solve is history, not news
 IN_CONTEST = {"CONTESTANT", "OUT_OF_COMPETITION"}
@@ -36,14 +37,18 @@ class Upsolve:
     problem: str
     problem_name: str
     at: datetime
+    platform: str = PLATFORM
 
     @property
     def event_key(self) -> str:
-        return f"{PLATFORM}|{self.contest_id}|{handle_key(self.handle)}|{self.problem}|upsolve|0"
+        return (
+            f"{self.platform}|{self.contest_id}|{handle_key(self.handle)}|{self.problem}|upsolve|0"
+        )
 
     def payload(self) -> dict[str, object]:
         return {
             "kind": "upsolve",
+            "platform": self.platform,
             "handle": self.handle,
             "contest_id": self.contest_id,
             "contest_name": self.contest_name,
@@ -67,6 +72,7 @@ def detect_upsolves(
     contests: Mapping[int, repos.ContestRow],
     *,
     now: datetime,
+    platform: str = PLATFORM,
 ) -> list[Upsolve]:
     """The fresh first practice solves of problems that were not solved during the contest."""
     solved_in_contest = {
@@ -95,6 +101,7 @@ def detect_upsolves(
                 problem=index,
                 problem_name=sub.problem_name,
                 at=sub.created_at,
+                platform=platform,
             )
         )
     return sorted(found, key=lambda u: (u.at, u.problem))
@@ -106,9 +113,15 @@ class UpsolveService:
         sessions: async_sessionmaker[AsyncSession],
         *,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
+        platform: str = PLATFORM,
     ) -> None:
         self._sessions = sessions
         self._now = now
+        self._platform = platform
+
+    @property
+    def platform(self) -> str:
+        return self._platform
 
     async def process(
         self,
@@ -118,7 +131,7 @@ class UpsolveService:
     ) -> int:
         """Record what is new and queue it for the chats that follow ``handle``; returns queued."""
         now = self._now()
-        found = detect_upsolves(handle, submissions, contests, now=now)
+        found = detect_upsolves(handle, submissions, contests, now=now, platform=self._platform)
         if not found:
             return 0
         key = handle_key(handle)
@@ -128,7 +141,7 @@ class UpsolveService:
                 fresh = await repos.insert_solve_event(
                     session,
                     event_key=upsolve.event_key,
-                    platform=PLATFORM,
+                    platform=self._platform,
                     contest_id=upsolve.contest_id,
                     handle_key=key,
                     problem=upsolve.problem,
@@ -137,7 +150,9 @@ class UpsolveService:
                 )
                 if not fresh:
                     continue
-                for chat_id in await repos.upsolve_watchers(session, PLATFORM, key, upsolve.at):
+                for chat_id in await repos.upsolve_watchers(
+                    session, self._platform, key, upsolve.at
+                ):
                     if await repos.enqueue_alert(
                         session,
                         chat_id,

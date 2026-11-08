@@ -27,12 +27,18 @@ class StandingsService:
         *,
         clock: Callable[[], float] = time.monotonic,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
+        min_refresh_age_s: float = MIN_REFRESH_AGE_S,
     ) -> None:
         self._source = source
+        self._min_refresh_age_s = min_refresh_age_s
         self._clock = clock
         self._now = now
         self._cache: OrderedDict[int, tuple[FullStandings, float, float]] = OrderedDict()
         self._locks: dict[int, asyncio.Lock] = {}
+
+    @property
+    def platform(self) -> str:
+        return self._source.platform
 
     def _lock(self, contest_id: int) -> asyncio.Lock:
         if len(self._locks) > MAX_LOCKS:
@@ -46,7 +52,7 @@ class StandingsService:
             now = self._clock()
             if cached is not None:
                 standings, fetched, expires = cached
-                fresh_enough = now - fetched < MIN_REFRESH_AGE_S
+                fresh_enough = now - fetched < self._min_refresh_age_s
                 if now < expires and (not refresh or fresh_enough):
                     self._cache.move_to_end(contest_id)
                     return standings

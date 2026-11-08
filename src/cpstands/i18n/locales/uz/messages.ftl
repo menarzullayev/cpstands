@@ -91,6 +91,7 @@ track-usage =
     <code>/track add handle1, handle2</code> — qo'shish
     <code>/track remove handle</code> — olib tashlash
     <code>/track list</code> — ro'yxatni ko'rish
+    <code>/track add kep:handle</code> — kep.uz foydalanuvchisi
 track-list-empty = 👥 Ro'yxat bo'sh. Handle qo'shing: <code>/track add tourist, jiangly</code>
 track-list-header = { $count ->
         [one] 👥 <b>Kuzatilmoqda: { $count } ta handle</b>
@@ -125,7 +126,7 @@ help-text =
     <b>Do'stlar</b>
     /track — kuzatiladigan handlelar
     /friends — xuddi shu, shaxsiy chatda
-    /rank — kuzatilgan handlelar reytingi
+    /rank — kuzatilgan handlelar reytingi (/rank kep — kep.uz)
     /rating — bitta foydalanuvchi reyting kartasi
     /summary — kuzatilgan handlelarning oxirgi contestdagi natijasi
     /import — Codeforces do'stlarini ko'chirish (shaxsiy chat)
@@ -140,6 +141,7 @@ standings-usage =
 
     <code>/standings 1970</code> — contest raqami bo'yicha
     <code>/standings https://codeforces.com/contest/1970</code> — havola bo'yicha
+    <code>/standings kep:504</code> — kep.uz contesti
 standings-status = { $phase ->
         [running] 🔥 <b>Davom etmoqda</b>
         [before] ⏰ <b>Hali boshlanmagan</b>
@@ -344,7 +346,8 @@ rating-usage =
     👤 <b>Reyting kartasi</b>
 
     <code>/rating tourist</code> — foydalanuvchining reytingi, unvoni va oxirgi contesti
-rating-not-found = ❌ Codeforces'da <b>{ $handle }</b> nomli foydalanuvchi yo'q.
+    <code>/rating kep:handle</code> — kep.uz reytingi
+rating-not-found = ❌ <b>{ $handle }</b> nomli foydalanuvchi topilmadi.
 rating-source-error = ⚠️ Codeforces hozir javob bermayapti. Bir daqiqadan keyin qayta urinib ko'ring.
 rating-card =
     👤 <b>{ $handle }</b>
@@ -374,6 +377,7 @@ summary-usage =
 
     <code>/summary</code> — oxirgi yakunlangan contest
     <code>/summary 2287</code> — raqami bo'yicha contest
+    <code>/summary kep</code> — oxirgi kep.uz contesti
 summary-no-friends = 👥 Avval handle qo'shing: <code>/track add tourist</code>.
 summary-none = 🤷 Kuzatilgan handlelardan hech biri unda qatnashmagan.
 summary-source-error = ⚠️ Codeforces hozir javob bermayapti. Bir daqiqadan keyin qayta urinib ko'ring.

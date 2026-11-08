@@ -14,6 +14,7 @@ from datetime import datetime
 
 from aiogram.types import InlineKeyboardMarkup
 
+from cpstands import platforms
 from cpstands.bot.keyboards import app_button, button
 from cpstands.domain.contest import (
     ContestPhase,
@@ -174,12 +175,31 @@ def _clock(moment: datetime, zone: str) -> str:
 
 
 def callback(
-    contest_id: int, row_page: int, col_page: int, view: str = "all", *, refresh: bool = False
+    contest_id: int,
+    row_page: int,
+    col_page: int,
+    view: str = "all",
+    *,
+    refresh: bool = False,
+    platform: str = platforms.CODEFORCES,
 ) -> str:
+    """``st:<contest>:<row>:<col>:<view>[:r]``; a kep.uz contest is written ``kep504``."""
     token = VIEW_TOKEN.get(view, "a")
-    return f"{CALLBACK_PREFIX}{contest_id}:{row_page}:{col_page}:{token}" + (
-        ":r" if refresh else ""
-    )
+    target = platforms.get(platform).slug(contest_id)
+    return f"{CALLBACK_PREFIX}{target}:{row_page}:{col_page}:{token}" + (":r" if refresh else "")
+
+
+_callback = callback  # the keyboard shadows the name with its own
+
+
+def parse_target(text: str) -> tuple[platforms.Platform, int] | None:
+    """``1970`` -> Codeforces 1970; ``kep504`` -> kep.uz 504."""
+    for site in platforms.PLATFORMS.values():
+        tag = site.prefix.rstrip(":")
+        if tag and text.startswith(tag):
+            rest = text[len(tag) :]
+            return (site, int(rest)) if rest.isascii() and rest.isdigit() else None
+    return (platforms.DEFAULT, int(text)) if text.isascii() and text.isdigit() else None
 
 
 def keyboard(
@@ -194,7 +214,14 @@ def keyboard(
 ) -> InlineKeyboardMarkup:
     ctx = ctx or ViewContext()
     cid = standings.contest.external_id
+    site = platforms.get(standings.contest.platform)
     view = ctx.view
+
+    def callback(
+        contest_id: int, row: int, col: int, view: str = "all", *, refresh: bool = False
+    ) -> str:
+        return _callback(contest_id, row, col, view, refresh=refresh, platform=site.name)
+
     pages = row_pages(len(visible_rows(standings, ctx)))
     row_page = min(max(row_page, 0), pages - 1)
     ranges = column_ranges(len(standings.problems), ctx.cols)
@@ -260,7 +287,7 @@ def keyboard(
                 emoji="🔁",
                 icons=icons,
             ),
-            app_button(say, f"standings_{cid}", icons=icons, chat_id=chat_id),
+            app_button(say, f"standings_{site.slug(cid)}", icons=icons, chat_id=chat_id),
         ]
     )
     return InlineKeyboardMarkup(inline_keyboard=rows)  # type: ignore[arg-type]

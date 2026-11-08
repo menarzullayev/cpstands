@@ -91,6 +91,7 @@ track-usage =
     <code>/track add handle1, handle2</code> — add
     <code>/track remove handle</code> — remove
     <code>/track list</code> — show the list
+    <code>/track add kep:handle</code> — a kep.uz user
 track-list-empty = 👥 The list is empty. Add handles: <code>/track add tourist, jiangly</code>
 track-list-header = { $count ->
         [one] 👥 <b>Following { $count } handle</b>
@@ -125,7 +126,7 @@ help-text =
     <b>Friends</b>
     /track — handles to follow
     /friends — the same, in a private chat
-    /rank — ratings of the followed handles
+    /rank — ratings of the followed handles (/rank kep — kep.uz)
     /rating — one user's rating card
     /summary — how the followed handles did in the last contest
     /import — copy your Codeforces friends (private chat)
@@ -140,6 +141,7 @@ standings-usage =
 
     <code>/standings 1970</code> — by contest id
     <code>/standings https://codeforces.com/contest/1970</code> — by link
+    <code>/standings kep:504</code> — a kep.uz contest
 standings-status = { $phase ->
         [running] 🔥 <b>Running</b>
         [before] ⏰ <b>Not started</b>
@@ -344,7 +346,8 @@ rating-usage =
     👤 <b>Rating card</b>
 
     <code>/rating tourist</code> — a user's rating, rank and last contest
-rating-not-found = ❌ No Codeforces user named <b>{ $handle }</b>.
+    <code>/rating kep:handle</code> — a kep.uz rating
+rating-not-found = ❌ There is no user called <b>{ $handle }</b>.
 rating-source-error = ⚠️ Codeforces does not answer right now. Try again in a minute.
 rating-card =
     👤 <b>{ $handle }</b>
@@ -377,6 +380,7 @@ summary-usage =
 
     <code>/summary</code> — the latest finished contest
     <code>/summary 2287</code> — a contest by its number
+    <code>/summary kep</code> — the latest kep.uz contest
 summary-no-friends = 👥 Follow some handles first: <code>/track add tourist</code>.
 summary-none = 🤷 None of the followed handles took part in it.
 summary-source-error = ⚠️ Codeforces does not answer right now. Try again in a minute.

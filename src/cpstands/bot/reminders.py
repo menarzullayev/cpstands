@@ -17,7 +17,7 @@ from aiogram.exceptions import (
 from aiogram.types import InlineKeyboardMarkup, LinkPreviewOptions
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from cpstands import metrics
+from cpstands import metrics, platforms
 from cpstands.bot import keyboards
 from cpstands.bot.telemetry import record_send
 from cpstands.db import repos
@@ -29,8 +29,6 @@ from cpstands.services.ops import OpsState
 log = structlog.get_logger(__name__)
 
 MAX_ATTEMPTS = 3
-CONTEST_URL = "https://codeforces.com/contest/{id}"
-REGISTER_URL = "https://codeforces.com/contestRegistration/{id}"
 
 
 def tg_time(moment: datetime, zone: str | None) -> Markup:
@@ -59,10 +57,14 @@ def render_reminder(
     chat: repos.ChatRecord,
     contest: repos.ContestRow,
     offset_min: int,
+    *,
+    platform: str = PLATFORM,
+    icons: bool = True,
 ) -> tuple[str, InlineKeyboardMarkup | None]:
     """Text and buttons of one reminder, "moved" notice or "cancelled" notice."""
     say = i18n.bound(chat.language, chat.tone)
-    name = contest.name
+    site = platforms.get(platform)
+    name = contest.name if site.prefix == "" else f"{contest.name} · {site.label}"
     if offset_min == repos.NOTICE_CANCELLED:
         return say("reminder-cancelled", name=name), None
     start = tg_time(contest.starts_at, chat.time_zone) if contest.starts_at else Markup("-")
@@ -71,28 +73,37 @@ def render_reminder(
     else:
         left = {4320: "d3", 1440: "day", 120: "h2", 60: "hour"}.get(offset_min, "minutes")
         text = say("reminder", name=name, start=start, left=left, minutes=offset_min)
-    return text, reminder_keyboard(say, contest.contest_id, chat_id=chat.chat_id)
+    markup = reminder_keyboard(
+        say, contest.contest_id, icons=icons, chat_id=chat.chat_id, platform=platform
+    )
+    return text, markup
 
 
 def reminder_keyboard(
-    say: object, contest_id: int, *, icons: bool = True, chat_id: int | None = None
+    say: object,
+    contest_id: int,
+    *,
+    icons: bool = True,
+    chat_id: int | None = None,
+    platform: str = PLATFORM,
 ) -> InlineKeyboardMarkup:
     from cpstands.i18n import Translator
 
     assert isinstance(say, Translator)
+    site = platforms.get(platform)
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 keyboards.link(
                     say("button-register"),
-                    REGISTER_URL.format(id=contest_id),
+                    site.register_url(contest_id),
                     emoji="🚀",
                     style="primary",
                     icons=icons,
                 ),
                 keyboards.link(
                     say("button-contest"),
-                    CONTEST_URL.format(id=contest_id),
+                    site.contest_url(contest_id),
                     emoji="🏆",
                     icons=icons,
                 ),
@@ -111,8 +122,10 @@ class ReminderSender:
         *,
         icons: bool = True,
         ops: OpsState | None = None,
+        platform: str = PLATFORM,
     ) -> None:
         self._bot = bot
+        self._platform = platform
         self._sessions = sessions
         self._i18n = i18n
         self._icons = icons
@@ -122,13 +135,17 @@ class ReminderSender:
         """Deliver one claimed reminder; returns whether Telegram accepted it."""
         async with self._sessions() as session:
             chat = await repos.get_chat(session, claimed.chat_id)
-            contest = await repos.get_contest(session, PLATFORM, claimed.contest_id)
+            contest = await repos.get_contest(session, self._platform, claimed.contest_id)
         if chat is None or contest is None or chat.status != "active":
             return False
-        text, markup = render_reminder(self._i18n, chat, contest, claimed.offset_min)
-        if markup is not None and not self._icons:
-            say = self._i18n.bound(chat.language, chat.tone)
-            markup = reminder_keyboard(say, claimed.contest_id, icons=False, chat_id=chat.chat_id)
+        text, markup = render_reminder(
+            self._i18n,
+            chat,
+            contest,
+            claimed.offset_min,
+            platform=self._platform,
+            icons=self._icons,
+        )
         try:
             await self._bot.send_message(
                 claimed.chat_id,
@@ -171,7 +188,7 @@ class ReminderSender:
         if claimed.attempts >= MAX_ATTEMPTS:
             return
         async with self._sessions() as session, session.begin():
-            await repos.release_reminder(session, PLATFORM, claimed)
+            await repos.release_reminder(session, self._platform, claimed)
 
 
 def now_utc() -> datetime:
