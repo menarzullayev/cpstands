@@ -12,6 +12,7 @@ import json
 import time
 from collections.abc import Awaitable, Callable
 
+import aiohttp
 import httpx
 import structlog
 from sqlalchemy import text
@@ -70,8 +71,10 @@ Pinger = Callable[[str], Awaitable[None]]
 
 
 async def http_ping(url: str) -> None:
-    async with httpx.AsyncClient(timeout=PING_TIMEOUT_S) as client:
-        await client.get(url)
+    # aiohttp, not httpx: httpx logs every request URL at INFO, and this URL is a secret.
+    timeout = aiohttp.ClientTimeout(total=PING_TIMEOUT_S)
+    async with aiohttp.ClientSession(timeout=timeout) as session, session.get(url) as response:
+        await response.read()
 
 
 class Heartbeat:
@@ -118,7 +121,7 @@ class Heartbeat:
             return
         try:
             await self._pinger(self._ping_url + suffix)
-        except (httpx.HTTPError, OSError):
+        except (aiohttp.ClientError, httpx.HTTPError, OSError, TimeoutError):
             # The monitor being unreachable must never disturb the bot; it alerts on silence.
             log.warning("monitor_ping_failed")  # the URL is a secret and is not logged
 

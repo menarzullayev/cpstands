@@ -106,3 +106,34 @@ async def test_without_a_url_nothing_is_pinged(sessions: async_sessionmaker[Asyn
     pings = Pings()
     await Heartbeat(sessions, commit="c", version="v", pinger=pings).tick()
     assert pings.urls == []
+
+
+async def test_the_real_ping_never_logs_its_url(caplog: pytest.LogCaptureFixture) -> None:
+    import logging
+
+    from aiohttp import web
+
+    from cpstands.services.heartbeat import http_ping
+
+    async def ok(_: web.Request) -> web.Response:
+        return web.Response(text="OK")
+
+    app = web.Application()
+    app.router.add_get("/{tail:.*}", ok)
+    runner = web.AppRunner(app, access_log=None)
+    await runner.setup()
+    site = web.TCPSite(runner, "127.0.0.1", 0)
+    await site.start()
+    port = site._server.sockets[0].getsockname()[1]  # type: ignore[union-attr]
+    url = f"http://127.0.0.1:{port}/secret-uuid-123"
+    try:
+        caplog.set_level(logging.DEBUG)
+        # Control: httpx does log the full URL of a successful request.
+        async with httpx.AsyncClient() as client:
+            await client.get(url)
+        assert "secret-uuid-123" in caplog.text
+        caplog.clear()
+        await http_ping(url)
+        assert "secret-uuid-123" not in caplog.text
+    finally:
+        await runner.cleanup()
