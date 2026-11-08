@@ -24,6 +24,7 @@ from cpstands.services.contests import ContestService
 from cpstands.services.ops import OpsState
 from cpstands.services.ratings import RatingService
 from cpstands.services.standings import StandingsService
+from cpstands.services.summary import SummaryService
 from cpstands.services.watchlist import WatchlistService
 from tests.support.sources import FakeSource, make_standings
 from tests.support.telegram import (
@@ -113,15 +114,17 @@ async def harness(migrated_database: str) -> AsyncIterator[Harness]:
         },
     )
     ops = OpsState()
+    standings = StandingsService(source)  # type: ignore[arg-type]
     deps = Deps(
         i18n=I18N,
         sessions=sessions,
         watchlist=WatchlistService(sessions, source),  # type: ignore[arg-type]
         admin=make_admin_checker(bot),
-        standings=StandingsService(source),  # type: ignore[arg-type]
+        standings=standings,
         contests=ContestService(sessions, source),  # type: ignore[arg-type]
         ops=ops,
         ratings=RatingService(source),  # type: ignore[arg-type]
+        summaries=SummaryService(source, standings),  # type: ignore[arg-type]
         owner_id=PRIVATE,
     )
     yield Harness(build_dispatcher(deps, RateLimiter()), bot, fake, sessions, source, ops)
@@ -305,6 +308,7 @@ async def test_rate_limit_answers_once_then_stays_quiet(migrated_database: str) 
         contests=ContestService(sessions, FakeSource([])),  # type: ignore[arg-type]
         ops=OpsState(),
         ratings=RatingService(FakeSource([])),  # type: ignore[arg-type]
+        summaries=SummaryService(FakeSource([]), StandingsService(FakeSource([]))),  # type: ignore[arg-type]
     )
     harness = Harness(
         build_dispatcher(deps, RateLimiter(per_user=3)),
@@ -1197,3 +1201,54 @@ async def test_rating_follow_rejects_garbage_and_non_admins(harness: Harness) ->
     assert len(harness.session.alerts()) == before + 1
     async with harness.sessions() as session:
         assert await repos.get_friend(session, GROUP, "codeforces", "tourist") is None
+
+
+# --- /summary ---------------------------------------------------------------------------
+
+
+async def _finished_contest(harness: Harness, cid: int, handles: tuple[str, ...]) -> None:
+    from tests.test_summary import A, R, table
+
+    standings = table(dict.fromkeys(handles, (A, R)), cid=cid)
+    harness.source.standings[cid] = standings
+    async with harness.sessions() as session, session.begin():
+        await repos.upsert_contest(
+            session, "codeforces", cid, "Round", "FINISHED", standings.contest.starts_at, 7200
+        )
+
+
+async def test_summary_needs_friends_and_a_numeric_contest(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/summary")
+    assert harness.session.last_text() == I18N.t(None, "summary-no-friends")
+    await harness.say(PRIVATE, PRIVATE, "/summary abc")
+    assert harness.session.last_text() == I18N.t(None, "summary-usage")
+    await harness.say(PRIVATE, PRIVATE, "/summary -5")
+    assert harness.session.last_text() == I18N.t(None, "summary-usage")
+
+
+async def test_summary_shows_the_latest_finished_contest_with_friends_in_it(
+    harness: Harness,
+) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/track add tourist")
+    await _finished_contest(harness, 3001, ("tourist", "x"))
+    await _finished_contest(harness, 3002, ("someone",))  # newer, but no friends in it
+    async with harness.sessions() as session, session.begin():
+        await repos.upsert_contest(
+            session, "codeforces", 3002, "Newer", "FINISHED", datetime.now(UTC), 7200
+        )
+    await harness.say(PRIVATE, PRIVATE, "/summary")
+    text = harness.session.last_text()
+    assert "tourist" in text
+    assert "3001" in text
+    await harness.say(PRIVATE, PRIVATE, "/summary 3002")
+    assert harness.session.last_text() == I18N.t(None, "summary-none")
+    await harness.say(PRIVATE, PRIVATE, "/summary 99999")  # Codeforces does not know it
+    assert harness.session.last_text() == I18N.t(None, "summary-none")
+
+
+async def test_summary_reports_a_source_failure(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/track add tourist")
+    await _finished_contest(harness, 3001, ("tourist",))
+    harness.source.fail = True
+    await harness.say(PRIVATE, PRIVATE, "/summary 3001")
+    assert harness.session.last_text() == I18N.t(None, "summary-source-error")

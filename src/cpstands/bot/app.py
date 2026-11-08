@@ -24,6 +24,7 @@ from cpstands.bot.rating_card import create_rating_router
 from cpstands.bot.reminders import ReminderSender
 from cpstands.bot.scheduler import Scheduler
 from cpstands.bot.settings import create_settings_router
+from cpstands.bot.summary import SummaryWorker, create_summary_router
 from cpstands.bot.telemetry import TelegramMetrics
 from cpstands.config import Settings
 from cpstands.db import repos
@@ -38,6 +39,7 @@ from cpstands.services.ops import ObservedSource, OpsState, load_source_state, r
 from cpstands.services.ratings import RatingService
 from cpstands.services.retention import RetentionService
 from cpstands.services.standings import StandingsService
+from cpstands.services.summary import SummaryService
 from cpstands.services.watchlist import WatchlistService
 from cpstands.sources.codeforces.client import ClientConfig, CodeforcesClient
 from cpstands.sources.codeforces.source import CodeforcesSource
@@ -56,6 +58,7 @@ def build_dispatcher(deps: Deps, limiter: RateLimiter | None = None) -> Dispatch
     dispatcher.include_router(create_router())
     dispatcher.include_router(create_settings_router())
     dispatcher.include_router(create_rating_router())
+    dispatcher.include_router(create_summary_router())
     dispatcher.include_router(create_privacy_router())
     dispatcher.include_router(create_owner_router())
 
@@ -118,15 +121,17 @@ async def run_bot(settings: Settings) -> None:
     await load_source_state(sessions, ops)
     source = ObservedSource(CodeforcesSource(client), ops)
     contests = ContestService(sessions, source)
+    standings = StandingsService(source)
     deps = Deps(
         i18n=I18n(custom_emoji=settings.custom_emoji),
         sessions=sessions,
         watchlist=WatchlistService(sessions, source),
         admin=make_admin_checker(bot),
-        standings=StandingsService(source),
+        standings=standings,
         contests=contests,
         ops=ops,
         ratings=RatingService(source),
+        summaries=SummaryService(source, standings),
         owner_id=settings.telegram_owner_id,
         icons=settings.button_icons,
     )
@@ -135,7 +140,8 @@ async def run_bot(settings: Settings) -> None:
     sender = ReminderSender(bot, sessions, deps.i18n, icons=deps.icons, ops=ops)
     scheduler = Scheduler(sessions, contests, sender, retention=RetentionService(sessions), ops=ops)
     watcher = AlertWatcher(sessions, deps.standings, AlertService(sessions))
-    notifier = AlertNotifier(bot, sessions, deps.i18n, ops=ops)
+    notifier = AlertNotifier(bot, sessions, deps.i18n, ops=ops, icons=deps.icons)
+    summarizer = SummaryWorker(sessions, deps.summaries, ops=ops)
     monitor = OperatorAlerts(
         bot, sessions, ops, deps.standings, deps.i18n, settings.telegram_owner_id
     )
@@ -144,6 +150,7 @@ async def run_bot(settings: Settings) -> None:
         asyncio.create_task(scheduler.run(), name="scheduler"),
         asyncio.create_task(watcher.run(), name="alert-watcher"),
         asyncio.create_task(notifier.run(), name="alert-notifier"),
+        asyncio.create_task(summarizer.run(), name="summaries"),
         asyncio.create_task(monitor.run(), name="operator-alerts"),
     ]
     runner = None

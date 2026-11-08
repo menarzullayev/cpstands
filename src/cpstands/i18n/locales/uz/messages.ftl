@@ -127,6 +127,7 @@ help-text =
     /friends — xuddi shu, shaxsiy chatda
     /rank — kuzatilgan handlelar reytingi
     /rating — bitta foydalanuvchi reyting kartasi
+    /summary — kuzatilgan handlelarning oxirgi contestdagi natijasi
 
     <b>Contestlar</b> <i>(tez orada)</i>
     /standings · /upcoming · /rank
@@ -350,3 +351,19 @@ rating-follow-done = ✅ Ro'yxatga qo'shildi
 rating-follow-limit = 🔒 Ro'yxat to'lgan ({ $limit } ta handle).
 button-follow = Kuzatish
 button-profile = Profil
+
+summary-header = 🏁 <b>{ $contest }</b> yakunlandi · { $count } ta ishtirokchi
+summary-line = { $medal } { $handle } · { $rank }-o'rin · { $solved } ta masala
+summary-rating = {" "}· { $delta } → { $new }
+summary-best = 📈 Reytingda eng katta o'sish: { $handle } ({ $delta })
+summary-more = … va yana { $count } ta kuzatilgan handle
+summary-unrated = ℹ️ Bu contest uchun reyting o'zgarishi e'lon qilinmagan (hozircha).
+summary-usage =
+    🏁 <b>Contest xulosasi</b>
+
+    <code>/summary</code> — oxirgi yakunlangan contest
+    <code>/summary 2287</code> — raqami bo'yicha contest
+summary-no-friends = 👥 Avval handle qo'shing: <code>/track add tourist</code>.
+summary-none = 🤷 Kuzatilgan handlelardan hech biri unda qatnashmagan.
+summary-source-error = ⚠️ Codeforces hozir javob bermayapti. Bir daqiqadan keyin qayta urinib ko'ring.
+button-results = Natijalar

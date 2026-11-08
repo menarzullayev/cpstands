@@ -127,6 +127,7 @@ help-text =
     /friends — the same, in a private chat
     /rank — ratings of the followed handles
     /rating — one user's rating card
+    /summary — how the followed handles did in the last contest
 
     <b>Contests</b> <i>(coming soon)</i>
     /standings · /upcoming · /rank
@@ -350,3 +351,22 @@ rating-follow-done = ✅ Added to the list
 rating-follow-limit = 🔒 The list is full ({ $limit } handles).
 button-follow = Follow
 button-profile = Profile
+
+summary-header = 🏁 <b>{ $contest }</b> is over · { $count } participants
+summary-line = { $medal } { $handle } · place { $rank } · { $solved ->
+        [one] { $solved } problem
+       *[other] { $solved } problems
+    }
+summary-rating = {" "}· { $delta } → { $new }
+summary-best = 📈 Biggest rating gain: { $handle } ({ $delta })
+summary-more = … and { $count } more followed handles
+summary-unrated = ℹ️ Rating changes are not published for this contest (yet).
+summary-usage =
+    🏁 <b>Contest summary</b>
+
+    <code>/summary</code> — the latest finished contest
+    <code>/summary 2287</code> — a contest by its number
+summary-no-friends = 👥 Follow some handles first: <code>/track add tourist</code>.
+summary-none = 🤷 None of the followed handles took part in it.
+summary-source-error = ⚠️ Codeforces does not answer right now. Try again in a minute.
+button-results = Results

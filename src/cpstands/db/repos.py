@@ -487,6 +487,39 @@ async def stored_before_contests(session: AsyncSession, platform: str) -> list[C
     return [_contest_row(row) for row in result.all()]
 
 
+async def finished_contests(
+    session: AsyncSession, platform: str, *, ended_after: datetime, now: datetime, limit: int
+) -> list[ContestRow]:
+    """Finished contests that ended within the window, newest first."""
+    result = await session.execute(
+        text(
+            """
+            SELECT c.external_id, c.name, c.phase, c.starts_at, c.duration_s FROM contests c
+            WHERE c.platform = :platform AND c.phase = 'FINISHED'
+              AND c.starts_at IS NOT NULL AND c.duration_s IS NOT NULL
+              AND c.starts_at + c.duration_s * interval '1 second' > CAST(:after AS timestamptz)
+              AND c.starts_at + c.duration_s * interval '1 second' <= CAST(:now AS timestamptz)
+            ORDER BY c.starts_at DESC, c.external_id DESC
+            LIMIT :limit
+            """
+        ),
+        {"platform": platform, "after": ended_after, "now": now, "limit": limit},
+    )
+    return [_contest_row(row) for row in result.all()]
+
+
+async def latest_finished_contests(
+    session: AsyncSession, platform: str, *, limit: int
+) -> list[ContestRow]:
+    result = await session.execute(
+        select(*_CONTEST_COLUMNS)
+        .where(contests.c.platform == platform, contests.c.phase == "FINISHED")
+        .order_by(contests.c.starts_at.desc().nulls_last(), contests.c.external_id.desc())
+        .limit(limit)
+    )
+    return [_contest_row(row) for row in result.all()]
+
+
 # --- reminders --------------------------------------------------------------------------
 
 # Offsets below one are not time offsets but notices about a change of the contest.
@@ -919,7 +952,8 @@ async def set_alerts_enabled(session: AsyncSession, chat_id: int, enabled: bool)
         await session.execute(
             text(
                 "UPDATE deliveries SET state = 'failed', last_error = 'alerts switched off' "
-                "WHERE chat_id = :chat AND kind = 'alert' AND state = 'pending'"
+                "WHERE chat_id = :chat AND kind = 'alert' AND state = 'pending' "
+                "AND COALESCE(payload->>'kind', '') <> 'summary'"
             ),
             {"chat": chat_id},
         )
@@ -1024,3 +1058,25 @@ async def scoreboard_keys(session: AsyncSession, chat_id: int, platform: str) ->
         )
     )
     return {str(row[0]) for row in result.all()}
+
+
+async def summary_audience(session: AsyncSession, platform: str) -> dict[int, dict[str, str]]:
+    """Active chats that want post-contest summaries -> {handle key: display} they follow."""
+    result = await session.execute(
+        select(
+            watched_handles.c.chat_id,
+            watched_handles.c.handle_key,
+            watched_handles.c.handle_display,
+        )
+        .join(chats, chats.c.chat_id == watched_handles.c.chat_id)
+        .where(
+            watched_handles.c.platform == platform,
+            watched_handles.c.show_in_list.is_(True),
+            chats.c.status == "active",
+            chats.c.summary_enabled.is_(True),
+        )
+    )
+    audience: dict[int, dict[str, str]] = {}
+    for chat_id, key, display in result.all():
+        audience.setdefault(int(chat_id), {})[str(key)] = str(display)
+    return audience

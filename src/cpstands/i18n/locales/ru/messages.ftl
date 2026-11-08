@@ -131,6 +131,7 @@ help-text =
     /friends — то же самое, в личном чате
     /rank — рейтинги отслеживаемых хендлов
     /rating — карточка рейтинга пользователя
+    /summary — итоги последнего контеста для отслеживаемых хендлов
 
     <b>Контесты</b> <i>(скоро)</i>
     /standings · /upcoming · /rank
@@ -364,3 +365,19 @@ rating-follow-done = ✅ Добавлено в список
 rating-follow-limit = 🔒 Список заполнен ({ $limit } хендлов).
 button-follow = Следить
 button-profile = Профиль
+
+summary-header = 🏁 <b>{ $contest }</b> завершён · участников: { $count }
+summary-line = { $medal } { $handle } · место { $rank } · решено задач: { $solved }
+summary-rating = {" "}· { $delta } → { $new }
+summary-best = 📈 Лучший рост рейтинга: { $handle } ({ $delta })
+summary-more = … и ещё отслеживаемых хендлов: { $count }
+summary-unrated = ℹ️ Изменения рейтинга для этого контеста не опубликованы (пока).
+summary-usage =
+    🏁 <b>Итоги контеста</b>
+
+    <code>/summary</code> — последний завершённый контест
+    <code>/summary 2287</code> — контест по номеру
+summary-no-friends = 👥 Сначала добавьте хендлы: <code>/track add tourist</code>.
+summary-none = 🤷 Никто из отслеживаемых хендлов в нём не участвовал.
+summary-source-error = ⚠️ Codeforces сейчас не отвечает. Попробуйте через минуту.
+button-results = Результаты

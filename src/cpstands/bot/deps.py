@@ -13,6 +13,7 @@ from cpstands.services.contests import ContestService
 from cpstands.services.ops import OpsState
 from cpstands.services.ratings import RatingService
 from cpstands.services.standings import StandingsService
+from cpstands.services.summary import SummaryService
 from cpstands.services.watchlist import WatchlistService
 
 
@@ -26,6 +27,7 @@ class Deps:
     contests: ContestService
     ops: OpsState
     ratings: RatingService
+    summaries: SummaryService
     owner_id: int | None = None
     icons: bool = False
     whisper: Whisper = field(default_factory=Whisper)

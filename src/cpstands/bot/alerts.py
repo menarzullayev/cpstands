@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import html
 import time
 from collections import defaultdict
 from collections.abc import Awaitable, Callable
@@ -18,15 +17,17 @@ from aiogram.exceptions import (
     TelegramNetworkError,
     TelegramRetryAfter,
 )
-from aiogram.types import LinkPreviewOptions
+from aiogram.types import InlineKeyboardMarkup, LinkPreviewOptions
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from cpstands import metrics
+from cpstands.bot.common import html_link
 from cpstands.bot.live import fetch_delay
 from cpstands.bot.reminders import duration_text
+from cpstands.bot.summary import render_summary
 from cpstands.bot.telemetry import record_send
 from cpstands.db import repos
-from cpstands.i18n import I18n, Markup, Translator
+from cpstands.i18n import I18n, Translator
 from cpstands.services.alerts import PLATFORM, AlertService
 from cpstands.services.ops import OpsState
 from cpstands.services.standings import StandingsService
@@ -114,8 +115,7 @@ class AlertWatcher:
         self._next_due.pop(contest_id, None)
 
 
-def _link(url: str, text: str) -> Markup:
-    return Markup(f'<a href="{html.escape(url, quote=True)}">{html.escape(text, quote=False)}</a>')
+_link = html_link
 
 
 def render_alerts(
@@ -183,8 +183,10 @@ class AlertNotifier:
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         ops: OpsState | None = None,
+        icons: bool = False,
     ) -> None:
         self._ops = ops
+        self._icons = icons
         self._bot = bot
         self._sessions = sessions
         self._i18n = i18n
@@ -208,11 +210,15 @@ class AlertNotifier:
         async with self._sessions() as session, session.begin():
             claimed = await repos.claim_due_alerts(session, now=self._now(), limit=CLAIM_LIMIT)
         by_chat: dict[int, list[repos.ClaimedAlert]] = defaultdict(list)
+        summaries: dict[int, list[repos.ClaimedAlert]] = defaultdict(list)
         for alert in claimed:
-            by_chat[alert.chat_id].append(alert)
+            target = summaries if alert.payload.get("kind") == "summary" else by_chat
+            target[alert.chat_id].append(alert)
         sent = 0
         for chat_id, alerts in by_chat.items():
             sent += await self._deliver(chat_id, alerts)
+        for chat_id, alerts in summaries.items():
+            sent += await self._deliver_summaries(chat_id, alerts)
         return sent
 
     async def _deliver(self, chat_id: int, alerts: list[repos.ClaimedAlert]) -> int:
@@ -224,39 +230,69 @@ class AlertNotifier:
         delivered = 0
         for text in render_alerts(self._i18n, chat, alerts):
             await self._respect_gap(chat_id)
-            try:
-                await self._bot.send_message(
-                    chat_id, text, link_preview_options=LinkPreviewOptions(is_disabled=True)
-                )
-            except TelegramRetryAfter as exc:
-                record_send("alert", self._ops, error="flood")
-                await self._release(alerts, float(exc.retry_after) + 1.0, "flood control")
+            if not await self._send(chat_id, text, alerts):
                 return delivered
-            except TelegramForbiddenError:
-                record_send("alert", self._ops, error="forbidden")
-                async with self._sessions() as session, session.begin():
-                    await repos.set_status(session, chat_id, "removed")
-                await self._fail(alerts, "bot was blocked")
-                return delivered
-            except TelegramNetworkError:
-                record_send("alert", self._ops, error="network")
-                await self._release(alerts, 10.0, "network")
-                return delivered
-            except TelegramBadRequest as exc:
-                log.warning("alert_rejected", chat_id=chat_id, reason=str(exc)[:120])
-                record_send("alert", self._ops, error="bad_request")
-                await self._fail(alerts, str(exc))
-                return delivered
-            except TelegramAPIError:
-                record_send("alert", self._ops, error="api")
-                await self._release(alerts, 30.0, "api error")
-                return delivered
-            record_send("alert", self._ops)
-            metrics.ALERTS_SENT.inc()
-            self._last_sent[chat_id] = self._clock()
             delivered += 1
         self._observe_latency(alerts)
         return delivered
+
+    async def _deliver_summaries(self, chat_id: int, alerts: list[repos.ClaimedAlert]) -> int:
+        async with self._sessions() as session:
+            chat = await repos.get_chat(session, chat_id)
+        if chat is None or chat.status != "active" or not chat.summary_enabled:
+            await self._fail(alerts, "chat is not receiving summaries")
+            return 0
+        delivered = 0
+        for index, alert in enumerate(alerts):
+            text, markup = render_summary(self._i18n, chat, alert.payload, icons=self._icons)
+            await self._respect_gap(chat_id)
+            if not await self._send(chat_id, text, alerts[index:], markup):
+                return delivered
+            delivered += 1
+        return delivered
+
+    async def _send(
+        self,
+        chat_id: int,
+        text: str,
+        alerts: list[repos.ClaimedAlert],
+        markup: InlineKeyboardMarkup | None = None,
+    ) -> bool:
+        """Send one message; on a failure put ``alerts`` back or fail them, and say so."""
+        try:
+            await self._bot.send_message(
+                chat_id,
+                text,
+                reply_markup=markup,
+                link_preview_options=LinkPreviewOptions(is_disabled=True),
+            )
+        except TelegramRetryAfter as exc:
+            record_send("alert", self._ops, error="flood")
+            await self._release(alerts, float(exc.retry_after) + 1.0, "flood control")
+            return False
+        except TelegramForbiddenError:
+            record_send("alert", self._ops, error="forbidden")
+            async with self._sessions() as session, session.begin():
+                await repos.set_status(session, chat_id, "removed")
+            await self._fail(alerts, "bot was blocked")
+            return False
+        except TelegramNetworkError:
+            record_send("alert", self._ops, error="network")
+            await self._release(alerts, 10.0, "network")
+            return False
+        except TelegramBadRequest as exc:
+            log.warning("alert_rejected", chat_id=chat_id, reason=str(exc)[:120])
+            record_send("alert", self._ops, error="bad_request")
+            await self._fail(alerts, str(exc))
+            return False
+        except TelegramAPIError:
+            record_send("alert", self._ops, error="api")
+            await self._release(alerts, 30.0, "api error")
+            return False
+        record_send("alert", self._ops)
+        metrics.ALERTS_SENT.inc()
+        self._last_sent[chat_id] = self._clock()
+        return True
 
     def _observe_latency(self, alerts: list[repos.ClaimedAlert]) -> None:
         """Seconds from the verdict to the message (REQ-N03)."""

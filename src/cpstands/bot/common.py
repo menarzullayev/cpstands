@@ -2,14 +2,20 @@
 
 from __future__ import annotations
 
+import html
+
 from aiogram.types import CallbackQuery, Chat, Message
 
 from cpstands.bot.deps import Deps
 from cpstands.db import repos
-from cpstands.i18n import Translator
+from cpstands.i18n import Markup, Translator
 
 CHAT_TYPES = {"private": "private", "group": "group", "supergroup": "supergroup"}
 DEFAULT_REMINDER_OFFSETS = (1440, 60, 10)  # minutes before the start
+
+
+def html_link(url: str, text: str) -> Markup:
+    return Markup(f'<a href="{html.escape(url, quote=True)}">{html.escape(text, quote=False)}</a>')
 
 
 def say(deps: Deps, chat: repos.ChatRecord | None) -> Translator:

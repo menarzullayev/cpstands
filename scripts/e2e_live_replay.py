@@ -29,6 +29,7 @@ from cpstands.services.contests import ContestService
 from cpstands.services.ops import OpsState
 from cpstands.services.ratings import RatingService
 from cpstands.services.standings import StandingsService
+from cpstands.services.summary import SummaryService
 from cpstands.services.watchlist import WatchlistService
 from cpstands.sources.codeforces.client import ClientConfig, CodeforcesClient
 from cpstands.sources.codeforces.source import CodeforcesSource
@@ -102,15 +103,17 @@ async def main(frames: int, period: int) -> None:
     )
     sessions = create_session_factory(engine)
     i18n = I18n(custom_emoji=settings.custom_emoji)
+    standings = StandingsService(source)
     deps = Deps(
         i18n=i18n,
         sessions=sessions,
         watchlist=WatchlistService(sessions, source),
         admin=make_admin_checker(bot),
-        standings=StandingsService(source),
+        standings=standings,
         contests=ContestService(sessions, source),
         ops=OpsState(),
         ratings=RatingService(source),
+        summaries=SummaryService(source, standings),
         icons=settings.button_icons,
     )
     updater = LiveUpdater(bot, sessions, deps.standings, i18n, icons=settings.button_icons)

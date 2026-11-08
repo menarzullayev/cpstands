@@ -38,6 +38,8 @@ SAMPLE_ARGS: dict[str, str | int] = {
     "level": 4,
     "cols": 16,
     "summary": "on",
+    "medal": "🥇",
+    "solved": 3,
     "body": "body",
     "rating": "1500",
     "max": "1600",

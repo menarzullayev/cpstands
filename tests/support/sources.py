@@ -47,6 +47,7 @@ class FakeSource:
         self.contest_changes = contest_changes or {}
         self.ratings = ratings or {}
         self.rating_fetches = 0
+        self.changes_fetches = 0
         self.contests: list[Contest] = contests or []
         self.delay_s = delay_s
         self.standings = standings or {}
@@ -83,6 +84,7 @@ class FakeSource:
     async def fetch_contest_rating_changes(
         self, contest_id: int
     ) -> tuple[ContestRatingChange, ...]:
+        self.changes_fetches += 1
         if self.fail:
             raise RetryableSourceError("down")
         if contest_id not in self.contest_changes:
