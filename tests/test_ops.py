@@ -332,13 +332,15 @@ async def test_the_three_endpoints(sessions: async_sessionmaker[AsyncSession]) -
         refreshed.append(True)
         metrics.UPTIME.set(12.5)
 
-    app = build_app(ReadinessChecker(sessions, state, None), refresh)
+    app = build_app(ReadinessChecker(sessions, state, None, commit="abc123"), refresh)
     async with TestClient(TestServer(app)) as client:
         health = await client.get("/healthz")
         assert (health.status, (await health.text()).strip()) == (200, "ok")
         ready = await client.get("/readyz")
         assert ready.status == 200
-        assert (await ready.json())["ready"] is True
+        payload = await ready.json()
+        assert payload["ready"] is True
+        assert payload["commit"] == "abc123"  # which build answered
         scraped = await client.get("/metrics")
         body = await scraped.text()
         assert scraped.status == 200

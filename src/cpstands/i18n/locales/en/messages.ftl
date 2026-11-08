@@ -109,8 +109,6 @@ rate-limited = ⏰ Easy there, speedster! Give me a moment.
 rate-limited-neutral = Too many requests. Please wait a moment.
 error-generic = 😵 Something broke on my side. Please try again in a moment.
 error-generic-neutral = Something went wrong. Please try again later.
-coming-soon = 🚧 This one is still in the workshop. Coming soon!
-coming-soon-neutral = This command is not available yet.
 help-text =
     💬 <b>cpstands</b> — contests for you and your friends
 
@@ -263,3 +261,13 @@ ops-alert-late = ⚠️ { $count } reminders are more than a minute late.
 ops-alert-sends = ⚠️ { $percent }% of the last { $count } sends failed.
 ops-alert-source = ⚠️ Source <code>{ $source }</code> failed { $count } times in a row.
 ops-alert-resolved = ✅ Resolved: { $rule }
+
+rank-title = 🏆 Friends' ratings
+rank-status = { $count ->
+        [one] 👥 { $count } handle
+       *[other] 👥 { $count } handles
+    } · 🕐 { $time }
+rank-footer = Rows { $first }–{ $last } of { $total }
+rank-unknown = ❌ Not found on Codeforces: { $handles }
+rank-empty = 👥 The list is empty. Add handles first: <code>/track add tourist, jiangly</code>
+rank-source-error = ⚠️ Codeforces does not answer right now. Try again in a minute.

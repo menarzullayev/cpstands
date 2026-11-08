@@ -113,8 +113,6 @@ rate-limited = ⏰ Полегче, торопыга! Дайте мне секу�
 rate-limited-neutral = Слишком много запросов. Подождите немного.
 error-generic = 😵 У меня что-то сломалось. Попробуйте ещё раз чуть позже.
 error-generic-neutral = Произошла ошибка. Попробуйте позже.
-coming-soon = 🚧 Эта команда ещё в мастерской. Скоро будет!
-coming-soon-neutral = Эта команда пока недоступна.
 help-text =
     💬 <b>cpstands</b> — контесты для вас и ваших друзей
 
@@ -271,3 +269,15 @@ ops-alert-late = ⚠️ { $count } напоминаний опаздывают �
 ops-alert-sends = ⚠️ { $percent }% из последних { $count } отправок не удались.
 ops-alert-source = ⚠️ Источник <code>{ $source }</code> дал сбой { $count } раз подряд.
 ops-alert-resolved = ✅ Устранено: { $rule }
+
+rank-title = 🏆 Рейтинг друзей
+rank-status = { $count ->
+        [one] 👥 { $count } хендл
+        [few] 👥 { $count } хендла
+        [many] 👥 { $count } хендлов
+       *[other] 👥 { $count } хендла
+    } · 🕐 { $time }
+rank-footer = Строки { $first }–{ $last } из { $total }
+rank-unknown = ❌ Не найдено на Codeforces: { $handles }
+rank-empty = 👥 Список пуст. Сначала добавьте хендлы: <code>/track add tourist, jiangly</code>
+rank-source-error = ⚠️ Codeforces сейчас не отвечает. Попробуйте через минуту.

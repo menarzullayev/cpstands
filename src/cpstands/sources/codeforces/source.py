@@ -12,7 +12,9 @@ from cpstands.domain.contest import (
     ContestList,
     FullStandings,
     HandleResolution,
+    RatingResult,
     StandingsFetch,
+    UserRating,
     handle_key,
 )
 from cpstands.sources.base import UnknownHandleError
@@ -23,6 +25,7 @@ from cpstands.sources.codeforces.parser import (
     parse_full_standings,
     parse_standings,
     parse_user_info,
+    parse_user_ratings,
 )
 
 HANDLE_RE = re.compile(r"^[A-Za-z0-9_.-]{1,24}$")
@@ -90,3 +93,25 @@ class CodeforcesSource:
                         break
                     batch = remaining
         return HandleResolution(known=known, unknown=tuple(unknown))
+
+    async def fetch_ratings(self, handles: Sequence[str]) -> RatingResult:
+        """Rating facts of the given handles; handles Codeforces does not know are reported."""
+        pending = [h.strip() for h in handles if HANDLE_RE.match(h.strip())]
+        unknown = [h.strip() for h in handles if not HANDLE_RE.match(h.strip())]
+        found: list[UserRating] = []
+        for start in range(0, len(pending), USER_INFO_BATCH):
+            batch = pending[start : start + USER_INFO_BATCH]
+            while batch:
+                try:
+                    raw = await self._client.fetch("user.info", {"handles": ";".join(batch)})
+                    found.extend(parse_user_ratings(raw.body))
+                    break
+                except UnknownHandleError as exc:
+                    unknown.append(exc.handle)
+                    bad = handle_key(exc.handle)
+                    remaining = [h for h in batch if handle_key(h) != bad]
+                    if len(remaining) == len(batch):  # the named handle is not in our batch
+                        unknown.extend(batch)
+                        break
+                    batch = remaining
+        return RatingResult(ratings=tuple(found), unknown=tuple(unknown))

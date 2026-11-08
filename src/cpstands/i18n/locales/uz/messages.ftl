@@ -109,8 +109,6 @@ rate-limited = ⏰ Sekinroq, shoshqaloq! Bir zum kuting.
 rate-limited-neutral = So'rovlar juda ko'p. Biroz kuting.
 error-generic = 😵 Mening tomonimda nimadir buzildi. Birozdan keyin qayta urinib ko'ring.
 error-generic-neutral = Xatolik yuz berdi. Keyinroq urinib ko'ring.
-coming-soon = 🚧 Bu buyruq hali ustaxonada. Tez orada tayyor bo'ladi!
-coming-soon-neutral = Bu buyruq hali mavjud emas.
 help-text =
     💬 <b>cpstands</b> — siz va do'stlaringiz uchun contestlar
 
@@ -263,3 +261,13 @@ ops-alert-late = ⚠️ { $count } ta eslatma bir daqiqadan ko'proq kechikdi.
 ops-alert-sends = ⚠️ Oxirgi { $count } yuborishning { $percent }% i muvaffaqiyatsiz.
 ops-alert-source = ⚠️ <code>{ $source }</code> manbasi ketma-ket { $count } marta xato berdi.
 ops-alert-resolved = ✅ Bartaraf etildi: { $rule }
+
+rank-title = 🏆 Do'stlar reytingi
+rank-status = { $count ->
+        [one] 👥 { $count } ta handle
+       *[other] 👥 { $count } ta handle
+    } · 🕐 { $time }
+rank-footer = { $first }–{ $last }-qatorlar, jami { $total }
+rank-unknown = ❌ Codeforces'da topilmadi: { $handles }
+rank-empty = 👥 Ro'yxat bo'sh. Avval handle qo'shing: <code>/track add tourist, jiangly</code>
+rank-source-error = ⚠️ Codeforces hozir javob bermayapti. Bir daqiqadan keyin qayta urinib ko'ring.

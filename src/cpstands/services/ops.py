@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import time
 from collections import deque
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
@@ -16,6 +16,7 @@ from cpstands.domain.contest import (
     ContestList,
     FullStandings,
     HandleResolution,
+    RatingResult,
     StandingsFetch,
 )
 from cpstands.sources.base import (
@@ -140,6 +141,9 @@ class ObservedSource:
         return await self._call(
             "fetch_full_standings", lambda: self._inner.fetch_full_standings(contest_id)
         )
+
+    async def fetch_ratings(self, handles: Sequence[str]) -> RatingResult:
+        return await self._call("fetch_ratings", lambda: self._inner.fetch_ratings(handles))
 
     async def resolve_handles(self, handles: object) -> HandleResolution:
         return await self._call(

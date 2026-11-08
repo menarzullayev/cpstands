@@ -34,11 +34,13 @@ class ReadinessChecker:
         ops: OpsState,
         expected_head: str | None,
         *,
+        commit: str = "dev",
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._sessions = sessions
         self._ops = ops
         self._head = expected_head
+        self.commit = commit
         self._clock = clock
         self._cached: tuple[float, Readiness] | None = None
 
@@ -87,7 +89,8 @@ def build_app(
     async def readyz(_: web.Request) -> web.Response:
         result = await readiness.check()
         return web.json_response(
-            {"ready": result.ready, "checks": result.checks}, status=200 if result.ready else 503
+            {"ready": result.ready, "commit": readiness.commit, "checks": result.checks},
+            status=200 if result.ready else 503,
         )
 
     async def metrics_endpoint(_: web.Request) -> web.Response:

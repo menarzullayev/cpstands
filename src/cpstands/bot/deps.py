@@ -11,6 +11,7 @@ from cpstands.i18n import I18n
 from cpstands.services.admin import AdminChecker
 from cpstands.services.contests import ContestService
 from cpstands.services.ops import OpsState
+from cpstands.services.ratings import RatingService
 from cpstands.services.standings import StandingsService
 from cpstands.services.watchlist import WatchlistService
 
@@ -24,6 +25,7 @@ class Deps:
     standings: StandingsService
     contests: ContestService
     ops: OpsState
+    ratings: RatingService
     owner_id: int | None = None
     icons: bool = False
     whisper: Whisper = field(default_factory=Whisper)

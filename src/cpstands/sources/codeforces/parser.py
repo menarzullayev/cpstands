@@ -26,6 +26,7 @@ from cpstands.domain.contest import (
     ProblemStatus,
     StandingRow,
     StandingsSnapshot,
+    UserRating,
     handle_key,
 )
 from cpstands.sources.base import (
@@ -274,3 +275,39 @@ def parse_full_standings(body: bytes, *, fetched_at: datetime) -> FullStandings:
     return FullStandings(
         contest=parse_contest(raw_contest), problems=problems, rows=rows, fetched_at=fetched_at
     )
+
+
+def _optional_int(value: object) -> int | None:
+    return value if isinstance(value, int) and not isinstance(value, bool) else None
+
+
+def parse_user_ratings(body: bytes) -> list[UserRating]:
+    """Parse ``user.info`` into rating facts; unrated users have ``None`` ratings."""
+    try:
+        document = json.loads(body)
+    except ValueError as exc:
+        raise RetryableSourceError("user.info body is not valid JSON") from exc
+    if not isinstance(document, dict):
+        raise SourceFormatError("user.info is not an object")
+    check_envelope(document.get("status"), document.get("comment"))
+    result = document.get("result")
+    if not isinstance(result, list):
+        raise SourceFormatError("user.info has no result array")
+    ratings: list[UserRating] = []
+    for user in result:
+        try:
+            handle = str(user["handle"])
+        except (KeyError, TypeError) as exc:
+            raise SourceFormatError("user.info entry without handle") from exc
+        rank = user.get("rank")
+        max_rank = user.get("maxRank")
+        ratings.append(
+            UserRating(
+                handle=handle,
+                rating=_optional_int(user.get("rating")),
+                max_rating=_optional_int(user.get("maxRating")),
+                rank=rank if isinstance(rank, str) else None,
+                max_rank=max_rank if isinstance(max_rank, str) else None,
+            )
+        )
+    return ratings

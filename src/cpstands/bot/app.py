@@ -11,6 +11,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.types import ErrorEvent
 
+from cpstands import __version__, metrics
 from cpstands.bot.alerts import AlertNotifier, AlertWatcher
 from cpstands.bot.deps import Deps
 from cpstands.bot.handlers import create_router
@@ -32,6 +33,7 @@ from cpstands.services.admin import AdminChecker
 from cpstands.services.alerts import AlertService
 from cpstands.services.contests import ContestService
 from cpstands.services.ops import ObservedSource, OpsState, load_source_state, refresh_gauges
+from cpstands.services.ratings import RatingService
 from cpstands.services.retention import RetentionService
 from cpstands.services.standings import StandingsService
 from cpstands.services.watchlist import WatchlistService
@@ -108,6 +110,7 @@ async def run_bot(settings: Settings) -> None:
     bot.session.middleware(TelegramMetrics())
     sessions = create_session_factory(engine)
     ops = OpsState()
+    metrics.BUILD_INFO.set(1, commit=settings.git_sha, version=__version__)
     await load_source_state(sessions, ops)
     source = ObservedSource(CodeforcesSource(client), ops)
     contests = ContestService(sessions, source)
@@ -119,6 +122,7 @@ async def run_bot(settings: Settings) -> None:
         standings=StandingsService(source),
         contests=contests,
         ops=ops,
+        ratings=RatingService(source),
         owner_id=settings.telegram_owner_id,
         icons=settings.button_icons,
     )
@@ -140,7 +144,7 @@ async def run_bot(settings: Settings) -> None:
     ]
     runner = None
     if settings.http_port:
-        readiness = ReadinessChecker(sessions, ops, _expected_head())
+        readiness = ReadinessChecker(sessions, ops, _expected_head(), commit=settings.git_sha)
 
         async def refresh() -> None:
             async with sessions() as session:

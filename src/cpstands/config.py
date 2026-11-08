@@ -48,6 +48,8 @@ class Settings(BaseSettings):
     default_timezone: str = "Asia/Tashkent"
     # Health and metrics endpoints; port 0 turns them off.
     http_host: str = "127.0.0.1"
+    # The commit this build was made from (set by the image build, shown by /readyz and /metrics).
+    git_sha: str = "dev"
     http_port: int = 8080
     # Custom emoji in message text need Telegram Premium on the bot owner (Bot API 9.4).
     custom_emoji: bool = True

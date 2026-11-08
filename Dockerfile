@@ -20,6 +20,14 @@ ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     ALEMBIC_CONFIG=/app/alembic.ini
+ARG GIT_SHA=unknown
+LABEL org.opencontainers.image.source="https://github.com/menarzullayev/cpstands" \
+      org.opencontainers.image.revision="${GIT_SHA}"
+ENV GIT_SHA=${GIT_SHA}
+EXPOSE 8080
+# Liveness only: the process and its event loop answer. Readiness is /readyz.
+HEALTHCHECK --interval=15s --timeout=4s --start-period=20s --retries=4 \
+    CMD ["python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=3).status == 200 else 1)"]
 USER cpstands
 ENTRYPOINT ["python", "-m", "cpstands"]
 CMD ["version"]

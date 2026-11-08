@@ -229,7 +229,9 @@ def test_neutral_tone_prefers_the_neutral_variant_and_falls_back_to_the_base() -
     assert playful != neutral
     assert neutral == "Too many requests. Please wait a moment."
     assert i18n.t("en", "not-admin", tone="neutral") == i18n.t("en", "not-admin")
-    assert i18n.bound("ru", "neutral")("coming-soon") == i18n.t("ru", "coming-soon", tone="neutral")
+    assert i18n.bound("ru", "neutral")("error-generic") == i18n.t(
+        "ru", "error-generic", tone="neutral"
+    )
 
 
 def test_custom_emoji_wraps_known_emoji_and_leaves_others() -> None:
@@ -279,7 +281,7 @@ def test_checker_catches_neutral_variant_problems(broken_locales: Path) -> None:
         "rate-limited-neutral" in p and "variables" in p for p in check_catalogs(broken_locales)
     )
     _edit(broken_locales, "en", "not-admin = ", "not-admin-gone = ")
-    _edit(broken_locales, "en", "coming-soon-neutral", "no-base-neutral")
+    _edit(broken_locales, "en", "error-generic-neutral", "no-base-neutral")
     assert any("'no-base-neutral' has no base message" in p for p in check_catalogs(broken_locales))
 
 

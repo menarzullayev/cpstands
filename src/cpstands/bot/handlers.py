@@ -19,7 +19,7 @@ from aiogram.types import (
     Message,
 )
 
-from cpstands.bot import keyboards, standings_view
+from cpstands.bot import keyboards, rank_view, standings_view
 from cpstands.bot.deps import Deps
 from cpstands.bot.live import MAX_LIVE_PER_CHAT
 from cpstands.bot.reminders import duration_text, tg_time
@@ -40,7 +40,6 @@ CELEBRATE_EFFECT_ID = "5046509860389126442"
 _CHAT_TYPES = {"private": "private", "group": "group", "supergroup": "supergroup"}
 _JOINED = {ChatMemberStatus.MEMBER, ChatMemberStatus.ADMINISTRATOR}
 _GONE = {ChatMemberStatus.LEFT, ChatMemberStatus.KICKED}
-_PLANNED_COMMANDS = ("rank",)
 
 
 def _say(deps: Deps, chat: repos.ChatRecord | None) -> Translator:
@@ -453,10 +452,75 @@ async def on_help_track(callback: CallbackQuery, deps: Deps) -> None:
     await callback.answer()
 
 
-async def on_coming_soon(message: Message, deps: Deps) -> None:
+# --- friends' ratings --------------------------------------------------------------------
+
+
+async def _rank_page(
+    deps: Deps, chat: repos.ChatRecord, page: int, *, refresh: bool
+) -> tuple[str, InlineKeyboardMarkup] | str:
+    """The rating page and its buttons, or the text of a failure."""
+    say = _say(deps, chat)
+    handles = await deps.watchlist.list(chat.chat_id)
+    if not handles:
+        return say("rank-empty")
+    try:
+        table = await deps.ratings.get(handles, refresh=refresh)
+    except SourceError:
+        log.warning("rank_source_error", exc_info=True)
+        return say("rank-source-error")
+    text = rank_view.render(table, page, say, time_zone=chat.time_zone)
+    return text, rank_view.keyboard(len(table.rows), page, say, icons=deps.icons)
+
+
+async def on_rank(message: Message, deps: Deps) -> None:
     chat = await _ensure_chat(deps, message.chat)
-    if chat is not None:
-        await deps.whisper.reply(message, _say(deps, chat)("coming-soon"))
+    if chat is None:
+        return
+    await message.bot.send_chat_action(message.chat.id, "typing")  # type: ignore[union-attr]
+    result = await _rank_page(deps, chat, 0, refresh=False)
+    if isinstance(result, str):
+        await deps.whisper.reply(message, result)
+        return
+    text, markup = result
+    await message.bot.send_rich_message(  # type: ignore[union-attr]
+        message.chat.id,
+        InputRichMessage(html=text),
+        reply_markup=markup,
+        message_thread_id=message.message_thread_id if message.is_topic_message else None,
+    )
+
+
+async def on_rank_page(callback: CallbackQuery, deps: Deps) -> None:
+    context = await _tap_context(deps, callback, admin=False)
+    if context is None:
+        return
+    message, chat = context
+    parts = (callback.data or "").split(":")
+    try:
+        page = int(parts[1])
+    except (IndexError, ValueError):
+        await callback.answer(_say(deps, chat)("button-expired"), show_alert=True)
+        return
+    result = await _rank_page(deps, chat, page, refresh=parts[2:] == ["r"])
+    if isinstance(result, str):
+        await callback.answer(_plain(result), show_alert=True)
+        return
+    text, markup = result
+    try:
+        await message.bot.edit_message_text(  # type: ignore[union-attr]
+            chat_id=message.chat.id,
+            message_id=message.message_id,
+            rich_message=InputRichMessage(html=text),
+            reply_markup=markup,
+        )
+    except TelegramBadRequest as exc:
+        if "not modified" not in str(exc):
+            raise
+    await callback.answer()
+
+
+async def on_rank_noop(callback: CallbackQuery) -> None:
+    await callback.answer()
 
 
 # --- membership --------------------------------------------------------------------------
@@ -627,7 +691,9 @@ def create_router() -> Router:
         on_standings_page, F.data.startswith(standings_view.CALLBACK_PREFIX)
     )
     router.message.register(on_help, Command("help"))
-    router.message.register(on_coming_soon, Command(*_PLANNED_COMMANDS))
+    router.message.register(on_rank, Command("rank"))
+    router.callback_query.register(on_rank_noop, F.data == rank_view.NOOP)
+    router.callback_query.register(on_rank_page, F.data.startswith(rank_view.PREFIX))
     router.my_chat_member.register(on_my_chat_member)
     router.chat_member.register(on_chat_member)
     return router

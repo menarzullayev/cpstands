@@ -219,3 +219,6 @@ SOURCE_STREAK = REGISTRY.gauge(
     "cpstands_source_consecutive_errors", "Consecutive failed calls of a source.", ("source",)
 )
 SOURCE_PAUSED = REGISTRY.gauge("cpstands_source_paused", "1 while a source is paused.", ("source",))
+BUILD_INFO = REGISTRY.gauge(
+    "cpstands_build_info", "Always 1; the labels say which build is running.", ("commit", "version")
+)

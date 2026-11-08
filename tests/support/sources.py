@@ -16,7 +16,9 @@ from cpstands.domain.contest import (
     Problem,
     ProblemResult,
     ProblemStatus,
+    RatingResult,
     StandingRow,
+    UserRating,
     handle_key,
 )
 from cpstands.sources.base import PermanentSourceError, RetryableSourceError
@@ -35,7 +37,10 @@ class FakeSource:
         standings: dict[int, FullStandings] | None = None,
         delay_s: float = 0.0,
         contests: list[Contest] | None = None,
+        ratings: dict[str, UserRating] | None = None,
     ) -> None:
+        self.ratings = ratings or {}
+        self.rating_fetches = 0
         self.contests: list[Contest] = contests or []
         self.delay_s = delay_s
         self.standings = standings or {}
@@ -55,6 +60,14 @@ class FakeSource:
         }
         unknown = tuple(h for h in handles if handle_key(h) not in self._existing)
         return HandleResolution(known=known, unknown=unknown)
+
+    async def fetch_ratings(self, handles: Sequence[str]) -> RatingResult:
+        self.rating_fetches += 1
+        if self.fail:
+            raise RetryableSourceError("down")
+        known = [self.ratings[handle_key(h)] for h in handles if handle_key(h) in self.ratings]
+        unknown = tuple(h for h in handles if handle_key(h) not in self.ratings)
+        return RatingResult(ratings=tuple(known), unknown=unknown)
 
     async def list_contests(self) -> ContestList:
         if self.fail:

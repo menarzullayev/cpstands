@@ -85,5 +85,6 @@ def test_default_registry_has_the_documented_metrics() -> None:
         "cpstands_standings_age_seconds",
         "cpstands_queue_depth",
         "cpstands_process_uptime_seconds",
+        "cpstands_build_info",
     ):
         assert f"# TYPE {name} " in text

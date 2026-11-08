@@ -140,6 +140,23 @@ class ContestList:
 
 
 @dataclass(frozen=True, slots=True)
+class UserRating:
+    """A user's Codeforces rating facts; ``None`` fields mean unrated."""
+
+    handle: str
+    rating: int | None
+    max_rating: int | None
+    rank: str | None
+    max_rank: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class RatingResult:
+    ratings: tuple[UserRating, ...]
+    unknown: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class HandleResolution:
     """Result of validating handles: canonical spelling for known ones, the rest unknown."""
 

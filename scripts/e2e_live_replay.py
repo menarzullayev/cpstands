@@ -27,6 +27,7 @@ from cpstands.i18n import I18n
 from cpstands.services.alerts import AlertService
 from cpstands.services.contests import ContestService
 from cpstands.services.ops import OpsState
+from cpstands.services.ratings import RatingService
 from cpstands.services.standings import StandingsService
 from cpstands.services.watchlist import WatchlistService
 from cpstands.sources.codeforces.client import ClientConfig, CodeforcesClient
@@ -109,6 +110,7 @@ async def main(frames: int, period: int) -> None:
         standings=StandingsService(source),
         contests=ContestService(sessions, source),
         ops=OpsState(),
+        ratings=RatingService(source),
         icons=settings.button_icons,
     )
     updater = LiveUpdater(bot, sessions, deps.standings, i18n, icons=settings.button_icons)

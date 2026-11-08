@@ -17,11 +17,12 @@ from cpstands.bot.deps import Deps
 from cpstands.bot.ratelimit import RateLimiter
 from cpstands.db import repos
 from cpstands.db.engine import create_engine, create_session_factory
-from cpstands.domain.contest import Contest, ContestPhase
+from cpstands.domain.contest import Contest, ContestPhase, UserRating
 from cpstands.i18n import I18n
 from cpstands.services import timezone as tzs
 from cpstands.services.contests import ContestService
 from cpstands.services.ops import OpsState
+from cpstands.services.ratings import RatingService
 from cpstands.services.standings import StandingsService
 from cpstands.services.watchlist import WatchlistService
 from tests.support.sources import FakeSource, make_standings
@@ -101,6 +102,15 @@ async def harness(migrated_database: str) -> AsyncIterator[Harness]:
             _contest(2288, "Codeforces Round (Div. 2)", 4),
             _contest(2299, "Far Away Round", 40),
         ],
+        ratings={
+            "tourist": UserRating(
+                "tourist", 3800, 3979, "legendary grandmaster", "legendary grandmaster"
+            ),
+            "jiangly": UserRating(
+                "jiangly", 3900, 3900, "legendary grandmaster", "legendary grandmaster"
+            ),
+            "petr": UserRating("Petr", None, None, None, None),
+        },
     )
     ops = OpsState()
     deps = Deps(
@@ -111,6 +121,7 @@ async def harness(migrated_database: str) -> AsyncIterator[Harness]:
         standings=StandingsService(source),  # type: ignore[arg-type]
         contests=ContestService(sessions, source),  # type: ignore[arg-type]
         ops=ops,
+        ratings=RatingService(source),  # type: ignore[arg-type]
         owner_id=PRIVATE,
     )
     yield Harness(build_dispatcher(deps, RateLimiter()), bot, fake, sessions, source, ops)
@@ -259,12 +270,6 @@ async def test_settings_shows_summary_and_menu_buttons(harness: Harness) -> None
     assert harness.session.last_text() == I18N.t(None, "pick-language")
 
 
-async def test_unfinished_commands_answer_coming_soon(harness: Harness) -> None:
-    for command in ("/rank",):
-        await harness.say(PRIVATE, PRIVATE, command)
-        assert harness.session.last_text() == I18N.t(None, "coming-soon")
-
-
 async def test_help(harness: Harness) -> None:
     await harness.say(PRIVATE, PRIVATE, "/help")
     assert harness.session.last_text() == I18N.t(None, "help-text")
@@ -299,6 +304,7 @@ async def test_rate_limit_answers_once_then_stays_quiet(migrated_database: str) 
         standings=StandingsService(FakeSource([])),  # type: ignore[arg-type]
         contests=ContestService(sessions, FakeSource([])),  # type: ignore[arg-type]
         ops=OpsState(),
+        ratings=RatingService(FakeSource([])),  # type: ignore[arg-type]
     )
     harness = Harness(
         build_dispatcher(deps, RateLimiter(per_user=3)),
@@ -821,3 +827,54 @@ async def test_pause_and_resume_a_chat(harness: Harness) -> None:
     assert chat.status == "active"
     await harness.say(PRIVATE, PRIVATE, "/pause 123456")  # a chat the bot does not know
     assert harness.session.last_text() == I18N.t(None, "owner-chat-unknown", id="123456")
+
+
+# --- /rank ------------------------------------------------------------------------------
+
+
+async def test_rank_needs_a_watch_list_first(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/rank")
+    assert harness.session.last_text() == I18N.t(None, "rank-empty")
+    assert not harness.session.rich()
+
+
+async def test_rank_shows_friends_best_first_with_unrated_and_unknown(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/track add tourist, jiangly, Petr")
+    await harness.say(PRIVATE, PRIVATE, "/rank")
+    html = harness.session.rich()[-1]["html"]
+    assert html.index("jiangly") < html.index("tourist") < html.index("Petr")
+    assert "<td>3900</td>" in html
+    assert "<td>3979</td>" in html
+    assert "legendary grandmaster" in html
+    assert html.count("<td>-</td>") == 3  # Petr is unrated
+    buttons = [
+        b["callback_data"]
+        for row in harness.session.rich()[-1]["reply_markup"]["inline_keyboard"]
+        for b in row
+    ]
+    assert buttons == ["rk:0:r"]
+
+
+async def test_rank_failure_and_refresh(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/track add tourist")
+    harness.source.fail = True
+    await harness.say(PRIVATE, PRIVATE, "/rank")
+    assert harness.session.last_text() == I18N.t(None, "rank-source-error")
+    harness.source.fail = False
+    await harness.say(PRIVATE, PRIVATE, "/rank")
+    fetches = harness.source.rating_fetches
+    await harness.tap(PRIVATE, PRIVATE, "rk:0:r")  # a copy this fresh is reused
+    assert harness.source.rating_fetches == fetches
+    assert len(harness.session.rich()) == 2  # the page was rendered again, in place
+
+
+async def test_rank_callbacks_survive_garbage(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/track add tourist")
+    await harness.say(PRIVATE, PRIVATE, "/rank")
+    await harness.tap(PRIVATE, PRIVATE, "rk:noop")
+    before = len(harness.session.alerts())
+    await harness.tap(PRIVATE, PRIVATE, "rk:abc")
+    assert harness.session.alerts()[-1]["text"] == I18N.t(None, "button-expired")
+    assert len(harness.session.alerts()) == before + 1
+    await harness.tap(PRIVATE, PRIVATE, "rk:99")  # a page past the end is clamped
+    assert "<td>1</td>" in harness.session.rich()[-1]["html"]
