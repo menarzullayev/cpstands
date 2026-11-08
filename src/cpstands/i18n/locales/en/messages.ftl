@@ -68,8 +68,8 @@ settings-summary =
     }</b>
     📊 Table columns: <b>{ $cols }</b>
     📈 Table style: <b>{ $style ->
-        [classic] classic
-       *[emoji] emoji
+       *[classic] classic
+        [emoji] emoji
     }</b>
     🏁 Summary: <b>{ $summary ->
         [off] off
@@ -300,8 +300,8 @@ word-off = off
 button-back = Back
 button-columns = Columns: { $n }
 button-table-style = Style: { $style ->
-        [classic] classic
-       *[emoji] emoji
+       *[classic] classic
+        [emoji] emoji
     }
 button-summary = { $state ->
         [off] Summary: off

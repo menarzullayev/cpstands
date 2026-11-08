@@ -68,8 +68,8 @@ settings-summary =
     }</b>
     📊 Колонок в таблице: <b>{ $cols }</b>
     📈 Вид таблицы: <b>{ $style ->
-        [classic] классический
-       *[emoji] эмодзи
+       *[classic] классический
+        [emoji] эмодзи
     }</b>
     🏁 Итоги контеста: <b>{ $summary ->
         [off] выкл
@@ -310,8 +310,8 @@ word-off = выкл
 button-back = Назад
 button-columns = Колонок: { $n }
 button-table-style = Вид: { $style ->
-        [classic] классический
-       *[emoji] эмодзи
+       *[classic] классический
+        [emoji] эмодзи
     }
 button-summary = { $state ->
         [off] Итоги: выкл

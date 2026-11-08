@@ -55,7 +55,7 @@ chats = Table(
     Column("notify_level", Integer, nullable=False, server_default=text("4")),
     Column("table_cols", Integer, nullable=False, server_default=text("16")),
     Column("summary_enabled", Boolean, nullable=False, server_default=text("true")),
-    Column("table_style", Text, nullable=False, server_default="emoji"),
+    Column("table_style", Text, nullable=False, server_default="classic"),
     _ts("created_at", nullable=False, default_now=True),
     _ts("updated_at", nullable=False, default_now=True),
     CheckConstraint(

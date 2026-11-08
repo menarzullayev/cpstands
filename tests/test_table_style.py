@@ -17,6 +17,7 @@ from cpstands.domain.contest import (
 from cpstands.i18n import I18n
 
 SAY = I18n(custom_emoji=True).bound("en", "neutral")
+EMOJI = view.ViewContext(style="emoji")
 OK = ProblemStatus.ACCEPTED
 NO = ProblemStatus.REJECTED
 NOT = ProblemStatus.NOT_TRIED
@@ -50,8 +51,8 @@ def _rows(html: str) -> list[str]:
     return html.split("<tr>")[2:]
 
 
-def test_the_emoji_style_is_the_default() -> None:
-    html = view.render(table(), 0, 0, SAY, time_zone="UTC")
+def test_the_emoji_style() -> None:
+    html = view.render(table(), 0, 0, SAY, time_zone="UTC", ctx=EMOJI)
     assert "<table bordered compact>" in html
     alice, bob, carol, dave = _rows(html)
     assert view._emoji("🥇") in alice
@@ -82,7 +83,7 @@ def test_the_classic_style_marks_first_solves_and_raises_attempts() -> None:
 def test_first_solves_count_the_whole_table_not_one_page() -> None:
     standings = table(rows=60)
     assert view.first_solves(standings) == [300, 600]
-    second_page = view.render(standings, 1, 0, SAY, time_zone="UTC")
+    second_page = view.render(standings, 1, 0, SAY, time_zone="UTC", ctx=EMOJI)
     assert "⚡" not in second_page  # the 9000 s solves on page two are not first
 
 
@@ -121,7 +122,7 @@ def test_kep_uz_names_one_first_solver_per_problem() -> None:
     assert len(at_zero) > 1
     firsts = [r.who for r in standings.rows if r.problems[0].first]
     assert firsts == ["user_026"]
-    html = view.render(standings, 0, 0, SAY, time_zone="UTC")
+    html = view.render(standings, 0, 0, SAY, time_zone="UTC", ctx=EMOJI)
     assert (
         html.count("⚡")
         == len(problems)
@@ -135,14 +136,14 @@ def test_kep_uz_names_one_first_solver_per_problem() -> None:
 
 def test_a_solved_cell_uses_the_owners_green_dot() -> None:
     """The owner picked a minimal green dot (2026-11-08); a plain ✅ looked like spam."""
-    html = view.render(table(), 0, 0, SAY, time_zone="UTC")
+    html = view.render(table(), 0, 0, SAY, time_zone="UTC", ctx=EMOJI)
     assert "<td>🟢 00:15</td>" in html  # plain: it does not count toward the 100 limit
     assert "✅" not in html
 
 
 def test_a_failed_problem_uses_the_owners_red_dot() -> None:
     """The owner picked a red dot for failed tries too (2026-11-08), replacing ❌."""
-    html = view.render(table(), 0, 0, SAY, time_zone="UTC")
+    html = view.render(table(), 0, 0, SAY, time_zone="UTC", ctx=EMOJI)
     assert "<td>🔴<sup>2</sup></td>" in html
     assert "❌" not in html
 
@@ -152,7 +153,7 @@ def test_a_page_never_carries_more_than_100_custom_emoji() -> None:
     from tests.support.sources import make_standings
 
     big = make_standings(rows=60, problems=21)  # equal times: every solve ties for first
-    html = view.render(big, 0, 0, SAY, time_zone="UTC")
+    html = view.render(big, 0, 0, SAY, time_zone="UTC", ctx=EMOJI)
     assert html.count("<tg-emoji") == view.MAX_CUSTOM_EMOJI
     assert "⚡" in html.split("<tg-emoji")[-1]  # the rest are still shown, as plain emoji
 
@@ -162,3 +163,11 @@ def test_the_cap_keeps_the_first_ones_and_unwraps_the_rest() -> None:
     capped = view.cap_custom_emoji(tag * 3 + "x", limit=2)
     assert capped == tag * 2 + "⚡x"
     assert view.cap_custom_emoji(tag * 3, limit=5) == tag * 3  # under the limit: untouched
+
+
+def test_the_classic_style_is_the_default() -> None:
+    """Owner decision 2026-11-08: the striped classic table is the default."""
+    assert view.ViewContext().style == "classic"
+    html = view.render(table(), 0, 0, SAY, time_zone="UTC")
+    assert "<table bordered striped>" in html
+    assert "🟢" not in html

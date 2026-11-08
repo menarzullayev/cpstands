@@ -36,7 +36,7 @@ CALLBACK_PREFIX = "st:"
 NOOP = "st:noop"
 VIEW_TOKEN = {"friends": "f", "all": "a"}
 TOKEN_VIEW = {"f": "friends", "a": "all"}
-STYLES = ("emoji", "classic")  # owner decision 2026-11-08: emoji by default
+STYLES = ("classic", "emoji")  # owner decision 2026-11-08: classic by default
 # Telegram keeps only the first 100 custom emoji of a message and shows the rest as plain
 # emoji (measured 2026-11-08: 201 sent, 100 kept). So solved and failed cells use plain 🟢 🔴,
 # and only the few special marks (medals, ⚡ first solves) are custom.
@@ -53,7 +53,7 @@ class ViewContext:
     view: str = "all"  # "friends" or "all"
     friends: frozenset[str] = frozenset()
     cols: int = PROBLEM_COLUMNS
-    style: str = "emoji"  # "emoji" or "classic"
+    style: str = "classic"  # "classic" or "emoji"
 
     @property
     def has_friends(self) -> bool:
