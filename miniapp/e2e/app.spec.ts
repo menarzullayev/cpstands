@@ -191,3 +191,9 @@ test('a malformed group link opens Home instead', async ({ page }) => {
   await expect(page.getByText('My rating')).toBeVisible()
 })
 
+test('a group that is not set up says what the admin should do', async ({ page }) => {
+  await mockTelegram(page, { startParam: 'g999_0123456789abcdef' })
+  await page.goto('/')
+  await expect(page.getByText('This group is not set up yet: an admin sends /start in the group first.')).toBeVisible()
+})
+

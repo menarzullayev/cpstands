@@ -108,6 +108,7 @@ export async function mockTelegram(page: Page, opts: MockOptions = {}) {
             return settings
           case 'app_group':
             if (!/^g\d+_[0-9a-f]{16}/.test(opts.startParam ?? '')) return null
+            if ((opts.startParam ?? '').startsWith('g999_')) return { __error: 'group not active' }
             return {
               chatId: -1001234567890, title: 'Toshkent CP klubi', language: 'uz', timeZone: 'Asia/Tashkent',
               contestId: 2279, viewer: 1, handles: data.friends.friends.map((f) => f.handle),
@@ -129,8 +130,10 @@ export async function mockTelegram(page: Page, opts: MockOptions = {}) {
         const body = JSON.parse(String(init?.body ?? '{}'))
         calls.push({ name: `rpc:${m[1]}`, input: body })
         const result = rpcAnswer(m[1], body)
-        return new Response(JSON.stringify(result ?? { message: 'not found' }), {
-          status: result === null ? 404 : 200,
+        const failed = result !== null && typeof result === 'object' && '__error' in result
+        const payload = failed ? { code: 'P0001', message: (result as { __error: string }).__error } : (result ?? { message: 'not found' })
+        return new Response(JSON.stringify(payload), {
+          status: result === null ? 404 : failed ? 400 : 200,
           headers: { 'Content-Type': 'application/json' },
         })
       }

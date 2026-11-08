@@ -99,7 +99,9 @@ def build_dispatcher(deps: Deps, limiter: RateLimiter | None = None) -> Dispatch
 def make_admin_checker(bot: Bot) -> AdminChecker:
     async def fetch_status(chat_id: int, user_id: int) -> str:
         member = await bot.get_chat_member(chat_id, user_id)
-        return str(member.status.value)
+        # aiogram 3.31 types status as a plain string ("creator"); older releases used an enum.
+        status = member.status
+        return str(getattr(status, "value", status))
 
     return AdminChecker(fetch_status)
 

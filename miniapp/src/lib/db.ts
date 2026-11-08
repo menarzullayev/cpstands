@@ -30,7 +30,15 @@ export async function rpc<T>(fn: string, args: Record<string, unknown> = {}, sig
     const err = (await res.json().catch(() => ({}))) as { message?: string; code?: string }
     const message = err.message ?? ''
     const code =
-      err.code === '28000' ? 'UNAUTHORIZED' : /bad handle/.test(message) ? 'BAD_HANDLE' : err.code === '22023' ? 'BAD_INPUT' : 'DB_DOWN'
+      err.code === '28000'
+        ? 'UNAUTHORIZED'
+        : /bad handle/.test(message)
+          ? 'BAD_HANDLE'
+          : /group not active/.test(message)
+            ? 'GROUP_INACTIVE'
+            : err.code === '22023'
+              ? 'BAD_INPUT'
+              : 'DB_DOWN'
     throw new ApiError(code, message)
   }
   return (await res.json()) as T

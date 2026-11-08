@@ -68,7 +68,11 @@ export function GroupView() {
   if (error)
     return (
       <Empty icon={<Info />}>
-        {error === 'UNAUTHORIZED' || error === 'BAD_INPUT' ? t('gr.bad') : t('error.generic')}
+        {error === 'GROUP_INACTIVE'
+          ? t('gr.inactive')
+          : error === 'UNAUTHORIZED' || error === 'BAD_INPUT'
+            ? t('gr.bad')
+            : t('error.generic')}
       </Empty>
     )
   if (!group) return <Loading lines={6} />
