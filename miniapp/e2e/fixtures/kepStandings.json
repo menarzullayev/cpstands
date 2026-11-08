@@ -1,0 +1,4680 @@
+{
+ "contest": {
+  "id": 502,
+  "name": "KEP Contest #22",
+  "type": "ICPC",
+  "phase": "FINISHED",
+  "start": 1789828800,
+  "duration": 9000,
+  "rated": true,
+  "contestants": 65
+ },
+ "problems": [
+  {
+   "index": "A",
+   "name": "0gur4ik Nihoyat M"
+  },
+  {
+   "index": "B1",
+   "name": "KEPPER #1"
+  },
+  {
+   "index": "B2",
+   "name": "KEPPER #2"
+  },
+  {
+   "index": "C1",
+   "name": "Duel yaratish #1"
+  },
+  {
+   "index": "C2",
+   "name": "Duel yaratish #2"
+  },
+  {
+   "index": "D",
+   "name": "Faollik taqvimi"
+  },
+  {
+   "index": "E1",
+   "name": "Promolar #1"
+  },
+  {
+   "index": "E2",
+   "name": "Promolar #2"
+  },
+  {
+   "index": "F",
+   "name": "KEPPER aks-sadolari"
+  },
+  {
+   "index": "G",
+   "name": "Ichma-ich efir"
+  },
+  {
+   "index": "H",
+   "name": "Eng qimmat mavzu bepul"
+  },
+  {
+   "index": "I",
+   "name": "KEP mozaikasi"
+  }
+ ],
+ "rows": [
+  {
+   "handle": "user_001",
+   "rank": 1,
+   "points": 12,
+   "penalty": 13,
+   "virtual": true,
+   "delta": 0,
+   "rating": 1141,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 0
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 0
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 0
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 0
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 60
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 60
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 60
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 60
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 120
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 120
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 120
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 180
+    }
+   ]
+  },
+  {
+   "handle": "user_002",
+   "rank": 2,
+   "points": 12,
+   "penalty": 30,
+   "virtual": true,
+   "delta": 0,
+   "rating": 1141,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 0
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 0
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 60
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 120
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 120
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 120
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 180
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 180
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 240
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 240
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 240
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 300
+    }
+   ]
+  },
+  {
+   "handle": "user_003",
+   "rank": 3,
+   "points": 12,
+   "penalty": 38,
+   "virtual": true,
+   "delta": 0,
+   "rating": 1200,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 0
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 0
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 60
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 120
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 120
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 180
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 240
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 240
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 300
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 300
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 360
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 360
+    }
+   ]
+  },
+  {
+   "handle": "user_004",
+   "rank": 4,
+   "points": 11,
+   "penalty": 385,
+   "virtual": false,
+   "delta": 212,
+   "rating": 1997,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 0
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 240
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 300
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 600
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 840
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1140
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1440
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 4980
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 3120
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 3780
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 6060
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_005",
+   "rank": 5,
+   "points": 11,
+   "penalty": 390,
+   "virtual": false,
+   "delta": 127,
+   "rating": 1914,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 60
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 240
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 420
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 660
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1260
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1500
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1980
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 2940
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 4080
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 4680
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 5580
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_003",
+   "rank": 6,
+   "points": 10,
+   "penalty": 214,
+   "virtual": true,
+   "delta": 0,
+   "rating": 1200,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 60
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 240
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 240
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 300
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 420
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 480
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 540
+    },
+    {
+     "points": 1,
+     "rejected": 2,
+     "time": 1680
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 2520
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 3960
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_006",
+   "rank": 7,
+   "points": 10,
+   "penalty": 348,
+   "virtual": false,
+   "delta": 0,
+   "rating": 2776,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 0
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 840
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 900
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 480
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 540
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1380
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1740
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 2880
+    },
+    {
+     "points": 1,
+     "rejected": 2,
+     "time": 4260
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 6660
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_007",
+   "rank": 8,
+   "points": 10,
+   "penalty": 463,
+   "virtual": false,
+   "delta": 11,
+   "rating": 1989,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 0
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 180
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 360
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 660
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 4320
+    },
+    {
+     "points": 1,
+     "rejected": 2,
+     "time": 1380
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1620
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 3660
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 6480
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 7320
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_008",
+   "rank": 9,
+   "points": 9,
+   "penalty": 353,
+   "virtual": false,
+   "delta": -54,
+   "rating": 2091,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 0
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 180
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 300
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 540
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 4680
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 840
+    },
+    {
+     "points": 1,
+     "rejected": 2,
+     "time": 1140
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 3660
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 7440
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_009",
+   "rank": 10,
+   "points": 9,
+   "penalty": 406,
+   "virtual": false,
+   "delta": 34,
+   "rating": 1753,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 0
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 120
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 240
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 540
+    },
+    {
+     "points": 1,
+     "rejected": 2,
+     "time": 3480
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1260
+    },
+    {
+     "points": 1,
+     "rejected": 2,
+     "time": 1980
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 5760
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 8580
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_010",
+   "rank": 11,
+   "points": 8,
+   "penalty": 284,
+   "virtual": false,
+   "delta": 80,
+   "rating": 1603,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 60
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 360
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 480
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 780
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1200
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1980
+    },
+    {
+     "points": 1,
+     "rejected": 2,
+     "time": 2640
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 8340
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_011",
+   "rank": 12,
+   "points": 8,
+   "penalty": 288,
+   "virtual": false,
+   "delta": 72,
+   "rating": 1578,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 120
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 240
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 360
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 660
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1500
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 2520
+    },
+    {
+     "points": 1,
+     "rejected": 2,
+     "time": 3420
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 7260
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_012",
+   "rank": 13,
+   "points": 8,
+   "penalty": 339,
+   "virtual": false,
+   "delta": 106,
+   "rating": 1449,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 60
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 300
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 420
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 720
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 6060
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 2460
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1200
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 7920
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_013",
+   "rank": 14,
+   "points": 8,
+   "penalty": 356,
+   "virtual": false,
+   "delta": 4,
+   "rating": 1652,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 0
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 240
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 360
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1440
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 3720
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 1080
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 2100
+    },
+    {
+     "points": 1,
+     "rejected": 3,
+     "time": 8820
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_014",
+   "rank": 15,
+   "points": 8,
+   "penalty": 397,
+   "virtual": false,
+   "delta": 32,
+   "rating": 1575,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 120
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 300
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 360
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1260
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 4200
+    },
+    {
+     "points": 1,
+     "rejected": 3,
+     "time": 3300
+    },
+    {
+     "points": 1,
+     "rejected": 5,
+     "time": 2340
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 7140
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_015",
+   "rank": 16,
+   "points": 7,
+   "penalty": 165,
+   "virtual": false,
+   "delta": 86,
+   "rating": 1401,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 60
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 540
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 780
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1260
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1860
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 2220
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 3180
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_016",
+   "rank": 17,
+   "points": 7,
+   "penalty": 181,
+   "virtual": false,
+   "delta": 85,
+   "rating": 1377,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 120
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 420
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 720
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1080
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 4380
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1860
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 2280
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_017",
+   "rank": 18,
+   "points": 7,
+   "penalty": 184,
+   "virtual": false,
+   "delta": 75,
+   "rating": 1375,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 60
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 480
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 660
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1080
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1620
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 2400
+    },
+    {
+     "points": 1,
+     "rejected": 2,
+     "time": 3540
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_018",
+   "rank": 19,
+   "points": 7,
+   "penalty": 206,
+   "virtual": false,
+   "delta": 0,
+   "rating": 1553,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 60
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 300
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 420
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 780
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 4440
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 2340
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 2820
+    },
+    {
+     "points": 0,
+     "rejected": 9,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_019",
+   "rank": 20,
+   "points": 7,
+   "penalty": 258,
+   "virtual": false,
+   "delta": 34,
+   "rating": 1430,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 120
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 420
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 720
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 1200
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1740
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 6840
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 3240
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_020",
+   "rank": 21,
+   "points": 7,
+   "penalty": 289,
+   "virtual": false,
+   "delta": 3,
+   "rating": 1495,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 60
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 240
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 420
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1080
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 2760
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 4200
+    },
+    {
+     "points": 1,
+     "rejected": 3,
+     "time": 6180
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_021",
+   "rank": 22,
+   "points": 7,
+   "penalty": 318,
+   "virtual": false,
+   "delta": -2,
+   "rating": 1493,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 240
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 900
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1320
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1560
+    },
+    {
+     "points": 1,
+     "rejected": 2,
+     "time": 2580
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 3840
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 6840
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_022",
+   "rank": 23,
+   "points": 7,
+   "penalty": 370,
+   "virtual": false,
+   "delta": -21,
+   "rating": 1526,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 240
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 660
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 900
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 3420
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 3540
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 4980
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 6660
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_023",
+   "rank": 24,
+   "points": 7,
+   "penalty": 385,
+   "virtual": false,
+   "delta": 44,
+   "rating": 1321,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 480
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 840
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1080
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1980
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 3360
+    },
+    {
+     "points": 1,
+     "rejected": 2,
+     "time": 6480
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 7680
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_024",
+   "rank": 25,
+   "points": 7,
+   "penalty": 518,
+   "virtual": false,
+   "delta": 43,
+   "rating": 1301,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 480
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 360
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 840
+    },
+    {
+     "points": 1,
+     "rejected": 2,
+     "time": 8940
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 8940
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 3420
+    },
+    {
+     "points": 1,
+     "rejected": 3,
+     "time": 4500
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 5,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_025",
+   "rank": 26,
+   "points": 7,
+   "penalty": 521,
+   "virtual": false,
+   "delta": -32,
+   "rating": 1500,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 120
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 360
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 480
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 8040
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 8460
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 3480
+    },
+    {
+     "points": 1,
+     "rejected": 3,
+     "time": 7320
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_026",
+   "rank": 27,
+   "points": 6,
+   "penalty": 68,
+   "virtual": false,
+   "delta": 0,
+   "rating": 1878,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 0
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 180
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 360
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 780
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1080
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1680
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_027",
+   "rank": 28,
+   "points": 6,
+   "penalty": 205,
+   "virtual": false,
+   "delta": -12,
+   "rating": 1401,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 60
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 360
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 540
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1080
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 1,
+     "rejected": 2,
+     "time": 5880
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 2580
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_028",
+   "rank": 29,
+   "points": 6,
+   "penalty": 214,
+   "virtual": false,
+   "delta": 43,
+   "rating": 1229,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 60
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 360
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 600
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1440
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 3180
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 1,
+     "rejected": 2,
+     "time": 5400
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_029",
+   "rank": 30,
+   "points": 6,
+   "penalty": 279,
+   "virtual": false,
+   "delta": 35,
+   "rating": 1233,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 120
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 840
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 1500
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 2640
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 6960
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 4080
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_030",
+   "rank": 31,
+   "points": 6,
+   "penalty": 566,
+   "virtual": false,
+   "delta": -3,
+   "rating": 1321,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 60
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 480
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 720
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1020
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 3360
+    },
+    {
+     "points": 1,
+     "rejected": 38,
+     "time": 5520
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_031",
+   "rank": 32,
+   "points": 5,
+   "penalty": 57,
+   "virtual": false,
+   "delta": 33,
+   "rating": 1205,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 60
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 300
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 420
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1020
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1620
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_032",
+   "rank": 33,
+   "points": 5,
+   "penalty": 128,
+   "virtual": false,
+   "delta": -42,
+   "rating": 1410,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 120
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 480
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 660
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1080
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 4140
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_033",
+   "rank": 34,
+   "points": 5,
+   "penalty": 154,
+   "virtual": false,
+   "delta": 37,
+   "rating": 1163,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 600
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 960
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1380
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 4,
+     "time": null
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 2760
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 3540
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_034",
+   "rank": 35,
+   "points": 5,
+   "penalty": 236,
+   "virtual": false,
+   "delta": -47,
+   "rating": 1392,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1800
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 2100
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 2400
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 3000
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 8,
+     "time": null
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 4260
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_035",
+   "rank": 36,
+   "points": 5,
+   "penalty": 323,
+   "virtual": false,
+   "delta": -12,
+   "rating": 1266,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 2460
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 2940
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 3180
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 3840
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 6960
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_036",
+   "rank": 37,
+   "points": 4,
+   "penalty": 29,
+   "virtual": false,
+   "delta": 36,
+   "rating": 1118,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 60
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 360
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 600
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 720
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_037",
+   "rank": 38,
+   "points": 4,
+   "penalty": 47,
+   "virtual": false,
+   "delta": -6,
+   "rating": 1216,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 180
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 480
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 840
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1320
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_038",
+   "rank": 39,
+   "points": 4,
+   "penalty": 51,
+   "virtual": false,
+   "delta": -4,
+   "rating": 1189,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 120
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 480
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 960
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1500
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_039",
+   "rank": 40,
+   "points": 4,
+   "penalty": 70,
+   "virtual": false,
+   "delta": -40,
+   "rating": 1291,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 120
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 840
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1200
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 2040
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_040",
+   "rank": 41,
+   "points": 4,
+   "penalty": 75,
+   "virtual": false,
+   "delta": -2,
+   "rating": 1153,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 180
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 900
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1260
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 2160
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_041",
+   "rank": 42,
+   "points": 4,
+   "penalty": 153,
+   "virtual": false,
+   "delta": -25,
+   "rating": 1205,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1860
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 2040
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 2280
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 3000
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_042",
+   "rank": 43,
+   "points": 3,
+   "penalty": 12,
+   "virtual": true,
+   "delta": 0,
+   "rating": 1200,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 0
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 240
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 480
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_043",
+   "rank": 44,
+   "points": 3,
+   "penalty": 24,
+   "virtual": false,
+   "delta": -10,
+   "rating": 1144,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 180
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 540
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 720
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_044",
+   "rank": 45,
+   "points": 3,
+   "penalty": 81,
+   "virtual": false,
+   "delta": -20,
+   "rating": 1153,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1140
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1560
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 2160
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_045",
+   "rank": 46,
+   "points": 3,
+   "penalty": 267,
+   "virtual": false,
+   "delta": -23,
+   "rating": 1146,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 3720
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 5040
+    },
+    {
+     "points": 1,
+     "rejected": 1,
+     "time": 6060
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_046",
+   "rank": 47,
+   "points": 2,
+   "penalty": 1,
+   "virtual": true,
+   "delta": 0,
+   "rating": 1200,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 0
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 60
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_047",
+   "rank": 48,
+   "points": 2,
+   "penalty": 21,
+   "virtual": false,
+   "delta": -24,
+   "rating": 1134,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 240
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1020
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_048",
+   "rank": 49,
+   "points": 2,
+   "penalty": 60,
+   "virtual": false,
+   "delta": -18,
+   "rating": 1095,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1740
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1860
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_049",
+   "rank": 50,
+   "points": 2,
+   "penalty": 171,
+   "virtual": false,
+   "delta": -32,
+   "rating": 1125,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 4740
+    },
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 5520
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_050",
+   "rank": 51,
+   "points": 1,
+   "penalty": 2,
+   "virtual": false,
+   "delta": -18,
+   "rating": 1055,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 120
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_051",
+   "rank": 52,
+   "points": 1,
+   "penalty": 8,
+   "virtual": false,
+   "delta": -40,
+   "rating": 1109,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 480
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_052",
+   "rank": 53,
+   "points": 1,
+   "penalty": 29,
+   "virtual": false,
+   "delta": -33,
+   "rating": 1064,
+   "cells": [
+    {
+     "points": 1,
+     "rejected": 0,
+     "time": 1740
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_001",
+   "rank": 54,
+   "points": 0,
+   "penalty": 0,
+   "virtual": false,
+   "delta": -47,
+   "rating": 1094,
+   "cells": [
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_002",
+   "rank": 54,
+   "points": 0,
+   "penalty": 0,
+   "virtual": false,
+   "delta": -47,
+   "rating": 1094,
+   "cells": [
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_053",
+   "rank": 54,
+   "points": 0,
+   "penalty": 0,
+   "virtual": false,
+   "delta": -62,
+   "rating": 1160,
+   "cells": [
+    {
+     "points": 0,
+     "rejected": 2,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 2,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 3,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 2,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 2,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 2,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 2,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 2,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 2,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 2,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 3,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_054",
+   "rank": 54,
+   "points": 0,
+   "penalty": 0,
+   "virtual": true,
+   "delta": 0,
+   "rating": 1200,
+   "cells": [
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_055",
+   "rank": 54,
+   "points": 0,
+   "penalty": 0,
+   "virtual": false,
+   "delta": -42,
+   "rating": 1099,
+   "cells": [
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 3,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 2,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 2,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_056",
+   "rank": 54,
+   "points": 0,
+   "penalty": 0,
+   "virtual": false,
+   "delta": -42,
+   "rating": 1099,
+   "cells": [
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 2,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 3,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_057",
+   "rank": 54,
+   "points": 0,
+   "penalty": 0,
+   "virtual": false,
+   "delta": -42,
+   "rating": 1099,
+   "cells": [
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_058",
+   "rank": 54,
+   "points": 0,
+   "penalty": 0,
+   "virtual": false,
+   "delta": -42,
+   "rating": 1099,
+   "cells": [
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 3,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_059",
+   "rank": 54,
+   "points": 0,
+   "penalty": 0,
+   "virtual": false,
+   "delta": -42,
+   "rating": 1099,
+   "cells": [
+    {
+     "points": 0,
+     "rejected": 2,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 3,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 4,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 4,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_060",
+   "rank": 54,
+   "points": 0,
+   "penalty": 0,
+   "virtual": false,
+   "delta": -42,
+   "rating": 1099,
+   "cells": [
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 2,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 1,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_003",
+   "rank": 54,
+   "points": 0,
+   "penalty": 0,
+   "virtual": true,
+   "delta": 0,
+   "rating": 1200,
+   "cells": [
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  },
+  {
+   "handle": "user_046",
+   "rank": 54,
+   "points": 0,
+   "penalty": 0,
+   "virtual": true,
+   "delta": 0,
+   "rating": 1200,
+   "cells": [
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    },
+    {
+     "points": 0,
+     "rejected": 0,
+     "time": null
+    }
+   ]
+  }
+ ],
+ "total": 65
+}

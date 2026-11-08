@@ -197,3 +197,45 @@ test('a group that is not set up says what the admin should do', async ({ page }
   await expect(page.getByText('This group is not set up yet: an admin sends /start in the group first.')).toBeVisible()
 })
 
+
+test('the Contests tab switches to kep.uz and opens a kep.uz table', async ({ page }) => {
+  await mockTelegram(page)
+  await page.goto('/')
+  await page.getByRole('navigation').getByRole('button', { name: 'Contests' }).click()
+  await page.getByRole('tab', { name: 'kep.uz' }).click()
+  await expect(page.getByText('KEP Contest #23')).toBeVisible()
+  await page.getByRole('button', { name: 'Standings' }).first().click()
+  await expect(page.getByText('65 in the table')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'user_001' })).toBeVisible()
+  expect(await backVisible(page)).toBe(true)
+})
+
+test('a kep.uz standings link opens that table', async ({ page }) => {
+  await mockTelegram(page, { startParam: 'standings_kep502' })
+  await page.goto('/')
+  await expect(page.getByText('KEP Contest #22')).toBeVisible()
+  await expect(page.getByText('virtual').first()).toBeVisible()
+})
+
+test('a kep.uz table that has not opened yet says so', async ({ page }) => {
+  await mockTelegram(page, { startParam: 'standings_kep504' })
+  await page.goto('/')
+  await expect(page.getByText('The table opens when the contest starts.')).toBeVisible()
+})
+
+test('a kep.uz profile link shows the rating and its history', async ({ page }) => {
+  await mockTelegram(page, { startParam: 'kprofile_demo_user' })
+  await page.goto('/')
+  await expect(page.getByText('demo_user')).toBeVisible()
+  await expect(page.getByText('Rating history')).toBeVisible()
+  await expect(page.getByText('3 rated contests')).toBeVisible()
+})
+
+test('a malformed kep.uz link opens no kep.uz table', async ({ page }) => {
+  await mockTelegram(page, { startParam: 'standings_kepx' })
+  await page.goto('/')
+  // Like any standings_<word>, it lands on the Standings tab, not on a kep.uz page.
+  await expect(page.getByRole('navigation').getByRole('button', { name: 'Standings' })).toHaveAttribute('aria-current', 'page')
+  await expect(page.getByText('kep.uz', { exact: true })).toHaveCount(0)
+  expect(await backVisible(page)).toBe(false)
+})

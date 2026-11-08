@@ -10,6 +10,9 @@ import activity from './fixtures/activity.json' with { type: 'json' }
 import standings from './fixtures/standings.json' with { type: 'json' }
 import upsolve from './fixtures/upsolve.json' with { type: 'json' }
 import leaderboard from './fixtures/leaderboard.json' with { type: 'json' }
+import kepContests from './fixtures/kepContests.json' with { type: 'json' }
+import kepStandings from './fixtures/kepStandings.json' with { type: 'json' }
+import kepProfile from './fixtures/kepProfile.json' with { type: 'json' }
 
 /** The moment the fixtures were captured; the page clock is frozen here. */
 export const NOW = new Date('2026-11-08T10:06:00Z')
@@ -25,7 +28,7 @@ export interface MockOptions {
 export async function mockTelegram(page: Page, opts: MockOptions = {}) {
   await page.route('https://telegram.org/**', (r) => r.fulfill({ status: 200, contentType: 'text/javascript', body: '' }))
   await page.clock.setFixedTime(NOW)
-  const data = { contests, profile, compareOne, compare, friends, activity, standings, upsolve, leaderboard }
+  const data = { contests, profile, compareOne, compare, friends, activity, standings, upsolve, leaderboard, kepContests, kepStandings, kepProfile }
   await page.addInitScript(
     ([data, opts]) => {
       const store: Record<string, string> = { me: 'tourist', effects: '0', ...(opts.storage ?? {}) }
@@ -69,6 +72,13 @@ export async function mockTelegram(page: Page, opts: MockOptions = {}) {
           case 'leaderboard':
             if (!list.length) throw { type: 'ENDPOINT_ERROR', message: 'No friends', parameters: { code: 'NO_FRIENDS' } }
             return { ...data.leaderboard, period: input.period }
+          case 'kep':
+            if (input.op === 'contests') return data.kepContests
+            if (input.op === 'profile') return data.kepProfile
+            if (input.op === 'standings' && input.contestId === 504)
+              throw { type: 'ENDPOINT_ERROR', message: 'Not open yet', parameters: { code: 'NOT_STARTED' } }
+            if (input.op === 'standings') return data.kepStandings
+            break
           case 'standings':
             if (!list.length) throw { type: 'ENDPOINT_ERROR', message: 'No friends', parameters: { code: 'NO_FRIENDS' } }
             return data.standings

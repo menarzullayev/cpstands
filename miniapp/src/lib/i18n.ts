@@ -1,6 +1,19 @@
 import { tgUser } from './tg'
 
 const en = {
+  'kep.notStarted': 'The table opens when the contest starts.',
+  'kep.empty': 'Nobody is in the table yet.',
+  'kep.rows': '{0} in the table',
+  'kep.virtual': 'virtual',
+  'kep.rating': 'Rating',
+  'kep.max': 'Max',
+  'kep.place': 'Place',
+  'kep.contests': '{0} rated contests',
+  'kep.history': 'Rating history',
+  'kep.recent': 'Recent contests',
+  'error.KEP_DOWN': 'kep.uz does not answer right now. Try again in a minute.',
+  'error.KEP_BUSY': 'kep.uz is busy. Try again in a few seconds.',
+  'error.NOT_STARTED': 'The table opens when the contest starts.',
   'tab.home': 'Home',
   'tab.contests': 'Contests',
   'tab.standings': 'Standings',
@@ -192,6 +205,19 @@ export type Key = keyof typeof en
 type Dict = Record<Key, string>
 
 const uz: Dict = {
+  'kep.notStarted': 'Jadval contest boshlanganda ochiladi.',
+  'kep.empty': 'Jadvalda hali hech kim yo‘q.',
+  'kep.rows': 'Jadvalda {0} kishi',
+  'kep.virtual': 'virtual',
+  'kep.rating': 'Reyting',
+  'kep.max': 'Maks',
+  'kep.place': 'O‘rin',
+  'kep.contests': '{0} ta reytingli contest',
+  'kep.history': 'Reyting tarixi',
+  'kep.recent': 'Oxirgi contestlar',
+  'error.KEP_DOWN': 'kep.uz hozir javob bermayapti. Bir daqiqadan keyin qayta urinib ko‘ring.',
+  'error.KEP_BUSY': 'kep.uz band. Bir necha soniyadan keyin qayta urinib ko‘ring.',
+  'error.NOT_STARTED': 'Jadval contest boshlanganda ochiladi.',
   'tab.home': 'Bosh',
   'tab.contests': 'Contestlar',
   'tab.standings': 'Natijalar',
@@ -380,6 +406,19 @@ const uz: Dict = {
 }
 
 const ru: Dict = {
+  'kep.notStarted': 'Таблица откроется, когда начнётся контест.',
+  'kep.empty': 'В таблице пока никого нет.',
+  'kep.rows': 'В таблице: {0}',
+  'kep.virtual': 'виртуально',
+  'kep.rating': 'Рейтинг',
+  'kep.max': 'Макс',
+  'kep.place': 'Место',
+  'kep.contests': 'Рейтинговых контестов: {0}',
+  'kep.history': 'История рейтинга',
+  'kep.recent': 'Последние контесты',
+  'error.KEP_DOWN': 'kep.uz сейчас не отвечает. Попробуйте через минуту.',
+  'error.KEP_BUSY': 'kep.uz занят. Попробуйте через несколько секунд.',
+  'error.NOT_STARTED': 'Таблица откроется, когда начнётся контест.',
   'tab.home': 'Главная',
   'tab.contests': 'Контесты',
   'tab.standings': 'Таблица',

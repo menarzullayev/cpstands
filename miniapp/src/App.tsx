@@ -15,10 +15,12 @@ import { Me } from '@/pages/Me'
 import { Upsolve } from '@/pages/Upsolve'
 import { Status } from '@/pages/Status'
 import { GroupView } from '@/pages/Group'
+import { KepStandings } from '@/pages/KepStandings'
 
 // Pages with charts load Recharts only when opened.
 const Profile = lazy(() => import('@/pages/Profile'))
 const Compare = lazy(() => import('@/pages/Compare'))
+const KepProfile = lazy(() => import('@/pages/KepProfile'))
 
 const TABS: { id: Tab; icon: typeof House }[] = [
   { id: 'home', icon: House },
@@ -70,6 +72,8 @@ function Screen() {
   if (top?.name === 'upsolve') return <Upsolve handle={top.handle} />
   if (top?.name === 'status') return <Status />
   if (top?.name === 'group') return <GroupView />
+  if (top?.name === 'kstandings') return <KepStandings contestId={top.contestId} />
+  if (top?.name === 'kprofile') return <KepProfile handle={top.handle} />
   switch (tab) {
     case 'home':
       return <Home />
