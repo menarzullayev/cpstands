@@ -147,8 +147,13 @@ class LiveUpdater:
             await self._mark(message, state="orphaned")
             return
         say = self._i18n.bound(chat.language, chat.tone)
+        async with self._sessions() as session:
+            friends = frozenset(await repos.scoreboard_keys(session, chat.chat_id, PLATFORM))
+        ctx = standings_view.ViewContext(
+            standings_view.resolve_view(message.view, friends), friends, chat.table_cols
+        )
         html = standings_view.render(
-            standings, message.row_page, message.col_page, say, time_zone=chat.time_zone
+            standings, message.row_page, message.col_page, say, time_zone=chat.time_zone, ctx=ctx
         )
         digest = table_digest(html)
         key = (message.chat_id, message.contest_id, message.message_id)
@@ -158,7 +163,7 @@ class LiveUpdater:
             return
         await self._respect_chat_gap(message.chat_id)
         markup = standings_view.keyboard(
-            standings, message.row_page, message.col_page, say, icons=self._icons
+            standings, message.row_page, message.col_page, say, icons=self._icons, ctx=ctx
         )
         try:
             await self._bot.edit_message_text(

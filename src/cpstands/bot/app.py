@@ -22,6 +22,7 @@ from cpstands.bot.privacy import create_privacy_router
 from cpstands.bot.ratelimit import RateLimiter, RateLimitMiddleware
 from cpstands.bot.reminders import ReminderSender
 from cpstands.bot.scheduler import Scheduler
+from cpstands.bot.settings import create_settings_router
 from cpstands.bot.telemetry import TelegramMetrics
 from cpstands.config import Settings
 from cpstands.db import repos
@@ -52,6 +53,7 @@ def build_dispatcher(deps: Deps, limiter: RateLimiter | None = None) -> Dispatch
     dispatcher.message.outer_middleware(middleware)
     dispatcher.callback_query.outer_middleware(middleware)
     dispatcher.include_router(create_router())
+    dispatcher.include_router(create_settings_router())
     dispatcher.include_router(create_privacy_router())
     dispatcher.include_router(create_owner_router())
 

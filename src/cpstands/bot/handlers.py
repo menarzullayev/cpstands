@@ -11,7 +11,6 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command, CommandObject
 from aiogram.types import (
     CallbackQuery,
-    Chat,
     ChatMemberUpdated,
     InlineKeyboardMarkup,
     InputRichMessage,
@@ -20,89 +19,34 @@ from aiogram.types import (
 )
 
 from cpstands.bot import keyboards, rank_view, standings_view
+from cpstands.bot.common import CHAT_TYPES
+from cpstands.bot.common import ensure_chat as _ensure_chat
+from cpstands.bot.common import is_admin as _is_admin
+from cpstands.bot.common import refresh as _refresh
+from cpstands.bot.common import say as _say
+from cpstands.bot.common import tap_context as _tap_context
 from cpstands.bot.deps import Deps
 from cpstands.bot.live import MAX_LIVE_PER_CHAT
 from cpstands.bot.reminders import duration_text, tg_time
+from cpstands.bot.settings import settings_view as _settings_view
 from cpstands.db import repos
 from cpstands.domain.contest import ContestPhase, FullStandings
-from cpstands.i18n import LANGUAGE_NAMES, SUPPORTED_LANGUAGES, TONES, Markup, Translator
+from cpstands.i18n import LANGUAGE_NAMES, SUPPORTED_LANGUAGES, Markup, Translator
 from cpstands.services import timezone as tzs
 from cpstands.services.watchlist import INPUT_CAP, PLATFORM
 from cpstands.sources.base import PermanentSourceError, SourceError
 
 log = structlog.get_logger(__name__)
 
-DEFAULT_REMINDER_OFFSETS = (1440, 60, 10)  # minutes before the start
-
 # The party popper effect; Telegram plays it only in private chats.
 CELEBRATE_EFFECT_ID = "5046509860389126442"
 
-_CHAT_TYPES = {"private": "private", "group": "group", "supergroup": "supergroup"}
+_CHAT_TYPES = CHAT_TYPES
 _JOINED = {ChatMemberStatus.MEMBER, ChatMemberStatus.ADMINISTRATOR}
 _GONE = {ChatMemberStatus.LEFT, ChatMemberStatus.KICKED}
 
 
-def _say(deps: Deps, chat: repos.ChatRecord | None) -> Translator:
-    if chat is None:
-        return deps.i18n.bound(None)
-    return deps.i18n.bound(chat.language, chat.tone)
-
-
-async def _ensure_chat(deps: Deps, chat: Chat) -> repos.ChatRecord | None:
-    chat_type = _CHAT_TYPES.get(chat.type)
-    if chat_type is None:
-        return None
-    async with deps.sessions() as session, session.begin():
-        return await repos.upsert_chat(session, chat.id, chat_type)
-
-
-async def _is_admin(deps: Deps, chat: Chat, user_id: int | None) -> bool:
-    if user_id is None:
-        return False
-    return await deps.admin.is_admin(chat.id, user_id, private=chat.type == "private")
-
-
-async def _tap_context(
-    deps: Deps, callback: CallbackQuery, *, admin: bool
-) -> tuple[Message, repos.ChatRecord] | None:
-    """Resolve the message and chat of a button tap; answer and stop when it is not allowed."""
-    message = callback.message
-    if not isinstance(message, Message):
-        await callback.answer(deps.i18n.t(None, "button-expired"), show_alert=True)
-        return None
-    chat = await _ensure_chat(deps, message.chat)
-    if chat is None:
-        return None
-    if admin and not await _is_admin(deps, message.chat, callback.from_user.id):
-        await callback.answer(_say(deps, chat)("not-admin"), show_alert=True)
-        return None
-    return message, chat
-
-
 # --- views -------------------------------------------------------------------------------
-
-
-async def _settings_view(deps: Deps, chat: repos.ChatRecord) -> tuple[str, InlineKeyboardMarkup]:
-    async with deps.sessions() as session:
-        count = await repos.count_handles(session, chat.chat_id, PLATFORM)
-    say = _say(deps, chat)
-    text = say(
-        "settings-summary",
-        language=LANGUAGE_NAMES.get(chat.language or "", "-"),
-        zone=chat.time_zone or say("settings-timezone-unset"),
-        mood=chat.tone,
-        reminders="on" if chat.reminder_offsets else "off",
-        alerts="on" if chat.alerts_enabled else "off",
-        count=count,
-    )
-    markup = keyboards.settings_keyboard(
-        say,
-        chat.tone,
-        icons=deps.icons,
-        reminders_on=bool(chat.reminder_offsets),
-        alerts_on=chat.alerts_enabled,
-    )
-    return text, markup
 
 
 def _zone_step(deps: Deps, chat: repos.ChatRecord) -> tuple[str, InlineKeyboardMarkup]:
@@ -181,13 +125,6 @@ async def on_zone_chosen(callback: CallbackQuery, deps: Deps) -> None:
     await callback.answer()
 
 
-async def _refresh(deps: Deps, chat_id: int) -> repos.ChatRecord:
-    async with deps.sessions() as session:
-        record = await repos.get_chat(session, chat_id)
-    assert record is not None  # the chat was upserted a moment ago
-    return record
-
-
 # --- time zone, settings, tone -----------------------------------------------------------
 
 
@@ -223,91 +160,6 @@ async def on_timezone(message: Message, command: CommandObject, deps: Deps) -> N
         )
     else:
         await deps.whisper.reply(message, say("timezone-not-found", query=shown))
-
-
-async def on_settings(message: Message, deps: Deps) -> None:
-    chat = await _ensure_chat(deps, message.chat)
-    if chat is None:
-        return
-    text, markup = await _settings_view(deps, chat)
-    await message.answer(text, reply_markup=markup)
-
-
-async def on_menu_language(callback: CallbackQuery, deps: Deps) -> None:
-    context = await _tap_context(deps, callback, admin=True)
-    if context is None:
-        return
-    message, chat = context
-    await message.edit_text(
-        deps.i18n.t(None, "pick-language"),
-        reply_markup=keyboards.language_keyboard(chat.language, icons=deps.icons),
-    )
-    await callback.answer()
-
-
-async def on_menu_timezone(callback: CallbackQuery, deps: Deps) -> None:
-    context = await _tap_context(deps, callback, admin=True)
-    if context is None:
-        return
-    message, chat = context
-    await message.edit_text(
-        _say(deps, chat)("onboarding-pick-timezone"),
-        reply_markup=keyboards.timezone_keyboard(
-            tzs.popular_zones(chat.language), chat.time_zone, icons=deps.icons
-        ),
-    )
-    await callback.answer()
-
-
-async def on_tone_chosen(callback: CallbackQuery, deps: Deps) -> None:
-    context = await _tap_context(deps, callback, admin=True)
-    if context is None:
-        return
-    message, chat = context
-    tone = (callback.data or "")[len(keyboards.TONE_PREFIX) :]
-    if tone not in TONES:
-        await callback.answer(_say(deps, chat)("button-expired"), show_alert=True)
-        return
-    async with deps.sessions() as session, session.begin():
-        await repos.set_tone(session, chat.chat_id, tone)
-    text, markup = await _settings_view(deps, await _refresh(deps, chat.chat_id))
-    await message.edit_text(text, reply_markup=markup)
-    await callback.answer()
-
-
-async def on_reminders_chosen(callback: CallbackQuery, deps: Deps) -> None:
-    context = await _tap_context(deps, callback, admin=True)
-    if context is None:
-        return
-    message, chat = context
-    value = (callback.data or "")[len(keyboards.REMINDERS_PREFIX) :]
-    if value not in {"on", "off"}:
-        await callback.answer(_say(deps, chat)("button-expired"), show_alert=True)
-        return
-    offsets = DEFAULT_REMINDER_OFFSETS if value == "on" else ()
-    async with deps.sessions() as session, session.begin():
-        await repos.set_reminder_offsets(session, chat.chat_id, offsets)
-    if offsets:
-        await deps.contests.plan()
-    text, markup = await _settings_view(deps, await _refresh(deps, chat.chat_id))
-    await message.edit_text(text, reply_markup=markup)
-    await callback.answer()
-
-
-async def on_alerts_chosen(callback: CallbackQuery, deps: Deps) -> None:
-    context = await _tap_context(deps, callback, admin=True)
-    if context is None:
-        return
-    message, chat = context
-    value = (callback.data or "")[len(keyboards.ALERTS_PREFIX) :]
-    if value not in {"on", "off"}:
-        await callback.answer(_say(deps, chat)("button-expired"), show_alert=True)
-        return
-    async with deps.sessions() as session, session.begin():
-        await repos.set_alerts_enabled(session, chat.chat_id, value == "on")
-    text, markup = await _settings_view(deps, await _refresh(deps, chat.chat_id))
-    await message.edit_text(text, reply_markup=markup)
-    await callback.answer()
 
 
 # --- upcoming contests -------------------------------------------------------------------
@@ -577,8 +429,9 @@ async def on_standings(message: Message, command: CommandObject, deps: Deps) -> 
     if standings.contest.phase is ContestPhase.BEFORE:
         await message.answer(say("standings-not-started", name=standings.contest.name))
         return
-    text = standings_view.render(standings, 0, 0, say, time_zone=chat.time_zone)
-    markup = standings_view.keyboard(standings, 0, 0, say, icons=deps.icons)
+    ctx = await _view_context(deps, chat, None)
+    text = standings_view.render(standings, 0, 0, say, time_zone=chat.time_zone, ctx=ctx)
+    markup = standings_view.keyboard(standings, 0, 0, say, icons=deps.icons, ctx=ctx)
     sent = await message.bot.send_rich_message(  # type: ignore[union-attr]
         message.chat.id,
         InputRichMessage(html=text),
@@ -595,6 +448,16 @@ async def on_standings(message: Message, command: CommandObject, deps: Deps) -> 
                 sent.message_id,
                 max_live=MAX_LIVE_PER_CHAT,
             )
+
+
+async def _view_context(
+    deps: Deps, chat: repos.ChatRecord, preferred: str | None
+) -> standings_view.ViewContext:
+    """Friends or everyone, and how many problem columns, for this chat."""
+    async with deps.sessions() as session:
+        friends = frozenset(await repos.scoreboard_keys(session, chat.chat_id, PLATFORM))
+    view = standings_view.resolve_view(preferred, friends)
+    return standings_view.ViewContext(view, friends, chat.table_cols)
 
 
 async def _load_standings(
@@ -628,12 +491,17 @@ async def on_standings_page(callback: CallbackQuery, deps: Deps) -> None:
     except (IndexError, ValueError):
         await callback.answer(say("button-expired"), show_alert=True)
         return
-    standings = await _load_standings(deps, contest_id, refresh=parts[4:] == ["r"])
+    token = parts[4] if len(parts) > 4 and parts[4] in standings_view.TOKEN_VIEW else None
+    preferred = standings_view.TOKEN_VIEW.get(token or "")
+    standings = await _load_standings(deps, contest_id, refresh=parts[-1] == "r")
     if isinstance(standings, str):
         await callback.answer(_plain(_failure(say, standings, contest_id)), show_alert=True)
         return
-    text = standings_view.render(standings, row_page, col_page, say, time_zone=chat.time_zone)
-    markup = standings_view.keyboard(standings, row_page, col_page, say, icons=deps.icons)
+    ctx = await _view_context(deps, chat, preferred)
+    text = standings_view.render(
+        standings, row_page, col_page, say, time_zone=chat.time_zone, ctx=ctx
+    )
+    markup = standings_view.keyboard(standings, row_page, col_page, say, icons=deps.icons, ctx=ctx)
     if standings.contest.phase.is_active:
         async with deps.sessions() as session, session.begin():
             await repos.set_live_pages(
@@ -644,6 +512,7 @@ async def on_standings_page(callback: CallbackQuery, deps: Deps) -> None:
                 message.message_id,
                 row_page,
                 col_page,
+                ctx.view if preferred else "auto",
             )
     try:
         await message.bot.edit_message_text(  # type: ignore[union-attr]
@@ -672,16 +541,8 @@ def create_router() -> Router:
     router.message.register(on_start, Command("start"))
     router.callback_query.register(on_language_chosen, F.data.startswith(keyboards.LANG_PREFIX))
     router.callback_query.register(on_zone_chosen, F.data.startswith(keyboards.TZ_PREFIX))
-    router.callback_query.register(on_tone_chosen, F.data.startswith(keyboards.TONE_PREFIX))
-    router.callback_query.register(
-        on_reminders_chosen, F.data.startswith(keyboards.REMINDERS_PREFIX)
-    )
-    router.callback_query.register(on_alerts_chosen, F.data.startswith(keyboards.ALERTS_PREFIX))
     router.message.register(on_upcoming, Command("upcoming"))
     router.message.register(on_timezone, Command("timezone"))
-    router.message.register(on_settings, Command("settings"))
-    router.callback_query.register(on_menu_language, F.data == keyboards.MENU_LANG)
-    router.callback_query.register(on_menu_timezone, F.data == keyboards.MENU_TZ)
     router.callback_query.register(on_help_settings, F.data == keyboards.HELP_SETTINGS)
     router.callback_query.register(on_help_track, F.data == keyboards.HELP_TRACK)
     router.message.register(on_track, Command("track", "friends"))

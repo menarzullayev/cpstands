@@ -58,11 +58,16 @@ settings-summary =
         [neutral] Neutral
        *[playful] Playful
     }</b>
-    🔔 Reminders: <b>{ $reminders ->
-        [off] off
-       *[on] on
+    🔔 Reminders: <b>{ $reminders }</b>
+    🔥 Alerts: <b>{ $level ->
+        [0] off
+        [1] scoreboard only
+        [2] + system tests
+        [3] + upsolves
+       *[4] everything
     }</b>
-    🔥 Alerts: <b>{ $alerts ->
+    📊 Table columns: <b>{ $cols }</b>
+    🏁 Summary: <b>{ $summary ->
         [off] off
        *[on] on
     }</b>
@@ -136,6 +141,9 @@ standings-status = { $phase ->
     } · 👥 { $count ->
         [one] { $count } participant
        *[other] { $count } participants
+    }{ $view ->
+        [friends]  (friends)
+       *[all] {""}
     } · 🕐 { $time }
 standings-footer = Rows { $first }–{ $last } of { $total } · problems { $from_problem }–{ $to_problem }
 standings-empty = No rows yet.
@@ -147,7 +155,9 @@ button-refresh = Refresh
 reminder =
     ⏰ <b>{ $name }</b>
     { $left ->
+        [d3] starts in 3 days
         [day] starts in 24 hours
+        [h2] starts in 2 hours
         [hour] starts in 1 hour
        *[minutes] starts in { $minutes } minutes
     }
@@ -155,7 +165,9 @@ reminder =
 reminder-neutral =
     <b>{ $name }</b>
     { $left ->
+        [d3] starts in 3 days
         [day] starts in 24 hours
+        [h2] starts in 2 hours
         [hour] starts in 1 hour
        *[minutes] starts in { $minutes } minutes
     }
@@ -170,10 +182,6 @@ reminder-cancelled = ❌ <b>{ $name }</b> has been cancelled.
 reminder-cancelled-neutral = <b>{ $name }</b> has been cancelled.
 button-register = Register
 button-contest = Contest page
-button-reminders = { $state ->
-        [off] Reminders: off
-       *[on] Reminders: on
-    }
 upcoming-header = 🏆 <b>Upcoming contests</b>
 upcoming-line =
     { $name }
@@ -197,10 +205,6 @@ alert-systest-fail = { $v ->
     }
 alert-systest-fail-neutral = { $v ->
        *[other] System tests failed: { $handle }, problem { $problem } ({ $title }, { $time }).
-    }
-button-alerts = { $state ->
-        [off] Alerts: off
-       *[on] Alerts: on
     }
 
 privacy-text =
@@ -271,3 +275,53 @@ rank-footer = Rows { $first }–{ $last } of { $total }
 rank-unknown = ❌ Not found on Codeforces: { $handles }
 rank-empty = 👥 The list is empty. Add handles first: <code>/track add tourist, jiangly</code>
 rank-source-error = ⚠️ Codeforces does not answer right now. Try again in a minute.
+
+word-off = off
+button-back = Back
+button-columns = Columns: { $n }
+button-summary = { $state ->
+        [off] Summary: off
+       *[on] Summary: on
+    }
+button-reminders-menu = Reminders
+button-alerts-menu = Alerts
+button-friends = Friends
+button-level = { $level ->
+        [0] Off
+        [1] Scoreboard
+        [2] + System tests
+        [3] + Upsolves
+       *[4] Everything
+    }
+reminders-menu =
+    🔔 <b>Reminders</b>
+
+    Choose when I remind you before a contest starts. Tap a time to switch it on or off.
+alerts-menu =
+    🔥 <b>Alerts</b>
+
+    How much should I tell you about the handles you follow?
+    <b>Off</b> — nothing
+    <b>Scoreboard</b> — they only show in the standings
+    <b>+ System tests</b> — also when a solution fails the system tests
+    <b>+ Upsolves</b> — also problems solved after the contest
+    <b>Everything</b> — and every solve during a contest
+friends-menu =
+    { $count ->
+        [one] 👥 <b>Friends</b> · { $count } handle
+       *[other] 👥 <b>Friends</b> · { $count } handles
+    }
+
+    Tap a handle to choose what I tell you about it.
+friends-empty = 👥 No handles yet. Add some: <code>/track add tourist, jiangly</code>
+friend-detail =
+    👤 <b>{ $handle }</b>
+
+    Choose what I tell you about this handle.
+button-toggle-show = Show on scoreboard
+button-toggle-solve = Solves during contests
+button-toggle-systest = System test failures
+button-toggle-upsolve = Upsolves
+standings-no-friends = 👥 None of the followed handles took part in this contest.
+button-view-friends = Friends
+button-view-all = Everyone

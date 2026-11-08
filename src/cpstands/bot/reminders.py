@@ -69,7 +69,7 @@ def render_reminder(
     if offset_min == repos.NOTICE_MOVED:
         text = say("reminder-moved", name=name, start=start)
     else:
-        left = {1440: "day", 60: "hour"}.get(offset_min, "minutes")
+        left = {4320: "d3", 1440: "day", 120: "h2", 60: "hour"}.get(offset_min, "minutes")
         text = say("reminder", name=name, start=start, left=left, minutes=offset_min)
     return text, reminder_keyboard(say, contest.contest_id)
 

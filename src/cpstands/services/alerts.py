@@ -148,7 +148,10 @@ class AlertService:
                 return ProcessResult(0, 0)
             keys = sorted({handle_key(handle) for _, handle in matches})
             previous = await repos.load_snapshots(session, PLATFORM, contest_id, keys)
-            watchers = await repos.watchers_of(session, PLATFORM, keys)
+            by_kind = {
+                kind: await repos.watchers_of(session, PLATFORM, keys, kind)
+                for kind in ("solve", "systest_fail")
+            }
             for row, handle in matches:
                 key = handle_key(handle)
                 for event in detect(previous.get(key), row, handle, standings, now=now):
@@ -168,7 +171,7 @@ class AlertService:
                     if not event.is_alert:
                         continue
                     payload = _payload(event, standings)
-                    for chat_id in watchers.get(key, []):
+                    for chat_id in by_kind.get(event.kind, {}).get(key, []):
                         if await repos.enqueue_alert(
                             session,
                             chat_id,

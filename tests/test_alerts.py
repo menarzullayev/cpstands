@@ -465,3 +465,53 @@ async def test_live_standings_and_alerts_share_one_fetch() -> None:
     clock.advance(11)
     await standings.get_shared(2290, max_age_s=20)
     assert source.full_fetches == 2
+
+
+# ----------------------------------------------------------- levels and per-friend toggles
+
+
+def test_each_level_includes_everything_the_level_below_does() -> None:
+    previous = {k for k, v in repos.LEVEL_TOGGLES[0].items() if v}
+    assert previous == set()
+    for level in range(1, 5):
+        current = {k for k, v in repos.LEVEL_TOGGLES[level].items() if v}
+        assert previous < current
+        previous = current
+    assert previous == set(repos.TOGGLE_FIELDS)
+
+
+async def test_per_friend_toggles_decide_who_gets_which_alert(rig: Rig) -> None:
+    await rig.chat(CHAT, "x")
+    await rig.chat(OTHER, "x")
+    async with rig.sessions() as session, session.begin():
+        await repos.set_friend_toggle(session, CHAT, "codeforces", "x", "notify_solve", False)
+    service = rig.service()
+    await service.process(table({"x": cells(P)}))
+    assert await rig.count("select count(*) from deliveries where chat_id = -1001") == 0
+    assert await rig.count("select count(*) from deliveries where chat_id = -1002") == 1
+    await service.process(table({"x": [(R, 1, None)]}, phase=ContestPhase.SYSTEM_TEST))
+    assert await rig.count("select count(*) from deliveries where chat_id = -1001") == 1  # tests on
+    assert await rig.count("select count(*) from deliveries where chat_id = -1002") == 2
+
+
+async def test_a_fully_muted_friend_is_not_even_watched(rig: Rig) -> None:
+    await rig.chat(CHAT, "x")
+    async with rig.sessions() as session, session.begin():
+        await repos.set_notify_level(session, CHAT, 1)  # scoreboard only
+    async with rig.sessions() as session:
+        assert await repos.watched_keys_of_active_chats(session, "codeforces") == set()
+    result = await rig.service().process(table({"x": cells(A)}))
+    assert (result.events, result.queued) == (0, 0)
+    async with rig.sessions() as session, session.begin():
+        await repos.set_notify_level(session, CHAT, 2)  # + system tests
+    async with rig.sessions() as session:
+        assert await repos.watched_keys_of_active_chats(session, "codeforces") == {"x"}
+
+
+async def test_an_unknown_level_or_toggle_is_refused(rig: Rig) -> None:
+    await rig.chat(CHAT, "x")
+    async with rig.sessions() as session, session.begin():
+        with pytest.raises(ValueError, match="unknown notification level"):
+            await repos.set_notify_level(session, CHAT, 7)
+        with pytest.raises(ValueError, match="unknown toggle"):
+            await repos.set_friend_toggle(session, CHAT, "codeforces", "x", "chat_id", False)

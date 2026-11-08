@@ -6,7 +6,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 
-from sqlalchemy import RowMapping, delete, func, select, text, update
+from sqlalchemy import RowMapping, delete, func, or_, select, text, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,6 +31,9 @@ class ChatRecord:
     status: str
     reminder_offsets: tuple[int, ...]
     alerts_enabled: bool
+    notify_level: int = 4
+    table_cols: int = 16
+    summary_enabled: bool = True
 
 
 _CHAT_COLUMNS = (
@@ -42,6 +45,9 @@ _CHAT_COLUMNS = (
     chats.c.status,
     chats.c.reminder_offsets,
     chats.c.alerts_enabled,
+    chats.c.notify_level,
+    chats.c.table_cols,
+    chats.c.summary_enabled,
 )
 
 
@@ -55,6 +61,9 @@ def _record(row: RowMapping) -> ChatRecord:
         status=str(row["status"]),
         reminder_offsets=tuple(int(v) for v in row["reminder_offsets"] or ()),
         alerts_enabled=bool(row["alerts_enabled"]),
+        notify_level=int(row["notify_level"]),
+        table_cols=int(row["table_cols"]),
+        summary_enabled=bool(row["summary_enabled"]),
     )
 
 
@@ -109,17 +118,31 @@ async def set_tone(session: AsyncSession, chat_id: int, tone: str) -> bool:
 
 
 async def set_reminder_offsets(session: AsyncSession, chat_id: int, offsets: Sequence[int]) -> bool:
-    """Set the reminder offsets in minutes before the start; an empty list turns them off."""
-    ok = await _update_chat(session, chat_id, reminder_offsets=list(offsets))
-    if ok and not offsets:
+    """Set the reminder offsets in minutes before the start; an empty list turns them off.
+
+    Scheduled reminders whose offset was deselected are cancelled; the planner creates the
+    ones that were added (and revives cancelled ones whose moment is still ahead).
+    """
+    ordered = sorted({int(o) for o in offsets}, reverse=True)
+    ok = await _update_chat(session, chat_id, reminder_offsets=ordered)
+    if ok:
         await session.execute(
             text(
                 "UPDATE reminders SET state = 'cancelled' "
-                "WHERE chat_id = :chat AND state = 'scheduled'"
+                "WHERE chat_id = :chat AND state = 'scheduled' AND offset_min > 0 "
+                "AND NOT (offset_min = ANY(CAST(:keep AS integer[])))"
             ),
-            {"chat": chat_id},
+            {"chat": chat_id, "keep": ordered},
         )
     return ok
+
+
+async def set_table_cols(session: AsyncSession, chat_id: int, cols: int) -> bool:
+    return await _update_chat(session, chat_id, table_cols=cols)
+
+
+async def set_summary_enabled(session: AsyncSession, chat_id: int, enabled: bool) -> bool:
+    return await _update_chat(session, chat_id, summary_enabled=enabled)
 
 
 async def set_status(session: AsyncSession, chat_id: int, status: str) -> bool:
@@ -151,6 +174,10 @@ async def add_handles(
     """Insert ``key -> display`` pairs; returns the keys that were really new."""
     if not handles:
         return set()
+    level = (
+        await session.execute(select(chats.c.notify_level).where(chats.c.chat_id == chat_id))
+    ).scalar()
+    toggles = LEVEL_TOGGLES[int(level) if level is not None else 4]
     statement = (
         insert(watched_handles)
         .values(
@@ -160,6 +187,7 @@ async def add_handles(
                     "platform": platform,
                     "handle_key": key,
                     "handle_display": display,
+                    **toggles,
                 }
                 for key, display in handles.items()
             ]
@@ -200,6 +228,7 @@ class LiveMessage:
     col_page: int
     last_hash: str | None
     last_edit_at: datetime | None
+    view: str = "auto"
 
 
 async def register_live_message(
@@ -224,6 +253,7 @@ async def register_live_message(
         state="active",
         row_page=0,
         col_page=0,
+        view="auto",
         last_hash=None,
         last_edit_at=func.now(),
         dirty=False,
@@ -236,6 +266,7 @@ async def register_live_message(
                 "state": "active",
                 "row_page": 0,
                 "col_page": 0,
+                "view": "auto",
                 "last_hash": None,
                 "last_edit_at": func.now(),
                 "dirty": False,
@@ -272,8 +303,9 @@ async def set_live_pages(
     message_id: int,
     row_page: int,
     col_page: int,
+    view: str = "auto",
 ) -> bool:
-    """Remember the page the reader is on; ignored when another message took over."""
+    """Remember the page and view the reader chose; ignored when another message took over."""
     result = await session.execute(
         update(standings_messages)
         .where(
@@ -282,7 +314,7 @@ async def set_live_pages(
             standings_messages.c.contest_id == contest_id,
             standings_messages.c.message_id == message_id,
         )
-        .values(row_page=row_page, col_page=col_page)
+        .values(row_page=row_page, col_page=col_page, view=view)
         .returning(standings_messages.c.chat_id)
     )
     return result.first() is not None
@@ -312,6 +344,7 @@ async def live_messages(session: AsyncSession, platform: str, contest_id: int) -
             standings_messages.c.col_page,
             standings_messages.c.last_hash,
             standings_messages.c.last_edit_at,
+            standings_messages.c.view,
         ).where(
             standings_messages.c.platform == platform,
             standings_messages.c.contest_id == contest_id,
@@ -738,11 +771,12 @@ async def insert_solve_event(
 
 
 async def watchers_of(
-    session: AsyncSession, platform: str, handle_keys: Sequence[str]
+    session: AsyncSession, platform: str, handle_keys: Sequence[str], kind: str = "solve"
 ) -> dict[str, list[int]]:
-    """Active chats with alerts on that follow each handle."""
+    """Active chats with alerts on that follow each handle and want this kind of alert."""
     if not handle_keys:
         return {}
+    field = getattr(watched_handles.c, KIND_FIELD[kind])
     result = await session.execute(
         select(watched_handles.c.handle_key, watched_handles.c.chat_id)
         .join(chats, chats.c.chat_id == watched_handles.c.chat_id)
@@ -751,6 +785,7 @@ async def watchers_of(
             watched_handles.c.handle_key.in_(list(handle_keys)),
             chats.c.status == "active",
             chats.c.alerts_enabled.is_(True),
+            field.is_(True),
         )
     )
     found: dict[str, list[int]] = {}
@@ -861,6 +896,7 @@ async def active_contests_to_watch(session: AsyncSession, platform: str) -> list
 
 
 async def watched_keys_of_active_chats(session: AsyncSession, platform: str) -> set[str]:
+    """Handles somebody wants alerts for (a solve or a system-test alert)."""
     result = await session.execute(
         select(watched_handles.c.handle_key)
         .join(chats, chats.c.chat_id == watched_handles.c.chat_id)
@@ -868,6 +904,9 @@ async def watched_keys_of_active_chats(session: AsyncSession, platform: str) -> 
             watched_handles.c.platform == platform,
             chats.c.status == "active",
             chats.c.alerts_enabled.is_(True),
+            or_(
+                watched_handles.c.notify_solve.is_(True), watched_handles.c.notify_systest.is_(True)
+            ),
         )
         .distinct()
     )
@@ -885,3 +924,103 @@ async def set_alerts_enabled(session: AsyncSession, chat_id: int, enabled: bool)
             {"chat": chat_id},
         )
     return ok
+
+
+# --- notification levels and per-friend toggles -----------------------------------------
+
+LEVEL_TOGGLES: dict[int, dict[str, bool]] = {
+    0: {"show_in_list": False, "notify_solve": False, "notify_systest": False, "notify_upsolve": False},
+    1: {"show_in_list": True, "notify_solve": False, "notify_systest": False, "notify_upsolve": False},
+    2: {"show_in_list": True, "notify_solve": False, "notify_systest": True, "notify_upsolve": False},
+    3: {"show_in_list": True, "notify_solve": False, "notify_systest": True, "notify_upsolve": True},
+    4: {"show_in_list": True, "notify_solve": True, "notify_systest": True, "notify_upsolve": True},
+}  # fmt: skip
+TOGGLE_FIELDS = ("show_in_list", "notify_solve", "notify_systest", "notify_upsolve")
+KIND_FIELD = {
+    "solve": "notify_solve",
+    "systest_fail": "notify_systest",
+    "upsolve": "notify_upsolve",
+}
+
+
+@dataclass(frozen=True, slots=True)
+class Friend:
+    key: str
+    display: str
+    show_in_list: bool
+    notify_solve: bool
+    notify_systest: bool
+    notify_upsolve: bool
+
+    def toggle(self, field: str) -> bool:
+        return bool(getattr(self, field))
+
+
+async def set_notify_level(session: AsyncSession, chat_id: int, level: int) -> bool:
+    """Set the chat's level and apply it to every followed handle (overrides come after)."""
+    if level not in LEVEL_TOGGLES:
+        raise ValueError(f"unknown notification level {level}")
+    ok = await _update_chat(session, chat_id, notify_level=level)
+    if ok:
+        await session.execute(
+            update(watched_handles)
+            .where(watched_handles.c.chat_id == chat_id)
+            .values(**LEVEL_TOGGLES[level])
+        )
+    return ok
+
+
+async def list_friends(session: AsyncSession, chat_id: int, platform: str) -> list[Friend]:
+    result = await session.execute(
+        select(
+            watched_handles.c.handle_key,
+            watched_handles.c.handle_display,
+            watched_handles.c.show_in_list,
+            watched_handles.c.notify_solve,
+            watched_handles.c.notify_systest,
+            watched_handles.c.notify_upsolve,
+        )
+        .where(watched_handles.c.chat_id == chat_id, watched_handles.c.platform == platform)
+        .order_by(watched_handles.c.handle_key)
+    )
+    return [
+        Friend(str(k), str(d), bool(a), bool(b), bool(c), bool(e))
+        for k, d, a, b, c, e in result.all()
+    ]
+
+
+async def get_friend(session: AsyncSession, chat_id: int, platform: str, key: str) -> Friend | None:
+    for friend in await list_friends(session, chat_id, platform):
+        if friend.key == key:
+            return friend
+    return None
+
+
+async def set_friend_toggle(
+    session: AsyncSession, chat_id: int, platform: str, key: str, field: str, value: bool
+) -> bool:
+    if field not in TOGGLE_FIELDS:
+        raise ValueError(f"unknown toggle {field}")
+    result = await session.execute(
+        update(watched_handles)
+        .where(
+            watched_handles.c.chat_id == chat_id,
+            watched_handles.c.platform == platform,
+            watched_handles.c.handle_key == key,
+        )
+        .values(**{field: value})
+        .returning(watched_handles.c.handle_key)
+    )
+    return result.first() is not None
+
+
+async def scoreboard_keys(session: AsyncSession, chat_id: int, platform: str) -> set[str]:
+    """Handles shown in the friends view of this chat's standings."""
+    result = await session.execute(
+        select(watched_handles.c.handle_key).where(
+            watched_handles.c.chat_id == chat_id,
+            watched_handles.c.platform == platform,
+            watched_handles.c.show_in_list.is_(True),
+        )
+    )
+    return {str(row[0]) for row in result.all()}

@@ -58,11 +58,16 @@ settings-summary =
         [neutral] neytral
        *[playful] qiziqarli
     }</b>
-    🔔 Eslatmalar: <b>{ $reminders ->
-        [off] o'chiq
-       *[on] yoqilgan
+    🔔 Eslatmalar: <b>{ $reminders }</b>
+    🔥 Alertlar: <b>{ $level ->
+        [0] o'chiq
+        [1] faqat jadval
+        [2] + system testlar
+        [3] + upsolve
+       *[4] hammasi
     }</b>
-    🔥 Alertlar: <b>{ $alerts ->
+    📊 Jadval ustunlari: <b>{ $cols }</b>
+    🏁 Xulosa: <b>{ $summary ->
         [off] o'chiq
        *[on] yoqilgan
     }</b>
@@ -136,6 +141,9 @@ standings-status = { $phase ->
     } · 👥 { $count ->
         [one] { $count } ishtirokchi
        *[other] { $count } ishtirokchi
+    }{ $view ->
+        [friends]  (do'stlar)
+       *[all] {""}
     } · 🕐 { $time }
 standings-footer = { $first }–{ $last }-qatorlar, jami { $total } · masalalar { $from_problem }–{ $to_problem }
 standings-empty = Hozircha qatorlar yo'q.
@@ -147,7 +155,9 @@ button-refresh = Yangilash
 reminder =
     ⏰ <b>{ $name }</b>
     { $left ->
+        [d3] 3 kundan keyin boshlanadi
         [day] 24 soatdan keyin boshlanadi
+        [h2] 2 soatdan keyin boshlanadi
         [hour] 1 soatdan keyin boshlanadi
        *[minutes] { $minutes } daqiqadan keyin boshlanadi
     }
@@ -155,7 +165,9 @@ reminder =
 reminder-neutral =
     <b>{ $name }</b>
     { $left ->
+        [d3] 3 kundan keyin boshlanadi
         [day] 24 soatdan keyin boshlanadi
+        [h2] 2 soatdan keyin boshlanadi
         [hour] 1 soatdan keyin boshlanadi
        *[minutes] { $minutes } daqiqadan keyin boshlanadi
     }
@@ -170,10 +182,6 @@ reminder-cancelled = ❌ <b>{ $name }</b> bekor qilindi.
 reminder-cancelled-neutral = <b>{ $name }</b> bekor qilindi.
 button-register = Ro'yxatdan o'tish
 button-contest = Contest sahifasi
-button-reminders = { $state ->
-        [off] Eslatmalar: o'chiq
-       *[on] Eslatmalar: yoqilgan
-    }
 upcoming-header = 🏆 <b>Yaqin contestlar</b>
 upcoming-line =
     { $name }
@@ -197,10 +205,6 @@ alert-systest-fail = { $v ->
     }
 alert-systest-fail-neutral = { $v ->
        *[other] System test o'tilmadi: { $handle }, { $problem } masalasi ({ $title }, { $time }).
-    }
-button-alerts = { $state ->
-        [off] Alertlar: o'chiq
-       *[on] Alertlar: yoqilgan
     }
 
 privacy-text =
@@ -271,3 +275,53 @@ rank-footer = { $first }–{ $last }-qatorlar, jami { $total }
 rank-unknown = ❌ Codeforces'da topilmadi: { $handles }
 rank-empty = 👥 Ro'yxat bo'sh. Avval handle qo'shing: <code>/track add tourist, jiangly</code>
 rank-source-error = ⚠️ Codeforces hozir javob bermayapti. Bir daqiqadan keyin qayta urinib ko'ring.
+
+word-off = o'chiq
+button-back = Orqaga
+button-columns = Ustunlar: { $n }
+button-summary = { $state ->
+        [off] Xulosa: o'chiq
+       *[on] Xulosa: yoqilgan
+    }
+button-reminders-menu = Eslatmalar
+button-alerts-menu = Alertlar
+button-friends = Do'stlar
+button-level = { $level ->
+        [0] O'chiq
+        [1] Jadval
+        [2] + System test
+        [3] + Upsolve
+       *[4] Hammasi
+    }
+reminders-menu =
+    🔔 <b>Eslatmalar</b>
+
+    Contest boshlanishidan oldin qachon eslatishimni tanlang. Vaqtni yoqish yoki o'chirish uchun ustiga bosing.
+alerts-menu =
+    🔥 <b>Alertlar</b>
+
+    Kuzatilayotgan handlelar haqida qanchalik xabar beray?
+    <b>O'chiq</b> — hech narsa
+    <b>Jadval</b> — faqat natijalar jadvalida ko'rinadi
+    <b>+ System test</b> — yechim system testdan o'tmaganda ham
+    <b>+ Upsolve</b> — contestdan keyin yechilgan masalalar ham
+    <b>Hammasi</b> — va contest vaqtidagi har bir yechim
+friends-menu =
+    { $count ->
+        [one] 👥 <b>Do'stlar</b> · { $count } ta handle
+       *[other] 👥 <b>Do'stlar</b> · { $count } ta handle
+    }
+
+    Nima haqida xabar berishimni tanlash uchun handle ustiga bosing.
+friends-empty = 👥 Hali handle yo'q. Qo'shing: <code>/track add tourist, jiangly</code>
+friend-detail =
+    👤 <b>{ $handle }</b>
+
+    Shu handle haqida nima haqida xabar berishimni tanlang.
+button-toggle-show = Jadvalda ko'rsatish
+button-toggle-solve = Contest vaqtidagi yechimlar
+button-toggle-systest = System testdan yiqilish
+button-toggle-upsolve = Upsolve
+standings-no-friends = 👥 Kuzatilayotgan handlelardan hech biri bu contestda qatnashmagan.
+button-view-friends = Do'stlar
+button-view-all = Hamma

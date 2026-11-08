@@ -378,3 +378,13 @@ def test_duration_text() -> None:
     assert rem.duration_text(7200) == "2:00"
     assert rem.duration_text(9000) == "2:30"
     assert rem.duration_text(None) == "-"
+
+
+def test_reminder_text_for_three_days_and_two_hours() -> None:
+    i18n = I18n()
+    chat = repos.ChatRecord(1, "private", "en", "UTC", "playful", "active", (4320, 120), True)
+    row = repos.ContestRow(7, "Round", "BEFORE", START, 7200)
+    assert "starts in 3 days" in rem.render_reminder(i18n, chat, row, 4320)[0]
+    assert "starts in 2 hours" in rem.render_reminder(i18n, chat, row, 120)[0]
+    ru = replace(chat, language="ru")
+    assert "через 3 дня" in rem.render_reminder(i18n, ru, row, 4320)[0]

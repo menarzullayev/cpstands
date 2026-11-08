@@ -34,6 +34,11 @@ SAMPLE_ARGS: dict[str, str | int] = {
     "minutes": 10,
     "start": "21.11 19:35",
     "duration": "2:00",
+    "view": "all",
+    "level": 4,
+    "cols": 16,
+    "summary": "on",
+    "n": 16,
     "version": "0.1",
     "uptime": "1h",
     "sources": "codeforces",
@@ -180,7 +185,7 @@ def test_checker_catches_missing_catalog_file(broken_locales: Path) -> None:
 
 
 _KEY_RE = re.compile(
-    r"""(?:\b(?:t|say|rich)\(\s*(?:[^,()"']+,\s*)?|_say\([^()]*\)\(\s*)["']([a-z0-9-]+)["']"""
+    r"""(?:\b(?:t|say|rich|tr)\(\s*(?:[^,()"']+,\s*)?|\b_?say\([^()]*\)\(\s*)["']([a-z0-9-]+)["']"""
 )
 SRC = Path(__file__).resolve().parents[1] / "src" / "cpstands"
 
@@ -248,7 +253,9 @@ def test_custom_emoji_wraps_known_emoji_and_leaves_others() -> None:
         zone="y",
         mood="playful",
         reminders="on",
-        alerts="on",
+        level=4,
+        cols=16,
+        summary="on",
         count=1,
     )
 

@@ -58,13 +58,18 @@ settings-summary =
         [neutral] нейтральный
        *[playful] игривый
     }</b>
-    🔔 Напоминания: <b>{ $reminders ->
-        [off] выключены
-       *[on] включены
+    🔔 Напоминания: <b>{ $reminders }</b>
+    🔥 Оповещения: <b>{ $level ->
+        [0] выключены
+        [1] только таблица
+        [2] + системные тесты
+        [3] + дорешивание
+       *[4] всё
     }</b>
-    🔥 Оповещения: <b>{ $alerts ->
-        [off] выключены
-       *[on] включены
+    📊 Колонок в таблице: <b>{ $cols }</b>
+    🏁 Итоги контеста: <b>{ $summary ->
+        [off] выкл
+       *[on] вкл
     }</b>
     👥 Отслеживается: <b>{ $count ->
         [one] { $count } хендл
@@ -142,6 +147,9 @@ standings-status = { $phase ->
         [few] { $count } участника
         [many] { $count } участников
        *[other] { $count } участника
+    }{ $view ->
+        [friends]  (друзья)
+       *[all] {""}
     } · 🕐 { $time }
 standings-footer = Строки { $first }–{ $last } из { $total } · задачи { $from_problem }–{ $to_problem }
 standings-empty = Строк пока нет.
@@ -153,7 +161,9 @@ button-refresh = Обновить
 reminder =
     ⏰ <b>{ $name }</b>
     { $left ->
+        [d3] начнётся через 3 дня
         [day] начнётся через 24 часа
+        [h2] начнётся через 2 часа
         [hour] начнётся через 1 час
        *[minutes] начнётся через { $minutes } мин
     }
@@ -161,7 +171,9 @@ reminder =
 reminder-neutral =
     <b>{ $name }</b>
     { $left ->
+        [d3] начнётся через 3 дня
         [day] начнётся через 24 часа
+        [h2] начнётся через 2 часа
         [hour] начнётся через 1 час
        *[minutes] начнётся через { $minutes } мин
     }
@@ -176,10 +188,6 @@ reminder-cancelled = ❌ Контест <b>{ $name }</b> отменён.
 reminder-cancelled-neutral = Контест <b>{ $name }</b> отменён.
 button-register = Регистрация
 button-contest = Страница контеста
-button-reminders = { $state ->
-        [off] Напоминания: выкл
-       *[on] Напоминания: вкл
-    }
 upcoming-header = 🏆 <b>Ближайшие контесты</b>
 upcoming-line =
     { $name }
@@ -203,10 +211,6 @@ alert-systest-fail = { $v ->
     }
 alert-systest-fail-neutral = { $v ->
        *[other] Системные тесты не пройдены: { $handle }, задача { $problem } ({ $title }, { $time }).
-    }
-button-alerts = { $state ->
-        [off] Оповещения: выкл
-       *[on] Оповещения: вкл
     }
 
 privacy-text =
@@ -281,3 +285,55 @@ rank-footer = Строки { $first }–{ $last } из { $total }
 rank-unknown = ❌ Не найдено на Codeforces: { $handles }
 rank-empty = 👥 Список пуст. Сначала добавьте хендлы: <code>/track add tourist, jiangly</code>
 rank-source-error = ⚠️ Codeforces сейчас не отвечает. Попробуйте через минуту.
+
+word-off = выкл
+button-back = Назад
+button-columns = Колонок: { $n }
+button-summary = { $state ->
+        [off] Итоги: выкл
+       *[on] Итоги: вкл
+    }
+button-reminders-menu = Напоминания
+button-alerts-menu = Оповещения
+button-friends = Друзья
+button-level = { $level ->
+        [0] Выкл
+        [1] Таблица
+        [2] + Сист. тесты
+        [3] + Дорешивание
+       *[4] Всё
+    }
+reminders-menu =
+    🔔 <b>Напоминания</b>
+
+    Выберите, когда напоминать перед началом контеста. Нажмите на время, чтобы включить или выключить его.
+alerts-menu =
+    🔥 <b>Оповещения</b>
+
+    О чём сообщать по отслеживаемым хендлам?
+    <b>Выкл</b> — ни о чём
+    <b>Таблица</b> — они только в таблице результатов
+    <b>+ Сист. тесты</b> — ещё и когда решение не прошло системные тесты
+    <b>+ Дорешивание</b> — ещё и задачи, решённые после контеста
+    <b>Всё</b> — и каждое решение во время контеста
+friends-menu =
+    { $count ->
+        [one] 👥 <b>Друзья</b> · { $count } хендл
+        [few] 👥 <b>Друзья</b> · { $count } хендла
+        [many] 👥 <b>Друзья</b> · { $count } хендлов
+       *[other] 👥 <b>Друзья</b> · { $count } хендла
+    }
+
+    Нажмите на хендл, чтобы выбрать, о чём сообщать.
+friends-empty = 👥 Хендлов пока нет. Добавьте: <code>/track add tourist, jiangly</code>
+friend-detail =
+    👤 <b>{ $handle }</b>
+
+    Выберите, о чём сообщать по этому хендлу.
+button-toggle-show = Показывать в таблице
+button-toggle-solve = Решения во время контеста
+button-toggle-systest = Провал системных тестов
+button-toggle-upsolve = Дорешивание
+standings-no-friends = 👥 Никто из отслеживаемых хендлов не участвовал в этом контесте.
+button-view-friends = Друзья
+button-view-all = Все

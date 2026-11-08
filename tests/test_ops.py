@@ -287,12 +287,22 @@ async def test_retention_runs_once_a_day_even_across_restarts(
 # ------------------------------------------------------------------- readiness and http
 
 
+def _head() -> str:
+    from alembic.script import ScriptDirectory
+
+    from cpstands.__main__ import alembic_config
+
+    head = ScriptDirectory.from_config(alembic_config()).get_current_head()
+    assert head is not None
+    return head
+
+
 async def test_readiness_follows_database_migrations_and_scheduler(
     sessions: async_sessionmaker[AsyncSession],
 ) -> None:
     clock = FakeClock()
     state = ops.OpsState(clock=clock.monotonic)
-    ready = ReadinessChecker(sessions, state, "0002", clock=clock.monotonic)
+    ready = ReadinessChecker(sessions, state, _head(), clock=clock.monotonic)
     first = await ready.check()
     assert first.ready  # still inside the start-up grace period
     assert first.checks["scheduler"] == "starting"

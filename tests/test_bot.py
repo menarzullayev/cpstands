@@ -480,14 +480,14 @@ async def test_standings_sends_a_rich_table_with_navigation(harness: Harness) ->
     rows = page["reply_markup"]["inline_keyboard"]
     callbacks = [b["callback_data"] for row in rows for b in row]
     assert callbacks == [
-        "st:1970:0:0",
-        "st:1970:0:0",
+        "st:1970:0:0:a",
+        "st:1970:0:0:a",
         "st:noop",
-        "st:1970:1:0",
-        "st:1970:2:0",
-        "st:1970:0:0",
-        "st:1970:0:1",
-        "st:1970:0:0:r",
+        "st:1970:1:0:a",
+        "st:1970:2:0:a",
+        "st:1970:0:0:a",
+        "st:1970:0:1:a",
+        "st:1970:0:0:a:r",
     ]
 
 
@@ -636,68 +636,6 @@ async def test_finishing_setup_plans_reminders_for_the_known_contests(harness: H
     await harness.tap(PRIVATE, PRIVATE, "set:lang:en")
     await harness.tap(PRIVATE, PRIVATE, "tz:set:Asia/Tashkent")
     assert await _reminder_states(harness) == ["scheduled"] * 6  # three offsets, two contests
-
-
-async def test_reminders_can_be_switched_off_and_on_by_an_admin(harness: Harness) -> None:
-    await harness.say(PRIVATE, PRIVATE, "/upcoming")
-    await harness.say(PRIVATE, PRIVATE, "/start")
-    await harness.tap(PRIVATE, PRIVATE, "set:lang:en")
-    await harness.tap(PRIVATE, PRIVATE, "tz:set:Asia/Tashkent")
-
-    await harness.tap(PRIVATE, PRIVATE, "set:rem:off")
-    chat = await harness.chat(PRIVATE)
-    assert chat is not None
-    assert chat.reminder_offsets == ()
-    assert "Reminders: <b>off</b>" in harness.session.sent("EditMessageText")[-1]["text"]
-    assert set(await _reminder_states(harness)) == {"cancelled"}
-
-    await harness.tap(PRIVATE, PRIVATE, "set:rem:on")
-    chat = await harness.chat(PRIVATE)
-    assert chat is not None
-    assert chat.reminder_offsets == (1440, 60, 10)
-    assert set(await _reminder_states(harness)) == {"scheduled"}
-
-    await harness.tap(PRIVATE, PRIVATE, "set:rem:maybe")
-    chat = await harness.chat(PRIVATE)
-    assert chat is not None
-    assert chat.reminder_offsets == (1440, 60, 10)
-
-
-async def test_members_cannot_switch_reminders(harness: Harness) -> None:
-    await harness.say(GROUP, ADMIN, "/settings")
-    await harness.tap(GROUP, MEMBER, "set:rem:off")
-    assert harness.session.alerts()[-1]["text"] == I18N.t(None, "not-admin")
-    chat = await harness.chat(GROUP)
-    assert chat is not None
-    assert chat.reminder_offsets == (1440, 60, 10)
-
-
-async def test_alerts_can_be_switched_off_and_on_by_an_admin(harness: Harness) -> None:
-    await harness.say(PRIVATE, PRIVATE, "/settings")
-    await harness.tap(PRIVATE, PRIVATE, "set:alr:off")
-    chat = await harness.chat(PRIVATE)
-    assert chat is not None
-    assert chat.alerts_enabled is False
-    assert "Alertlar: <b>o'chiq</b>" in harness.session.sent("EditMessageText")[-1]["text"]
-    await harness.tap(PRIVATE, PRIVATE, "set:alr:on")
-    chat = await harness.chat(PRIVATE)
-    assert chat is not None
-    assert chat.alerts_enabled is True
-    before = len(harness.session.alerts())
-    await harness.tap(PRIVATE, PRIVATE, "set:alr:maybe")
-    assert len(harness.session.alerts()) == before + 1
-
-
-async def test_members_cannot_switch_alerts(harness: Harness) -> None:
-    await harness.say(GROUP, ADMIN, "/settings")
-    await harness.tap(GROUP, MEMBER, "set:alr:off")
-    assert harness.session.alerts()[-1]["text"] == I18N.t(None, "not-admin")
-    chat = await harness.chat(GROUP)
-    assert chat is not None
-    assert chat.alerts_enabled is True
-
-
-# --- privacy and deletion ---------------------------------------------------------------
 
 
 async def test_privacy_explains_what_is_stored_without_storing_anything(harness: Harness) -> None:
@@ -878,3 +816,317 @@ async def test_rank_callbacks_survive_garbage(harness: Harness) -> None:
     assert len(harness.session.alerts()) == before + 1
     await harness.tap(PRIVATE, PRIVATE, "rk:99")  # a page past the end is clamped
     assert "<td>1</td>" in harness.session.rich()[-1]["html"]
+
+
+# --- settings hub and submenus ----------------------------------------------------------
+
+
+def _callbacks(call: dict[str, object]) -> list[str]:
+    rows = call["reply_markup"]["inline_keyboard"]  # type: ignore[index]
+    return [b["callback_data"] for row in rows for b in row if "callback_data" in b]
+
+
+async def _active_private_chat(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/start")
+    await harness.tap(PRIVATE, PRIVATE, "set:lang:en")
+    await harness.tap(PRIVATE, PRIVATE, "tz:set:Asia/Tashkent")
+
+
+async def test_settings_hub_shows_every_setting_with_its_button(harness: Harness) -> None:
+    await _active_private_chat(harness)
+    await harness.say(PRIVATE, PRIVATE, "/settings")
+    sent = harness.session.sent()[-1]
+    text = str(sent["text"])
+    for line in (
+        "Reminders: <b>24h · 1h · 10m</b>",
+        "Alerts: <b>everything</b>",
+        "Table columns: <b>16</b>",
+        "Summary: <b>on</b>",
+    ):
+        assert line in text
+    assert _callbacks(sent) == [
+        "set:menu:lang", "set:menu:tz", "set:tone:neutral", "set:menu:rem",
+        "set:menu:alr", "set:cols:8", "set:sum:off", "fr:l:0",
+    ]  # fmt: skip
+
+
+async def test_reminder_times_are_chosen_one_by_one_and_the_plan_follows(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/upcoming")  # stores the contests
+    await _active_private_chat(harness)
+    await harness.tap(PRIVATE, PRIVATE, "set:menu:rem")
+    menu = harness.session.sent("EditMessageText")[-1]
+    assert _callbacks(menu) == [
+        "set:rt:4320",
+        "set:rt:1440",
+        "set:rt:120",
+        "set:rt:60",
+        "set:rt:10",
+        "set:menu:main",
+    ]
+    labels = [b["text"] for row in menu["reply_markup"]["inline_keyboard"][:1] for b in row]
+    assert labels == ["⬜ 3d", "✅ 24h", "⬜ 2h", "✅ 1h", "✅ 10m"]
+
+    await harness.tap(PRIVATE, PRIVATE, "set:rt:120")  # 2 hours on
+    await harness.tap(PRIVATE, PRIVATE, "set:rt:1440")  # 24 hours off
+    chat = await harness.chat(PRIVATE)
+    assert chat is not None
+    assert chat.reminder_offsets == (120, 60, 10)
+    from sqlalchemy import text
+
+    async with harness.sessions() as session:
+        rows = (
+            await session.execute(
+                text(
+                    "select offset_min, state from reminders where contest_id = 2287 order by 1 desc"
+                )
+            )
+        ).all()
+    assert [(int(a), str(b)) for a, b in rows] == [
+        (1440, "cancelled"),
+        (120, "scheduled"),
+        (60, "scheduled"),
+        (10, "scheduled"),
+    ]
+
+    await harness.tap(PRIVATE, PRIVATE, "set:rt:120")
+    await harness.tap(PRIVATE, PRIVATE, "set:rt:60")
+    await harness.tap(PRIVATE, PRIVATE, "set:rt:10")
+    chat = await harness.chat(PRIVATE)
+    assert chat is not None
+    assert chat.reminder_offsets == ()  # everything off is allowed
+    await harness.tap(PRIVATE, PRIVATE, "set:menu:main")
+    assert "Reminders: <b>off</b>" in harness.session.sent("EditMessageText")[-1]["text"]
+
+
+async def test_reminder_choices_reject_garbage_and_non_admins(harness: Harness) -> None:
+    await harness.say(GROUP, ADMIN, "/settings")
+    await harness.tap(GROUP, MEMBER, "set:rt:60")
+    assert harness.session.alerts()[-1]["text"] == I18N.t(None, "not-admin")
+    for bad in ("set:rt:61", "set:rt:abc", "set:rt:-5"):
+        await harness.tap(GROUP, ADMIN, bad)
+        assert harness.session.alerts()[-1]["text"] == I18N.t(None, "button-expired")
+    chat = await harness.chat(GROUP)
+    assert chat is not None
+    assert chat.reminder_offsets == (1440, 60, 10)
+
+
+async def test_alert_level_applies_to_every_friend_and_to_new_ones(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/track add tourist, jiangly")
+    await harness.tap(PRIVATE, PRIVATE, "set:menu:alr")
+    menu = harness.session.sent("EditMessageText")[-1]
+    assert _callbacks(menu) == [f"set:lvl:{i}" for i in range(5)] + ["set:menu:main"]
+    await harness.tap(PRIVATE, PRIVATE, "set:lvl:2")
+    chat = await harness.chat(PRIVATE)
+    assert chat is not None
+    assert chat.notify_level == 2
+    async with harness.sessions() as session:
+        friends = await repos.list_friends(session, PRIVATE, "codeforces")
+    assert [
+        (f.show_in_list, f.notify_solve, f.notify_systest, f.notify_upsolve) for f in friends
+    ] == [(True, False, True, False)] * 2
+    await harness.say(PRIVATE, PRIVATE, "/track add Petr")
+    async with harness.sessions() as session:
+        petr = await repos.get_friend(session, PRIVATE, "codeforces", "petr")
+    assert petr is not None
+    assert (petr.notify_solve, petr.notify_systest) == (False, True)  # inherits the chat's level
+    assert "+ system test" in harness.session.sent("EditMessageText")[-1]["text"]
+    before = len(harness.session.alerts())
+    await harness.tap(PRIVATE, PRIVATE, "set:lvl:9")
+    assert len(harness.session.alerts()) == before + 1
+
+
+async def test_table_columns_and_summary_switch(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/settings")
+    await harness.tap(PRIVATE, PRIVATE, "set:cols:8")
+    await harness.tap(PRIVATE, PRIVATE, "set:sum:off")
+    chat = await harness.chat(PRIVATE)
+    assert chat is not None
+    assert (chat.table_cols, chat.summary_enabled) == (8, False)
+    text = harness.session.sent("EditMessageText")[-1]["text"]
+    assert "Jadval ustunlari: <b>8</b>" in text
+    assert "Xulosa: <b>o'chiq</b>" in text
+    await harness.tap(PRIVATE, PRIVATE, "set:cols:10")  # not an allowed width
+    chat = await harness.chat(PRIVATE)
+    assert chat is not None
+    assert chat.table_cols == 8
+    await harness.tap(PRIVATE, PRIVATE, "set:sum:maybe")
+    chat = await harness.chat(PRIVATE)
+    assert chat is not None
+    assert chat.summary_enabled is False
+
+
+async def test_friends_menu_lists_pages_and_toggles_per_handle(harness: Harness) -> None:
+    await harness.tap(PRIVATE, PRIVATE, "fr:l:0")
+    assert harness.session.last_text() == I18N.t(None, "friends-empty")
+    await harness.say(PRIVATE, PRIVATE, "/track add tourist, jiangly, Petr")
+    await harness.tap(PRIVATE, PRIVATE, "fr:l:0")
+    listing = harness.session.sent("EditMessageText")[-1]
+    assert _callbacks(listing) == [
+        "fr:d:0:jiangly",
+        "fr:d:0:petr",
+        "fr:d:0:tourist",
+        "set:menu:main",
+    ]
+
+    await harness.tap(PRIVATE, PRIVATE, "fr:d:0:tourist")
+    detail = harness.session.sent("EditMessageText")[-1]
+    assert _callbacks(detail) == [f"fr:t:0:{i}:tourist" for i in range(4)] + ["fr:l:0"]
+    assert all(
+        b["text"].startswith("✅")
+        for row in detail["reply_markup"]["inline_keyboard"][:4]
+        for b in row
+    )
+
+    await harness.tap(PRIVATE, PRIVATE, "fr:t:0:1:tourist")  # solves during contests off
+    await harness.tap(PRIVATE, PRIVATE, "fr:t:0:2:tourist")  # system tests off
+    await harness.tap(PRIVATE, PRIVATE, "fr:t:0:3:tourist")  # upsolves off
+    async with harness.sessions() as session:
+        tourist = await repos.get_friend(session, PRIVATE, "codeforces", "tourist")
+    assert tourist is not None
+    assert (
+        tourist.show_in_list,
+        tourist.notify_solve,
+        tourist.notify_systest,
+        tourist.notify_upsolve,
+    ) == (True, False, False, False)
+    await harness.tap(PRIVATE, PRIVATE, "fr:l:0")
+    labels = [
+        b["text"]
+        for row in harness.session.sent("EditMessageText")[-1]["reply_markup"]["inline_keyboard"]
+        for b in row
+    ]
+    assert "🔕 tourist" in labels  # muted handles are marked in the list
+    assert "jiangly" in labels
+    await harness.tap(PRIVATE, PRIVATE, "fr:t:0:1:tourist")  # solves on again
+    async with harness.sessions() as session:
+        tourist = await repos.get_friend(session, PRIVATE, "codeforces", "tourist")
+    assert tourist is not None
+    assert tourist.notify_solve is True
+
+
+async def test_friends_menu_paginates_and_rejects_forged_callbacks(harness: Harness) -> None:
+    names = [f"user{i:02d}" for i in range(10)]
+    harness.source._existing.update({n: n for n in names})
+    await harness.say(PRIVATE, PRIVATE, "/track add " + " ".join(names))
+    await harness.tap(PRIVATE, PRIVATE, "fr:l:1")
+    listing = harness.session.sent("EditMessageText")[-1]
+    assert _callbacks(listing) == [
+        "fr:d:1:user08",
+        "fr:d:1:user09",
+        "fr:l:0",
+        "st:noop",
+        "fr:l:1",
+        "set:menu:main",
+    ]
+    before = len(harness.session.alerts())
+    for forged in (
+        "fr:d:0:../etc",
+        "fr:d:x:tourist",
+        "fr:t:0:9:user00",
+        "fr:t:0:1",
+        "fr:d:0:" + "a" * 40,
+        "fr:d:0:nobody",
+    ):
+        await harness.tap(PRIVATE, PRIVATE, forged)
+    assert len(harness.session.alerts()) == before + 6
+    await harness.say(GROUP, ADMIN, "/track add tourist")
+    await harness.tap(GROUP, MEMBER, "fr:t:0:1:tourist")
+    assert harness.session.alerts()[-1]["text"] == I18N.t(None, "not-admin")
+
+
+# --- friends / everyone view and table width --------------------------------------------
+
+
+async def _follow(harness: Harness, chat_id: int, user_id: int, *names: str) -> None:
+    harness.source._existing.update({n: n for n in names})
+    await harness.say(chat_id, user_id, "/track add " + " ".join(names))
+
+
+def _table_ranks(html: str) -> list[str]:
+    return [part.split("</td>")[0] for part in html.split("<tr><td>")[1:]]
+
+
+async def test_a_chat_with_friends_sees_only_them_first_and_can_switch(harness: Harness) -> None:
+    await _follow(harness, PRIVATE, PRIVATE, "user1", "user3", "user50")
+    await harness.say(PRIVATE, PRIVATE, "/standings 1970")
+    page = harness.session.rich()[-1]
+    assert _table_ranks(page["html"]) == ["2", "4", "51"]  # their real ranks, in order
+    assert "(do'stlar)" in page["html"]
+    assert _callbacks(page)[:2] == ["st:1970:0:0:f", "st:1970:0:0:a"]
+    primary = [b.get("style") for row in page["reply_markup"]["inline_keyboard"][:1] for b in row]
+    assert primary == ["primary", None]
+
+    await harness.tap(PRIVATE, PRIVATE, "st:1970:0:0:a")
+    everyone = harness.session.rich()[-1]
+    assert len(_table_ranks(everyone["html"])) == 25
+    assert "(do'stlar)" not in everyone["html"]
+    await harness.tap(PRIVATE, PRIVATE, "st:1970:0:0:f")
+    assert _table_ranks(harness.session.rich()[-1]["html"]) == ["2", "4", "51"]
+
+
+async def test_the_friends_view_follows_the_scoreboard_toggle_and_handles_absence(
+    harness: Harness,
+) -> None:
+    await _follow(harness, PRIVATE, PRIVATE, "user1", "user3")
+    async with harness.sessions() as session, session.begin():
+        await repos.set_friend_toggle(
+            session, PRIVATE, "codeforces", "user3", "show_in_list", False
+        )
+    await harness.say(PRIVATE, PRIVATE, "/standings 1970")
+    assert _table_ranks(harness.session.rich()[-1]["html"]) == ["2"]
+    async with harness.sessions() as session, session.begin():
+        await repos.set_friend_toggle(
+            session, PRIVATE, "codeforces", "user1", "show_in_list", False
+        )
+    await harness.say(PRIVATE, PRIVATE, "/standings 1970")
+    everyone = harness.session.rich()[-1]
+    assert len(_table_ranks(everyone["html"])) == 25  # nobody on the scoreboard: show everyone
+    assert not [c for c in _callbacks(everyone) if c.endswith(":f")]  # and no switcher
+
+
+async def test_friends_who_did_not_take_part_get_an_explanation(harness: Harness) -> None:
+    await _follow(harness, PRIVATE, PRIVATE, "newcomer")
+    await harness.say(PRIVATE, PRIVATE, "/standings 1970")
+    html = harness.session.rich()[-1]["html"]
+    assert "<table>" not in html
+    assert I18N.t(None, "standings-no-friends") in html or "hech biri" in html
+
+
+async def test_the_chosen_view_of_a_live_message_is_remembered(harness: Harness) -> None:
+    await _follow(harness, PRIVATE, PRIVATE, "user1")
+    await harness.say(PRIVATE, PRIVATE, "/standings 1973")  # a running contest
+    message_id = (await _live_rows(harness))[0][1]
+    await harness.feed(
+        callback_update(harness.uid(), PRIVATE, PRIVATE, "st:1973:0:0:a", message_id)
+    )
+    async with harness.sessions() as session:
+        from sqlalchemy import text
+
+        stored = (await session.execute(text("select view from standings_messages"))).scalar_one()
+    assert stored == "all"
+    await harness.feed(
+        callback_update(harness.uid(), PRIVATE, PRIVATE, "st:1973:0:0:f", message_id)
+    )
+    async with harness.sessions() as session:
+        stored = (await session.execute(text("select view from standings_messages"))).scalar_one()
+    assert stored == "friends"
+
+
+async def test_old_callbacks_without_a_view_still_work(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/standings 1970")
+    await harness.tap(PRIVATE, PRIVATE, "st:1970:1:0")  # the format before views existed
+    assert "<td>26</td>" in harness.session.rich()[-1]["html"]
+
+
+async def test_the_table_width_setting_changes_the_problem_columns(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/settings")
+    await harness.tap(PRIVATE, PRIVATE, "set:cols:8")
+    await harness.say(PRIVATE, PRIVATE, "/standings 1970")
+    page = harness.session.rich()[-1]
+    assert page["html"].count("<th>") == 4 + 8
+    labels = [b["text"] for row in page["reply_markup"]["inline_keyboard"] for b in row]
+    assert [t for t in labels if "–" in t] == [
+        "P1–P8",
+        "P9–P16",
+        "P17–P21",
+    ]  # every problem is reachable
