@@ -1179,6 +1179,8 @@ async def test_rating_card_shows_rating_last_contest_and_follow_button(harness: 
     assert "(1600 → 1580)" in text
     assert I18N.t(None, "rating-contests", count=2) in text
     assert _callbacks(call) == ["rt:add:tourist"]
+    labels = [b["text"] for row in call["reply_markup"]["inline_keyboard"] for b in row]
+    assert labels[0].startswith(chr(0x2795))  # a real symbol, not its code
     urls = [b["url"] for row in call["reply_markup"]["inline_keyboard"] for b in row if "url" in b]
     assert urls == ["https://codeforces.com/profile/tourist"]
 

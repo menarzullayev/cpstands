@@ -29,6 +29,7 @@ from cpstands.sources.base import SourceError
 log = structlog.get_logger(__name__)
 
 FOLLOW_PREFIX = "rt:add:"
+FOLLOW_EMOJI = chr(0x2795)  # heavy plus sign
 PROFILE_URL = "https://codeforces.com/profile/{handle}"
 _KEY_RE = re.compile(r"^[a-z0-9_.-]{1,24}$")
 
@@ -78,7 +79,7 @@ def card_keyboard(
             keyboards.button(
                 tr("button-follow"),
                 f"{FOLLOW_PREFIX}{handle_key(handle)}",
-                emoji="2795",
+                emoji=FOLLOW_EMOJI,
                 style="success",
                 icons=icons,
             )
