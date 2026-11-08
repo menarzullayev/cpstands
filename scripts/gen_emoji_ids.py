@@ -15,6 +15,7 @@ PALETTE = [
     "👤", "🤷", "🎭", "😵", "🔄", "📚", "🌱", "💥", "🧪", "😬", "📈", "📥", "✋", "🔕",
     # stand-ins for emoji the set lacks (see ALIASES in ui/emoji.py)
     "❗", "❕", "🔐", "⏳", "⌛", "🧽", "🗂", "💻", "📱",
+    "👈", "👉", "🔝", "➖",
 ]  # fmt: skip
 OUT = Path(__file__).resolve().parents[1] / "src" / "cpstands" / "ui" / "emoji_ids.py"
 

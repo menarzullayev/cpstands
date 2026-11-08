@@ -76,11 +76,16 @@ def keyboard(total: int, page: int, say: Translator, *, icons: bool) -> InlineKe
     if count > 1:
         rows.append(
             [
-                button("⏮", callback(0)),
-                button("◀", callback(max(page - 1, 0))),
+                button("1", callback(0), emoji="⏮", icons=icons),
+                button(str(max(page, 1)), callback(max(page - 1, 0)), emoji="◀", icons=icons),
                 button(f"{page + 1} / {count}", NOOP),
-                button("▶", callback(min(page + 1, count - 1))),
-                button("⏭", callback(count - 1)),
+                button(
+                    str(min(page + 2, count)),
+                    callback(min(page + 1, count - 1)),
+                    emoji="▶",
+                    icons=icons,
+                ),
+                button(str(count), callback(count - 1), emoji="⏭", icons=icons),
             ]
         )
     rows.append(

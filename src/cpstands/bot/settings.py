@@ -199,7 +199,12 @@ def _reminders_keyboard(deps: Deps, chat: repos.ChatRecord) -> InlineKeyboardMar
     tr = say(deps, chat)
     chosen = set(chat.reminder_offsets)
     buttons = [
-        keyboards.button(f"{'✅' if m in chosen else '⬜'} {offset_label(m)}", f"{RT_PREFIX}{m}")
+        keyboards.button(
+            offset_label(m),
+            f"{RT_PREFIX}{m}",
+            emoji="✅" if m in chosen else "⬜",
+            icons=deps.icons,
+        )
         for m in REMINDER_CHOICES
     ]
     back = keyboards.button(tr("button-back"), MENU_MAIN, emoji="◀", icons=deps.icons)
@@ -389,8 +394,10 @@ async def _detail_view(
         rows.append(
             [
                 keyboards.button(
-                    f"{'✅' if on else '⬜'} {labels[index]}",
+                    labels[index],
                     f"{FR_TOGGLE}{page}:{index}:{key}",
+                    emoji="✅" if on else "⬜",
+                    icons=deps.icons,
                 )
             ]
         )

@@ -221,11 +221,23 @@ def keyboard(
     if pages > 1:
         rows.append(
             [
-                button("⏮", callback(cid, 0, col_page, view)),
-                button("◀", callback(cid, max(row_page - 1, 0), col_page, view)),
+                button("1", callback(cid, 0, col_page, view), emoji="⏮", icons=icons),
+                button(
+                    str(max(row_page, 1)),
+                    callback(cid, max(row_page - 1, 0), col_page, view),
+                    emoji="◀",
+                    icons=icons,
+                ),
                 button(f"{row_page + 1} / {pages}", NOOP),
-                button("▶", callback(cid, min(row_page + 1, pages - 1), col_page, view)),
-                button("⏭", callback(cid, pages - 1, col_page, view)),
+                button(
+                    str(min(row_page + 2, pages)),
+                    callback(cid, min(row_page + 1, pages - 1), col_page, view),
+                    emoji="▶",
+                    icons=icons,
+                ),
+                button(
+                    str(pages), callback(cid, pages - 1, col_page, view), emoji="⏭", icons=icons
+                ),
             ]
         )
     if len(ranges) > 1:

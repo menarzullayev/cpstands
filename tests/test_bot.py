@@ -459,9 +459,9 @@ def test_button_icons_use_custom_emoji_when_enabled_else_prefix_the_emoji() -> N
     stand_in = keyboards.button("Settings", "x:y", emoji="⚙️", icons=True)
     assert stand_in.icon_custom_emoji_id  # the set has no gear, so a close twin is used
     assert stand_in.text == "Settings"
-    no_twin = keyboards.button("Back", "x:y", emoji="◀", icons=True)
+    no_twin = keyboards.button("Back", "x:y", emoji="▪", icons=True)
     assert no_twin.icon_custom_emoji_id is None
-    assert no_twin.text == "◀ Back"
+    assert no_twin.text == "▪ Back"
 
 
 def _ephemeral(call: dict[str, object]) -> dict[str, object] | None:
