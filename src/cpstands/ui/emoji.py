@@ -51,9 +51,18 @@ def custom_emoji_id(emoji: str) -> str | None:
     return _IDS.get(emoji) or _IDS.get(emoji.replace(VS16, ""))
 
 
+# An emoji that is already wrapped (a translated piece placed inside another message) is kept.
+_WRAPPED = r"<tg-emoji\s[^>]*>.*?</tg-emoji>"
+_DECORATE = re.compile(f"({_WRAPPED})|{_PATTERN.pattern}", re.DOTALL)
+
+
 def decorate(html_text: str) -> str:
-    """Wrap every known emoji of an HTML message in a ``tg-emoji`` tag."""
-    return _PATTERN.sub(
-        lambda m: f'<tg-emoji emoji-id="{_IDS[m.group(0)]}">{m.group(0)}</tg-emoji>',
-        html_text,
-    )
+    """Wrap every known emoji of an HTML message in a ``tg-emoji`` tag; safe to run twice."""
+
+    def wrap(m: re.Match[str]) -> str:
+        if m.group(1) is not None:
+            return m.group(1)
+        emoji = m.group(0)
+        return f'<tg-emoji emoji-id="{_IDS[emoji]}">{emoji}</tg-emoji>'
+
+    return _DECORATE.sub(wrap, html_text)

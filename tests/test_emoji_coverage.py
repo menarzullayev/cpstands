@@ -72,3 +72,16 @@ def test_pagination_and_toggle_buttons_carry_custom_icons() -> None:
     assert all(b.text.replace(" / ", "").isdigit() for b in nav)
     plain = rank_view.keyboard(60, 1, say, icons=False)  # type: ignore[arg-type]
     assert plain.inline_keyboard[0][1].text == "◀ 1"
+
+
+def test_decorate_never_nests_tg_emoji() -> None:
+    """A translated line with custom emoji, placed inside another message, is not wrapped again.
+
+    Telegram refuses nested tg-emoji with ENTITY_TEXT_INVALID (seen on /rating, 2026-11-08).
+    """
+    from cpstands.ui.emoji import decorate
+
+    once = decorate("🏆 1094 → 1141")
+    assert decorate(once) == once
+    assert re.search(r"<tg-emoji[^>]*>\s*<tg-emoji", decorate(once)) is None
+    assert decorate(f"👤 <b>x</b>\n\n{once}").count("<tg-emoji") == 3
