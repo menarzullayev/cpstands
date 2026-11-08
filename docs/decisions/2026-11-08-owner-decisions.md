@@ -85,7 +85,9 @@ store, not in PostgreSQL.
   design). `.gitleaks.toml` allows only `sb_publishable_` keys, and a negative test shows other
   secrets are still caught.
 - **Settings left as they are:**
-  - Enforce SSL is off on the project; the bot already requires SSL.
   - There are no network restrictions.
   - There are no backups (row 1).
-
+- **Enforce SSL turned on (2026-11-08, owner approval):**
+  - The database restart caused one moment of "database not available" errors in the bot's
+    loops (06:32:42 UTC); the bot recovered without a restart.
+  - Measured: an SSL connection works, and a non-SSL one is refused with `ESSLREQUIRED`.
