@@ -15,6 +15,7 @@ from aiogram.types import ErrorEvent
 from cpstands import __version__, metrics
 from cpstands.bot.alerts import AlertNotifier, AlertWatcher
 from cpstands.bot.appcmd import create_app_router
+from cpstands.bot.comments import CommentPoster, parse_targets
 from cpstands.bot.deps import Deps, PlatformKit
 from cpstands.bot.donate import create_donate_router
 from cpstands.bot.handlers import create_router
@@ -28,6 +29,7 @@ from cpstands.bot.rating_card import create_rating_router
 from cpstands.bot.reminders import ReminderSender
 from cpstands.bot.scheduler import Scheduler
 from cpstands.bot.settings import create_settings_router
+from cpstands.bot.silence import SilenceMiddleware
 from cpstands.bot.summary import SummaryWorker, create_summary_router
 from cpstands.bot.telemetry import TelegramMetrics
 from cpstands.bot.upsolve import UpsolveWatcher
@@ -71,8 +73,19 @@ class _Worker(Protocol):
     async def run(self) -> None: ...
 
 
-def build_dispatcher(deps: Deps, limiter: RateLimiter | None = None) -> Dispatcher:
+def build_dispatcher(
+    deps: Deps, limiter: RateLimiter | None = None, *, silent_chats: tuple[int, ...] = ()
+) -> Dispatcher:
     dispatcher = Dispatcher(deps=deps)
+    if silent_chats:
+        silence = SilenceMiddleware(silent_chats)
+        for observer in (
+            dispatcher.message,
+            dispatcher.callback_query,
+            dispatcher.my_chat_member,
+            dispatcher.chat_member,
+        ):
+            observer.outer_middleware(silence)
     middleware = RateLimitMiddleware(limiter or RateLimiter())
     dispatcher.message.outer_middleware(middleware)
     dispatcher.callback_query.outer_middleware(middleware)
@@ -182,7 +195,7 @@ async def run_bot(settings: Settings) -> None:
         icons=settings.button_icons,
         extra=extra,
     )
-    dispatcher = build_dispatcher(deps)
+    dispatcher = build_dispatcher(deps, silent_chats=tuple(settings.silent_chats))
     await store_api_secret(sessions, settings.telegram_bot_token.get_secret_value())
     heartbeat = Heartbeat(
         sessions,
@@ -203,7 +216,11 @@ async def run_bot(settings: Settings) -> None:
             language=settings.announce_language,
             time_zone=settings.default_timezone,
         )
-    updater = LiveUpdater(bot, sessions, deps.standings, deps.i18n, icons=deps.icons)
+    comment_targets = parse_targets(settings.live_comments)
+    link_only = frozenset(settings.silent_chats) | {t.chat_id for t in comment_targets}
+    updater = LiveUpdater(
+        bot, sessions, deps.standings, deps.i18n, icons=deps.icons, link_only=link_only
+    )
     sender = ReminderSender(bot, sessions, deps.i18n, icons=deps.icons, ops=ops)
     scheduler = Scheduler(sessions, contests, sender, retention=RetentionService(sessions), ops=ops)
     watcher = AlertWatcher(sessions, deps.standings, AlertService(sessions))
@@ -216,7 +233,9 @@ async def run_bot(settings: Settings) -> None:
     background: list[asyncio.Task[None]] = []
     for name, kit in extra.items():
         workers: list[_Worker] = [
-            LiveUpdater(bot, sessions, kit.standings, deps.i18n, icons=deps.icons),
+            LiveUpdater(
+                bot, sessions, kit.standings, deps.i18n, icons=deps.icons, link_only=link_only
+            ),
             Scheduler(
                 sessions,
                 kit.contests,
@@ -232,6 +251,11 @@ async def run_bot(settings: Settings) -> None:
         background += [
             asyncio.create_task(w.run(), name=f"{name}-{type(w).__name__}") for w in workers
         ]
+    if comment_targets:
+        poster = CommentPoster(
+            bot, sessions, deps.kits(), deps.i18n, comment_targets, icons=deps.icons
+        )
+        background.append(asyncio.create_task(poster.run(), name="live-comments"))
     tasks = [
         *background,
         asyncio.create_task(updater.run(), name="live-standings"),

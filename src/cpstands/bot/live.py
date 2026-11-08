@@ -70,6 +70,7 @@ class LiveUpdater:
         i18n: I18n,
         *,
         icons: bool = True,
+        link_only: frozenset[int] = frozenset(),
         clock: Callable[[], float] = time.monotonic,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
@@ -79,6 +80,8 @@ class LiveUpdater:
         self._standings = standings
         self._i18n = i18n
         self._icons = icons
+        # Chats whose tables carry link buttons only (their button taps are never answered).
+        self._link_only = link_only
         self._clock = clock
         self._now = now
         self._sleep = sleep
@@ -162,15 +165,18 @@ class LiveUpdater:
         if not final and digest == message.last_hash and age < STALE_TIME_S:
             return
         await self._respect_chat_gap(message.chat_id)
-        markup = standings_view.keyboard(
-            standings,
-            message.row_page,
-            message.col_page,
-            say,
-            icons=self._icons,
-            ctx=ctx,
-            chat_id=message.chat_id,
-        )
+        if message.chat_id in self._link_only:
+            markup = standings_view.link_keyboard(standings, say, icons=self._icons)
+        else:
+            markup = standings_view.keyboard(
+                standings,
+                message.row_page,
+                message.col_page,
+                say,
+                icons=self._icons,
+                ctx=ctx,
+                chat_id=message.chat_id,
+            )
         try:
             await self._bot.edit_message_text(
                 chat_id=message.chat_id,

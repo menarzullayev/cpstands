@@ -15,7 +15,7 @@ from datetime import datetime
 from aiogram.types import InlineKeyboardMarkup
 
 from cpstands import platforms
-from cpstands.bot.keyboards import app_button, button
+from cpstands.bot.keyboards import app_button, button, link
 from cpstands.domain.contest import (
     ContestPhase,
     FullStandings,
@@ -291,3 +291,19 @@ def keyboard(
         ]
     )
     return InlineKeyboardMarkup(inline_keyboard=rows)  # type: ignore[arg-type]
+
+
+def link_keyboard(
+    standings: FullStandings, say: Translator, *, icons: bool
+) -> InlineKeyboardMarkup:
+    """The site's standings page and the Mini App: links only, no callbacks."""
+    site = platforms.get(standings.contest.platform)
+    cid = standings.contest.external_id
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                link(say("button-results"), site.standings_url(cid), emoji="🏆", icons=icons),
+                app_button(say, f"standings_{site.slug(cid)}", icons=icons),
+            ]
+        ]
+    )
