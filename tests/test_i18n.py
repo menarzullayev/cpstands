@@ -256,8 +256,8 @@ def test_custom_emoji_wraps_known_emoji_and_leaves_others() -> None:
     assert "<tg-emoji" not in plain
     assert custom.startswith('<tg-emoji emoji-id="')
     assert custom.endswith("Give me a moment.")
-    # Emoji without a custom twin are left exactly as they are.
-    assert "⚙️" in I18n(custom_emoji=True).t(
+    # An emoji without its own custom twin is drawn as its stand-in, the stand-in as its text.
+    assert ">🗂</tg-emoji>" in I18n(custom_emoji=True).t(
         "en",
         "settings-summary",
         language="x",

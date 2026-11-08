@@ -36,10 +36,10 @@ def test_aliases_point_at_real_ids() -> None:
     assert all(twin in CUSTOM_EMOJI_IDS for twin in ALIASES.values())
 
 
-def test_a_stand_in_is_wrapped_and_keeps_its_fallback_text() -> None:
+def test_a_stand_in_is_wrapped_with_its_twin_as_text() -> None:
     out = decorate("⚠️ careful")
     assert out.startswith('<tg-emoji emoji-id="')
-    assert ">⚠️</tg-emoji>" in out
+    assert ">❗</tg-emoji>" in out
 
 
 @pytest.mark.parametrize("symbol", ["▪", "·"])
@@ -85,3 +85,17 @@ def test_decorate_never_nests_tg_emoji() -> None:
     assert decorate(once) == once
     assert re.search(r"<tg-emoji[^>]*>\s*<tg-emoji", decorate(once)) is None
     assert decorate(f"👤 <b>x</b>\n\n{once}").count("<tg-emoji") == 3
+
+
+def test_every_tag_carries_the_emoji_its_id_belongs_to() -> None:
+    """Telegram refuses a custom emoji whose text is another character (ENTITY_TEXT_INVALID)."""
+    from cpstands.ui.emoji import ALIASES, decorate
+    from cpstands.ui.emoji_ids import CUSTOM_EMOJI_IDS
+
+    by_id = {v: k for k, v in CUSTOM_EMOJI_IDS.items()}
+    sample = " ".join([*CUSTOM_EMOJI_IDS, *ALIASES])
+    tags = re.findall(r'<tg-emoji emoji-id="(\d+)">(.*?)</tg-emoji>', decorate(sample))
+    assert len(tags) == len(CUSTOM_EMOJI_IDS) + len(ALIASES)
+    for emoji_id, text in tags:
+        assert text == by_id[emoji_id], (emoji_id, text)
+    assert "→</tg-emoji>" not in decorate("1141 → 1094")
