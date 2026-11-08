@@ -10,6 +10,19 @@ import type { RatingPoint } from '../cf'
 
 const KEY = 'profile.handle'
 
+/** Codeforces' picture host is sometimes down; then the first letter stands in. */
+function Avatar({ src, handle, color }: { src: string | null; handle: string; color: string }) {
+  const [failed, setFailed] = useState(false)
+  if (!src || failed || src.includes('no-title')) {
+    return (
+      <div className="avatar letter" style={{ color, borderColor: color }} aria-hidden>
+        {handle.charAt(0).toUpperCase()}
+      </div>
+    )
+  }
+  return <img className="avatar" src={src} alt="" referrerPolicy="no-referrer" onError={() => setFailed(true)} />
+}
+
 function HandleForm({ initial, onSubmit }: { initial: string; onSubmit: (h: string) => void }) {
   const [value, setValue] = useState(initial)
   return (
@@ -56,7 +69,7 @@ function ProfileView({ data }: { data: P }) {
     <>
       <Card>
         <div className="profile-head">
-          {u.avatar && <img className="avatar" src={u.avatar} alt="" referrerPolicy="no-referrer" />}
+          <Avatar src={u.avatar} handle={u.handle} color={color} />
           <div>
             <button className="handle" style={{ color }} onClick={() => open(profileUrl(u.handle))}>
               {u.handle}

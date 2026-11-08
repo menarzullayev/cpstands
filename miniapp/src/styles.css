@@ -283,6 +283,13 @@ main {
   background: var(--soft);
   flex: none;
 }
+.avatar.letter {
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+  font-weight: 700;
+  border: 2px solid;
+}
 .handle {
   font-size: 22px;
   font-weight: 700;
@@ -557,19 +564,30 @@ main {
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
+.h2h {
+  table-layout: fixed;
+}
+.h2h th:first-child,
 .h2h td:first-child {
+  width: 46%;
   text-align: left;
-  min-width: 160px;
+}
+.h2h th:not(:first-child) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
 }
 .h2h td.win {
   font-weight: 700;
   color: var(--good);
 }
 .h2h-name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 260px;
+  font-size: 12px;
+  line-height: 1.3;
 }
 
 /* tab bar */
