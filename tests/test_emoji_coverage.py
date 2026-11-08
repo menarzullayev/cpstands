@@ -7,13 +7,15 @@ from pathlib import Path
 
 import pytest
 
+from cpstands.bot.standings_view import PLAIN_CELL_EMOJI
 from cpstands.ui.emoji import ALIASES, custom_emoji_id, decorate
 from cpstands.ui.emoji_ids import CUSTOM_EMOJI_IDS
 
 SRC = Path(__file__).resolve().parents[1] / "src" / "cpstands"
 _EMOJI = re.compile("[\U0001f300-\U0001faff☀-➿⭐⭕⏩-⏺⌚-⌛][️]?")
-# Plain symbols with no twin and no stand-in in the set.
-TYPOGRAPHY = set("▪")
+# Plain symbols with no twin and no stand-in in the set, and the table cell marks that are plain
+# on purpose (a message keeps at most 100 custom emoji).
+TYPOGRAPHY = set("▪") | PLAIN_CELL_EMOJI
 
 
 def _used() -> set[str]:
