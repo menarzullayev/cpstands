@@ -51,7 +51,7 @@ $$;
 -- https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app
 CREATE OR REPLACE FUNCTION private.tg_user_id(init_data text, max_age_s integer DEFAULT 86400)
 RETURNS bigint
-LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = pg_catalog, public, private AS $$
+LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = pg_catalog, public, private, extensions AS $$
 DECLARE
   token text;
   pairs text[][];
@@ -100,7 +100,7 @@ $$;
 
 -- The caller's private chat row, created on first use (it stays in onboarding until /start).
 CREATE OR REPLACE FUNCTION private.caller_chat(init_data text) RETURNS bigint
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public, private AS $$
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public, private, extensions AS $$
 DECLARE uid bigint := private.tg_user_id(init_data);
 BEGIN
   INSERT INTO chats (chat_id, chat_type) VALUES (uid, 'private') ON CONFLICT (chat_id) DO NOTHING;
@@ -109,7 +109,7 @@ END
 $$;
 
 CREATE OR REPLACE FUNCTION private.friend_list(uid bigint) RETURNS jsonb
-LANGUAGE sql SECURITY DEFINER SET search_path = pg_catalog, public, private AS $$
+LANGUAGE sql SECURITY DEFINER SET search_path = pg_catalog, public, private, extensions AS $$
   SELECT jsonb_build_object(
     'max', 200,
     'friends', coalesce(jsonb_agg(w.handle_display ORDER BY w.added_at, w.handle_key), '[]'::jsonb))
@@ -118,14 +118,14 @@ LANGUAGE sql SECURITY DEFINER SET search_path = pg_catalog, public, private AS $
 $$;
 
 CREATE OR REPLACE FUNCTION public.app_friends(init_data text) RETURNS jsonb
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public, private AS $$
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public, private, extensions AS $$
 BEGIN
   RETURN private.friend_list(private.caller_chat(init_data));
 END
 $$;
 
 CREATE OR REPLACE FUNCTION public.app_friends_add(init_data text, handles text[]) RETURNS jsonb
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public, private AS $$
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public, private, extensions AS $$
 DECLARE
   uid bigint := private.caller_chat(init_data);
   room integer;
@@ -162,7 +162,7 @@ END
 $$;
 
 CREATE OR REPLACE FUNCTION public.app_friends_remove(init_data text, handles text[]) RETURNS jsonb
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public, private AS $$
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public, private, extensions AS $$
 DECLARE uid bigint := private.caller_chat(init_data);
 BEGIN
   DELETE FROM watched_handles
@@ -173,7 +173,7 @@ END
 $$;
 
 CREATE OR REPLACE FUNCTION private.settings_of(uid bigint) RETURNS jsonb
-LANGUAGE sql SECURITY DEFINER SET search_path = pg_catalog, public, private AS $$
+LANGUAGE sql SECURITY DEFINER SET search_path = pg_catalog, public, private, extensions AS $$
   SELECT jsonb_build_object(
     'status', c.status, 'language', c.language, 'timeZone', c.time_zone, 'tone', c.tone,
     'reminders', to_jsonb(c.reminder_offsets), 'alerts', c.alerts_enabled,
@@ -182,14 +182,14 @@ LANGUAGE sql SECURITY DEFINER SET search_path = pg_catalog, public, private AS $
 $$;
 
 CREATE OR REPLACE FUNCTION public.app_settings(init_data text) RETURNS jsonb
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public, private AS $$
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public, private, extensions AS $$
 BEGIN
   RETURN private.settings_of(private.caller_chat(init_data));
 END
 $$;
 
 CREATE OR REPLACE FUNCTION public.app_settings_update(init_data text, patch jsonb) RETURNS jsonb
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public, private AS $$
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public, private, extensions AS $$
 DECLARE
   uid bigint := private.caller_chat(init_data);
   offsets integer[];
@@ -235,7 +235,7 @@ $$;
 
 -- Public health summary for the status page: no personal data.
 CREATE OR REPLACE FUNCTION public.app_status() RETURNS jsonb
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, public, private AS $$
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, public, private, extensions AS $$
   SELECT jsonb_build_object(
     'now', extract(epoch FROM now())::bigint,
     'heartbeat', (SELECT value FROM runtime_state WHERE key = 'bot.heartbeat'),

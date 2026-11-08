@@ -27,3 +27,6 @@ dist-ssr
 # Playwright
 test-results/
 playwright-report/
+
+# Public Supabase config (publishable key only), needed by the CI build.
+!.env.production

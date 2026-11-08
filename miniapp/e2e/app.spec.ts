@@ -134,3 +134,39 @@ test('the status page reports the Mini App backend and Codeforces', async ({ pag
   await expect(page.getByText('Codeforces API: Answering')).toBeVisible()
   await expect(page.getByText('app9170246912.tgcloud.ai')).toBeVisible()
 })
+
+test('friends come from the bot database and adding goes through Codeforces first', async ({ page }) => {
+  await mockTelegram(page)
+  await page.goto('/')
+  await page.getByRole('navigation').getByRole('button', { name: 'Friends', exact: true }).click()
+  await expect(page.getByText('Benq').first()).toBeVisible()
+  await page.getByPlaceholder('Handles, separated by spaces').fill('Um_nik')
+  await page.getByRole('button', { name: 'Add', exact: true }).click()
+  await expect(page.getByText('Added: Um_nik')).toBeVisible()
+  const names = await page.evaluate(() => (window as unknown as { __tg: { calls: { name: string }[] } }).__tg.calls.map((c) => c.name))
+  // The handle is checked on Codeforces (cards), then stored in the bot's list (rpc).
+  expect(names.indexOf('cards')).toBeLessThan(names.indexOf('rpc:app_friends_add'))
+})
+
+test('bot settings are read and saved through the database API', async ({ page }) => {
+  await mockTelegram(page)
+  await page.goto('/')
+  await page.getByRole('navigation').getByRole('button', { name: 'Me', exact: true }).click()
+  await expect(page.getByText('Bot settings')).toBeVisible()
+  await page.getByRole('button', { name: '3d', exact: true }).click()
+  await expect(page.getByText('Saved')).toBeVisible()
+  const update = await page.evaluate(() =>
+    (window as unknown as { __tg: { calls: { name: string; input: { patch?: unknown; init_data?: string } }[] } }).__tg.calls.find(
+      (c) => c.name === 'rpc:app_settings_update',
+    ),
+  )
+  expect(update?.input.patch).toEqual({ reminders: [1440, 60, 10, 4320] })
+  expect(update?.input.init_data).toContain('hash=') // every call carries the signed init data
+})
+
+test('the status page shows the bot heartbeat from the database', async ({ page }) => {
+  await mockTelegram(page, { startParam: 'status' })
+  await page.goto('/')
+  await expect(page.getByText('Bot: Running')).toBeVisible()
+  await expect(page.getByText('Active chats')).toBeVisible()
+})
