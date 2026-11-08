@@ -19,11 +19,13 @@ import ijson
 from cpstands.domain.contest import (
     Contest,
     ContestPhase,
+    ContestRatingChange,
     FullStandings,
     ParticipantResult,
     Problem,
     ProblemResult,
     ProblemStatus,
+    RatingChange,
     StandingRow,
     StandingsSnapshot,
     UserRating,
@@ -311,3 +313,55 @@ def parse_user_ratings(body: bytes) -> list[UserRating]:
             )
         )
     return ratings
+
+
+def _result_list(body: bytes, what: str) -> list[dict[str, Any]]:
+    try:
+        document = json.loads(body)
+    except ValueError as exc:
+        raise RetryableSourceError(f"{what} body is not valid JSON") from exc
+    if not isinstance(document, dict):
+        raise SourceFormatError(f"{what} is not an object")
+    check_envelope(document.get("status"), document.get("comment"))
+    result = document.get("result")
+    if not isinstance(result, list):
+        raise SourceFormatError(f"{what} has no result array")
+    return [item for item in result if isinstance(item, dict)]
+
+
+def parse_rating_history(body: bytes) -> list[RatingChange]:
+    """Parse ``user.rating`` into the rated contests of a user, oldest first."""
+    changes: list[RatingChange] = []
+    for item in _result_list(body, "user.rating"):
+        try:
+            changes.append(
+                RatingChange(
+                    contest_id=int(item["contestId"]),
+                    contest_name=str(item["contestName"]),
+                    rank=int(item["rank"]),
+                    old_rating=int(item["oldRating"]),
+                    new_rating=int(item["newRating"]),
+                    at=datetime.fromtimestamp(float(item["ratingUpdateTimeSeconds"]), tz=UTC),
+                )
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            raise SourceFormatError("malformed user.rating entry") from exc
+    return sorted(changes, key=lambda c: c.at)
+
+
+def parse_contest_rating_changes(body: bytes) -> list[ContestRatingChange]:
+    """Parse ``contest.ratingChanges`` into one entry per rated participant."""
+    changes: list[ContestRatingChange] = []
+    for item in _result_list(body, "contest.ratingChanges"):
+        try:
+            changes.append(
+                ContestRatingChange(
+                    handle=str(item["handle"]),
+                    rank=int(item["rank"]),
+                    old_rating=int(item["oldRating"]),
+                    new_rating=int(item["newRating"]),
+                )
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            raise SourceFormatError("malformed contest.ratingChanges entry") from exc
+    return changes

@@ -10,12 +10,14 @@ from cpstands.domain.contest import (
     Contest,
     ContestList,
     ContestPhase,
+    ContestRatingChange,
     FetchMeta,
     FullStandings,
     HandleResolution,
     Problem,
     ProblemResult,
     ProblemStatus,
+    RatingChange,
     RatingResult,
     StandingRow,
     UserRating,
@@ -38,7 +40,11 @@ class FakeSource:
         delay_s: float = 0.0,
         contests: list[Contest] | None = None,
         ratings: dict[str, UserRating] | None = None,
+        histories: dict[str, list[RatingChange]] | None = None,
+        contest_changes: dict[int, list[ContestRatingChange]] | None = None,
     ) -> None:
+        self.histories = histories or {}
+        self.contest_changes = contest_changes or {}
         self.ratings = ratings or {}
         self.rating_fetches = 0
         self.contests: list[Contest] = contests or []
@@ -68,6 +74,20 @@ class FakeSource:
         known = [self.ratings[handle_key(h)] for h in handles if handle_key(h) in self.ratings]
         unknown = tuple(h for h in handles if handle_key(h) not in self.ratings)
         return RatingResult(ratings=tuple(known), unknown=unknown)
+
+    async def fetch_rating_history(self, handle: str) -> tuple[RatingChange, ...]:
+        if self.fail:
+            raise RetryableSourceError("down")
+        return tuple(self.histories.get(handle_key(handle), ()))
+
+    async def fetch_contest_rating_changes(
+        self, contest_id: int
+    ) -> tuple[ContestRatingChange, ...]:
+        if self.fail:
+            raise RetryableSourceError("down")
+        if contest_id not in self.contest_changes:
+            raise PermanentSourceError(f"contestId: Rating changes unavailable for {contest_id}")
+        return tuple(self.contest_changes[contest_id])
 
     async def list_contests(self) -> ContestList:
         if self.fail:

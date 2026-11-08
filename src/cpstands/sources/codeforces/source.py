@@ -10,8 +10,10 @@ from datetime import UTC, datetime
 
 from cpstands.domain.contest import (
     ContestList,
+    ContestRatingChange,
     FullStandings,
     HandleResolution,
+    RatingChange,
     RatingResult,
     StandingsFetch,
     UserRating,
@@ -22,7 +24,9 @@ from cpstands.sources.codeforces.client import CodeforcesClient
 from cpstands.sources.codeforces.parser import (
     PLATFORM,
     parse_contest_list,
+    parse_contest_rating_changes,
     parse_full_standings,
+    parse_rating_history,
     parse_standings,
     parse_user_info,
     parse_user_ratings,
@@ -115,3 +119,15 @@ class CodeforcesSource:
                         break
                     batch = remaining
         return RatingResult(ratings=tuple(found), unknown=tuple(unknown))
+
+    async def fetch_rating_history(self, handle: str) -> tuple[RatingChange, ...]:
+        """The rated contests of one user, oldest first (empty for an unrated user)."""
+        raw = await self._client.fetch("user.rating", {"handle": handle})
+        return tuple(parse_rating_history(raw.body))
+
+    async def fetch_contest_rating_changes(
+        self, contest_id: int
+    ) -> tuple[ContestRatingChange, ...]:
+        """Rating changes of a finished rated contest; an unrated or unfinished one is an error."""
+        raw = await self._client.fetch("contest.ratingChanges", {"contestId": str(contest_id)})
+        return tuple(parse_contest_rating_changes(raw.body))

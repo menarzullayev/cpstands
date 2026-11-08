@@ -20,6 +20,7 @@ from cpstands.bot.monitor import OperatorAlerts
 from cpstands.bot.owner import create_owner_router
 from cpstands.bot.privacy import create_privacy_router
 from cpstands.bot.ratelimit import RateLimiter, RateLimitMiddleware
+from cpstands.bot.rating_card import create_rating_router
 from cpstands.bot.reminders import ReminderSender
 from cpstands.bot.scheduler import Scheduler
 from cpstands.bot.settings import create_settings_router
@@ -54,6 +55,7 @@ def build_dispatcher(deps: Deps, limiter: RateLimiter | None = None) -> Dispatch
     dispatcher.callback_query.outer_middleware(middleware)
     dispatcher.include_router(create_router())
     dispatcher.include_router(create_settings_router())
+    dispatcher.include_router(create_rating_router())
     dispatcher.include_router(create_privacy_router())
     dispatcher.include_router(create_owner_router())
 

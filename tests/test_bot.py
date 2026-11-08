@@ -17,7 +17,7 @@ from cpstands.bot.deps import Deps
 from cpstands.bot.ratelimit import RateLimiter
 from cpstands.db import repos
 from cpstands.db.engine import create_engine, create_session_factory
-from cpstands.domain.contest import Contest, ContestPhase, UserRating
+from cpstands.domain.contest import Contest, ContestPhase, RatingChange, UserRating
 from cpstands.i18n import I18n
 from cpstands.services import timezone as tzs
 from cpstands.services.contests import ContestService
@@ -1130,3 +1130,70 @@ async def test_the_table_width_setting_changes_the_problem_columns(harness: Harn
         "P9–P16",
         "P17–P21",
     ]  # every problem is reachable
+
+
+# --- /rating ----------------------------------------------------------------------------
+
+
+def _history() -> list[RatingChange]:
+    at = datetime(2026, 10, 1, tzinfo=UTC)
+    return [
+        RatingChange(1, "Round One", 10, 1500, 1600, at),
+        RatingChange(2, "Round <Two>", 5, 1600, 1580, at + timedelta(days=30)),
+    ]
+
+
+async def test_rating_card_shows_rating_last_contest_and_follow_button(harness: Harness) -> None:
+    harness.source.histories["tourist"] = _history()
+    await harness.say(PRIVATE, PRIVATE, "/rating Tourist")
+    call = harness.session.sent()[-1]
+    text = call["text"]
+    assert "3979" in text
+    assert "legendary grandmaster" in text
+    assert "Round &lt;Two&gt;" in text  # the contest name is escaped
+    assert "-20" in text
+    assert "(1600 → 1580)" in text
+    assert I18N.t(None, "rating-contests", count=2) in text
+    assert _callbacks(call) == ["rt:add:tourist"]
+    urls = [b["url"] for row in call["reply_markup"]["inline_keyboard"] for b in row if "url" in b]
+    assert urls == ["https://codeforces.com/profile/tourist"]
+
+
+async def test_rating_follow_button_adds_once_and_disappears(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/rating tourist")
+    await harness.tap(PRIVATE, PRIVATE, "rt:add:tourist")
+    async with harness.sessions() as session:
+        assert await repos.get_friend(session, PRIVATE, "codeforces", "tourist") is not None
+    assert harness.session.alerts()[-1]["text"] == I18N.t(None, "rating-follow-done")
+    await harness.say(PRIVATE, PRIVATE, "/rating tourist")
+    assert _callbacks(harness.session.sent()[-1]) == []  # already followed: only the profile link
+
+
+async def test_rating_unrated_user_and_unknown_user(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/rating Petr")
+    assert I18N.t(None, "rating-unrated") in harness.session.last_text()
+    assert I18N.t(None, "rating-no-contests") in harness.session.last_text()
+    await harness.say(PRIVATE, PRIVATE, "/rating nobody_here")
+    assert harness.session.last_text() == I18N.t(None, "rating-not-found", handle="nobody_here")
+
+
+async def test_rating_usage_and_source_failure(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/rating")
+    assert harness.session.last_text() == I18N.t(None, "rating-usage")
+    harness.source.fail = True
+    await harness.say(PRIVATE, PRIVATE, "/rating tourist")
+    assert harness.session.last_text() == I18N.t(None, "rating-source-error")
+
+
+async def test_rating_follow_rejects_garbage_and_non_admins(harness: Harness) -> None:
+    await harness.say(PRIVATE, PRIVATE, "/rating tourist")
+    await harness.tap(PRIVATE, PRIVATE, "rt:add:" + "x" * 80)
+    assert harness.session.alerts()[-1]["text"] == I18N.t(None, "button-expired")
+    await harness.tap(PRIVATE, PRIVATE, "rt:add:no such")
+    assert harness.session.alerts()[-1]["text"] == I18N.t(None, "button-expired")
+    await harness.say(GROUP, ADMIN, "/start")
+    before = len(harness.session.alerts())
+    await harness.tap(GROUP, MEMBER, "rt:add:tourist")
+    assert len(harness.session.alerts()) == before + 1
+    async with harness.sessions() as session:
+        assert await repos.get_friend(session, GROUP, "codeforces", "tourist") is None

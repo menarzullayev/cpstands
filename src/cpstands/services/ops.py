@@ -14,8 +14,10 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from cpstands import metrics
 from cpstands.domain.contest import (
     ContestList,
+    ContestRatingChange,
     FullStandings,
     HandleResolution,
+    RatingChange,
     RatingResult,
     StandingsFetch,
 )
@@ -140,6 +142,19 @@ class ObservedSource:
     async def fetch_full_standings(self, contest_id: int) -> FullStandings:
         return await self._call(
             "fetch_full_standings", lambda: self._inner.fetch_full_standings(contest_id)
+        )
+
+    async def fetch_rating_history(self, handle: str) -> tuple[RatingChange, ...]:
+        return await self._call(
+            "fetch_rating_history", lambda: self._inner.fetch_rating_history(handle)
+        )
+
+    async def fetch_contest_rating_changes(
+        self, contest_id: int
+    ) -> tuple[ContestRatingChange, ...]:
+        return await self._call(
+            "fetch_contest_rating_changes",
+            lambda: self._inner.fetch_contest_rating_changes(contest_id),
         )
 
     async def fetch_ratings(self, handles: Sequence[str]) -> RatingResult:

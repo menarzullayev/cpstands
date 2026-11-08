@@ -125,6 +125,8 @@ help-text =
     <b>Friends</b>
     /track — handles to follow
     /friends — the same, in a private chat
+    /rank — ratings of the followed handles
+    /rating — one user's rating card
 
     <b>Contests</b> <i>(coming soon)</i>
     /standings · /upcoming · /rank
@@ -325,3 +327,26 @@ button-toggle-upsolve = Upsolves
 standings-no-friends = 👥 None of the followed handles took part in this contest.
 button-view-friends = Friends
 button-view-all = Everyone
+
+rating-usage =
+    👤 <b>Rating card</b>
+
+    <code>/rating tourist</code> — a user's rating, rank and last contest
+rating-not-found = ❌ No Codeforces user named <b>{ $handle }</b>.
+rating-source-error = ⚠️ Codeforces does not answer right now. Try again in a minute.
+rating-card =
+    👤 <b>{ $handle }</b>
+
+    { $body }
+rating-unrated = 🏆 Unrated
+rating-line = 🏆 <b>{ $rating }</b> · max { $max } · { $rank }
+rating-contests = { $count ->
+        [one] 📊 { $count } rated contest
+       *[other] 📊 { $count } rated contests
+    }
+rating-no-contests = 📊 No rated contests yet
+rating-last = 🕐 Last: <b>{ $contest }</b> · { $delta } ({ $old } → { $new })
+rating-follow-done = ✅ Added to the list
+rating-follow-limit = 🔒 The list is full ({ $limit } handles).
+button-follow = Follow
+button-profile = Profile

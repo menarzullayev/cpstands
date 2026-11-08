@@ -129,6 +129,8 @@ help-text =
     <b>Друзья</b>
     /track — хендлы для отслеживания
     /friends — то же самое, в личном чате
+    /rank — рейтинги отслеживаемых хендлов
+    /rating — карточка рейтинга пользователя
 
     <b>Контесты</b> <i>(скоро)</i>
     /standings · /upcoming · /rank
@@ -337,3 +339,28 @@ button-toggle-upsolve = Дорешивание
 standings-no-friends = 👥 Никто из отслеживаемых хендлов не участвовал в этом контесте.
 button-view-friends = Друзья
 button-view-all = Все
+
+rating-usage =
+    👤 <b>Карточка рейтинга</b>
+
+    <code>/rating tourist</code> — рейтинг, звание и последний контест пользователя
+rating-not-found = ❌ На Codeforces нет пользователя <b>{ $handle }</b>.
+rating-source-error = ⚠️ Codeforces сейчас не отвечает. Попробуйте через минуту.
+rating-card =
+    👤 <b>{ $handle }</b>
+
+    { $body }
+rating-unrated = 🏆 Без рейтинга
+rating-line = 🏆 <b>{ $rating }</b> · макс. { $max } · { $rank }
+rating-contests = { $count ->
+        [one] 📊 { $count } рейтинговый контест
+        [few] 📊 { $count } рейтинговых контеста
+        [many] 📊 { $count } рейтинговых контестов
+       *[other] 📊 { $count } рейтингового контеста
+    }
+rating-no-contests = 📊 Рейтинговых контестов пока нет
+rating-last = 🕐 Последний: <b>{ $contest }</b> · { $delta } ({ $old } → { $new })
+rating-follow-done = ✅ Добавлено в список
+rating-follow-limit = 🔒 Список заполнен ({ $limit } хендлов).
+button-follow = Следить
+button-profile = Профиль

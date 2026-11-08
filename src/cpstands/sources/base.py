@@ -7,8 +7,10 @@ from typing import Protocol, runtime_checkable
 
 from cpstands.domain.contest import (
     ContestList,
+    ContestRatingChange,
     FullStandings,
     HandleResolution,
+    RatingChange,
     RatingResult,
     StandingsFetch,
 )
@@ -66,5 +68,11 @@ class SourcePort(Protocol):
     async def fetch_full_standings(self, contest_id: int) -> FullStandings: ...
 
     async def fetch_ratings(self, handles: Sequence[str]) -> RatingResult: ...
+
+    async def fetch_rating_history(self, handle: str) -> tuple[RatingChange, ...]: ...
+
+    async def fetch_contest_rating_changes(
+        self, contest_id: int
+    ) -> tuple[ContestRatingChange, ...]: ...
 
     async def resolve_handles(self, handles: Sequence[str]) -> HandleResolution: ...

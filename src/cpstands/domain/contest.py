@@ -151,6 +151,36 @@ class UserRating:
 
 
 @dataclass(frozen=True, slots=True)
+class RatingChange:
+    """One rated contest in a user's history."""
+
+    contest_id: int
+    contest_name: str
+    rank: int
+    old_rating: int
+    new_rating: int
+    at: datetime
+
+    @property
+    def delta(self) -> int:
+        return self.new_rating - self.old_rating
+
+
+@dataclass(frozen=True, slots=True)
+class ContestRatingChange:
+    """A participant's rating change in one contest (``contest.ratingChanges``)."""
+
+    handle: str
+    rank: int
+    old_rating: int
+    new_rating: int
+
+    @property
+    def delta(self) -> int:
+        return self.new_rating - self.old_rating
+
+
+@dataclass(frozen=True, slots=True)
 class RatingResult:
     ratings: tuple[UserRating, ...]
     unknown: tuple[str, ...]

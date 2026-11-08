@@ -8,7 +8,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from cpstands.domain.contest import UserRating, handle_key
+from cpstands.domain.contest import RatingChange, UserRating, handle_key
 from cpstands.sources.base import SourcePort
 
 TTL_S = 600.0
@@ -30,6 +30,15 @@ def sort_key(rating: UserRating) -> tuple[int, int, str]:
     return (0 if rating.rating is not None else 1, -(rating.rating or 0), handle_key(rating.handle))
 
 
+@dataclass(frozen=True, slots=True)
+class RatingCard:
+    """What ``/rating <handle>`` shows."""
+
+    user: UserRating
+    contests: int
+    last: RatingChange | None
+
+
 class RatingService:
     def __init__(
         self,
@@ -44,6 +53,7 @@ class RatingService:
         # key -> (rating or None when unknown to the platform, fetched at, canonical handle)
         self._cache: dict[str, tuple[UserRating | None, float, str]] = {}
         self._lock = asyncio.Lock()
+        self._cards: dict[str, tuple[RatingCard | None, float]] = {}
         self._fetched_at = self._now()
 
     async def get(self, handles: Sequence[str], *, refresh: bool = False) -> RatingTable:
@@ -77,3 +87,22 @@ class RatingService:
                 else:
                     rows.append(entry[0])
             return RatingTable(tuple(sorted(rows, key=sort_key)), tuple(unknown), self._fetched_at)
+
+    async def card(self, handle: str) -> RatingCard | None:
+        """The card of one handle, or ``None`` when Codeforces does not know it."""
+        key = handle_key(handle)
+        now = self._clock()
+        cached = self._cards.get(key)
+        if cached is not None and now - cached[1] < TTL_S:
+            return cached[0]
+        result = await self._source.fetch_ratings([handle])
+        if not result.ratings:
+            card = None
+        else:
+            user = result.ratings[0]
+            history = await self._source.fetch_rating_history(user.handle)
+            card = RatingCard(user, len(history), history[-1] if history else None)
+        if len(self._cards) > MAX_CACHED:
+            self._cards.clear()
+        self._cards[key] = (card, now)
+        return card

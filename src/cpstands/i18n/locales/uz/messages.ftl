@@ -125,6 +125,8 @@ help-text =
     <b>Do'stlar</b>
     /track — kuzatiladigan handlelar
     /friends — xuddi shu, shaxsiy chatda
+    /rank — kuzatilgan handlelar reytingi
+    /rating — bitta foydalanuvchi reyting kartasi
 
     <b>Contestlar</b> <i>(tez orada)</i>
     /standings · /upcoming · /rank
@@ -325,3 +327,26 @@ button-toggle-upsolve = Upsolve
 standings-no-friends = 👥 Kuzatilayotgan handlelardan hech biri bu contestda qatnashmagan.
 button-view-friends = Do'stlar
 button-view-all = Hamma
+
+rating-usage =
+    👤 <b>Reyting kartasi</b>
+
+    <code>/rating tourist</code> — foydalanuvchining reytingi, unvoni va oxirgi contesti
+rating-not-found = ❌ Codeforces'da <b>{ $handle }</b> nomli foydalanuvchi yo'q.
+rating-source-error = ⚠️ Codeforces hozir javob bermayapti. Bir daqiqadan keyin qayta urinib ko'ring.
+rating-card =
+    👤 <b>{ $handle }</b>
+
+    { $body }
+rating-unrated = 🏆 Reytingsiz
+rating-line = 🏆 <b>{ $rating }</b> · max { $max } · { $rank }
+rating-contests = { $count ->
+        [one] 📊 { $count } ta reytingli contest
+       *[other] 📊 { $count } ta reytingli contest
+    }
+rating-no-contests = 📊 Hali reytingli contest yo'q
+rating-last = 🕐 Oxirgisi: <b>{ $contest }</b> · { $delta } ({ $old } → { $new })
+rating-follow-done = ✅ Ro'yxatga qo'shildi
+rating-follow-limit = 🔒 Ro'yxat to'lgan ({ $limit } ta handle).
+button-follow = Kuzatish
+button-profile = Profil
