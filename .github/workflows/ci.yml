@@ -111,6 +111,12 @@ jobs:
         run: >-
           uvx --from git+https://github.com/menarzullayev/project-alpha.git@aa1b169985f0e34bcc6295cd4fe1c963a2565e01
           project-alpha validate
+      # `docker run` without --rm (stateful image) or `docker rm` without -v leaves an anonymous
+      # volume that nothing owns. Scans scripts, workflows and the commands in the runbooks.
+      - name: Docker volume leaks (docker run without --rm, docker rm without -v)
+        run: |
+          python3 scripts/check_docker_run.py --selftest
+          python3 scripts/check_docker_run.py
 
   image:
     name: Container image
