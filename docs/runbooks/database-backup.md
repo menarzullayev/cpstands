@@ -26,11 +26,14 @@ The Free plan has no backups of its own, so they are made locally.
 ## Check that a dump restores (no risk to production)
 
 ```bash
-docker run -d --name restore-test -e POSTGRES_PASSWORD=t postgres:17-alpine
+docker run -d --rm --name restore-test -e POSTGRES_PASSWORD=t postgres:17-alpine
 docker exec -i restore-test pg_restore -U postgres -d postgres --no-owner < ~/backups/cpstands/<file>.dump
 docker exec restore-test psql -U postgres -tAc "select count(*) from chats"
-docker rm -f restore-test
+docker stop restore-test
 ```
+
+`--rm` makes Docker delete the container, and the anonymous data volume the postgres image creates,
+when it stops. Without it `docker rm -f restore-test` would leave that volume behind.
 
 "schema public already exists" is expected and harmless.
 
