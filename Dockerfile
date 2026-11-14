@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM python:3.13-slim AS builder
+FROM python:3.15-slim AS builder
 COPY --from=ghcr.io/astral-sh/uv:0.11.3 /uv /bin/uv
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=never
 WORKDIR /app
@@ -10,7 +10,7 @@ COPY src ./src
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-editable
 
-FROM python:3.13-slim
+FROM python:3.15-slim
 # The base tag trails Debian's security updates, and it carries a pip nothing here runs: the
 # application lives in the virtual environment copied below. Docker Scout counted 8 high advisories
 # in the image on 2026-11-14 — zlib1g one revision behind, and msgpack, urllib3 and setuptools
