@@ -9,7 +9,12 @@ services:
   db:
     # Development and tests only; production uses the hosted database.
     profiles: ["dev"]
-    image: postgres:16-alpine
+    # The official postgres:16-alpine without gosu, started as `postgres`
+    # (the reasons are in the Dockerfile). Built on the first `up`; to pick up a
+    # new minor release: docker compose --profile dev build --pull db
+    build:
+      context: ./docker/dev-db
+    image: cpstands-dev-db:16
     restart: unless-stopped
     environment:
       POSTGRES_USER: cpstands
