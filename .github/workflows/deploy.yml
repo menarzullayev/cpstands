@@ -1,15 +1,17 @@
-# Deploys main to the home PC through a self-hosted runner, only after CI succeeded.
+# Deploys main to the home PC through a self-hosted runner. Started by hand only.
+#
+# Until 2026-11-15 this workflow also started by itself after every green CI run on main.
+# No runner with the labels below is registered on the PC, so each of those runs stayed
+# queued until GitHub dropped it. The automatic trigger is removed (owner decision,
+# 2026-11-15); the manual path in docs/runbooks/deploy.md is the one in use. Registering
+# the runner of ADR-015 and putting the trigger back is a separate decision.
 #
 # Safety: the job runs on the maintainer's machine, so it must never run code from a fork.
-# It starts only from a push to this repository's main branch (via the finished CI run) or by
-# hand, and it checks out exactly the commit CI tested.
+# `workflow_dispatch` can be started only by someone with write access to this repository,
+# and it deploys the commit it was started on.
 name: Deploy
 
 on:
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -26,17 +28,12 @@ env:
 jobs:
   deploy:
     name: Build, start, measure
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.event == 'push' &&
-       github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: [self-hosted, windows, cpstands]
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ github.sha }}
 
       - name: Remember the running image for a rollback
         shell: pwsh
@@ -48,7 +45,7 @@ jobs:
       - name: Build and start
         shell: pwsh
         env:
-          GIT_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+          GIT_SHA: ${{ github.sha }}
         run: |
           docker compose up -d --build --remove-orphans
           if ($LASTEXITCODE -ne 0) { exit 1 }
@@ -56,7 +53,7 @@ jobs:
       - name: Wait for readiness and measure the commit
         shell: pwsh
         env:
-          EXPECTED_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+          EXPECTED_SHA: ${{ github.sha }}
         run: |
           $port = if ($env:CPSTANDS_HTTP_PORT) { $env:CPSTANDS_HTTP_PORT } else { 9180 }
           $deadline = (Get-Date).AddSeconds(120)
