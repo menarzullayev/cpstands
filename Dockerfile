@@ -11,7 +11,13 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-editable
 
 FROM python:3.13-slim
-RUN useradd --system --uid 10001 --no-create-home --shell /usr/sbin/nologin cpstands
+# The base tag trails Debian's security updates, and it carries a pip nothing here runs: the
+# application lives in the virtual environment copied below. Docker Scout counted 8 high advisories
+# in the image on 2026-11-14 — zlib1g one revision behind, and msgpack, urllib3 and setuptools
+# vendored inside that pip.
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/* \
+    && python -m pip uninstall --yes pip \
+    && useradd --system --uid 10001 --no-create-home --shell /usr/sbin/nologin cpstands
 WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 COPY alembic.ini ./
