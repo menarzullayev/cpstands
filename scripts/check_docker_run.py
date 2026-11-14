@@ -359,10 +359,20 @@ def scan_text(text: str, path: str) -> list[str]:
 
 def tracked_files(root: Path) -> list[str]:
     git = shutil.which("git") or "git"
-    res = subprocess.run(  # noqa: S603 - fixed argument list, no shell
-        [git, "-C", str(root), "ls-files", "-z"], capture_output=True, check=True
-    )
-    files = [f for f in res.stdout.decode("utf-8", "replace").split("\0") if f]
+    try:
+        res = subprocess.run(  # noqa: S603 - fixed argument list, no shell
+            [git, "-C", str(root), "ls-files", "-z"], capture_output=True, check=True
+        )
+        files = [f for f in res.stdout.decode("utf-8", "replace").split("\0") if f]
+    except (subprocess.CalledProcessError, OSError):
+        # No git metadata (an exported copy of the tree, a source archive): walk the
+        # files instead of failing. The same script failed this way in another
+        # repository's CI on 2026-11-14.
+        files = [
+            p.relative_to(root).as_posix()
+            for p in root.rglob("*")
+            if p.is_file() and ".git" not in p.relative_to(root).parts
+        ]
     return [
         f
         for f in files
