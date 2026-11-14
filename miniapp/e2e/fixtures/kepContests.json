@@ -1,0 +1,107 @@
+{
+ "live": [],
+ "upcoming": [
+  {
+   "id": 504,
+   "name": "KEP Contest #23",
+   "type": "ICPC",
+   "phase": "BEFORE",
+   "start": 1794152100,
+   "duration": 9000,
+   "rated": true,
+   "contestants": 0
+  }
+ ],
+ "finished": [
+  {
+   "id": 502,
+   "name": "KEP Contest #22",
+   "type": "ICPC",
+   "phase": "FINISHED",
+   "start": 1789828800,
+   "duration": 9000,
+   "rated": true,
+   "contestants": 65
+  },
+  {
+   "id": 498,
+   "name": "KEPPY Birthday Contest | 5 years",
+   "type": "ICPC",
+   "phase": "FINISHED",
+   "start": 1783434900,
+   "duration": 10800,
+   "rated": true,
+   "contestants": 78
+  },
+  {
+   "id": 497,
+   "name": "KEP Contest #20",
+   "type": "ICPC",
+   "phase": "FINISHED",
+   "start": 1779633300,
+   "duration": 10800,
+   "rated": true,
+   "contestants": 45
+  },
+  {
+   "id": 496,
+   "name": "KEP Contest #19",
+   "type": "ICPC",
+   "phase": "FINISHED",
+   "start": 1777818900,
+   "duration": 9900,
+   "rated": true,
+   "contestants": 60
+  },
+  {
+   "id": 493,
+   "name": "April Fools Day Contest 2026",
+   "type": "ICPC",
+   "phase": "FINISHED",
+   "start": 1775052000,
+   "duration": 7200,
+   "rated": false,
+   "contestants": 43
+  },
+  {
+   "id": 491,
+   "name": "KEP IOI Style Beta Contest",
+   "type": "IOI",
+   "phase": "FINISHED",
+   "start": 1773586800,
+   "duration": 7200,
+   "rated": false,
+   "contestants": 17
+  },
+  {
+   "id": 488,
+   "name": "KEP Contest #18 | Winter is coming",
+   "type": "ICPC",
+   "phase": "FINISHED",
+   "start": 1766329200,
+   "duration": 10800,
+   "rated": true,
+   "contestants": 72
+  },
+  {
+   "id": 487,
+   "name": "New UI - Beta Testing Contest",
+   "type": "ICPC",
+   "phase": "FINISHED",
+   "start": 1764082800,
+   "duration": 7200,
+   "rated": false,
+   "contestants": 28
+  },
+  {
+   "id": 459,
+   "name": "Unexpected Contest",
+   "type": "ICPC",
+   "phase": "FINISHED",
+   "start": 1760337000,
+   "duration": 7200,
+   "rated": false,
+   "contestants": 14
+  }
+ ]
+}

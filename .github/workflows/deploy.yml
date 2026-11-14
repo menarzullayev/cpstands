@@ -1,0 +1,85 @@
+# Deploys main to the home PC through a self-hosted runner. Started by hand only.
+#
+# Until 2026-11-15 this workflow also started by itself after every green CI run on main.
+# No runner with the labels below is registered on the PC, so each of those runs stayed
+# queued until GitHub dropped it. The automatic trigger is removed (owner decision,
+# 2026-11-15); the manual path in docs/runbooks/deploy.md is the one in use. Registering
+# the runner of ADR-015 and putting the trigger back is a separate decision.
+#
+# Safety: the job runs on the maintainer's machine, so it must never run code from a fork.
+# `workflow_dispatch` can be started only by someone with write access to this repository,
+# and it deploys the commit it was started on.
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+env:
+  # Secrets file on the runner machine (never in the repository). Override with a repo variable.
+  CPSTANDS_ENV_FILE: ${{ vars.CPSTANDS_ENV_FILE || 'D:/Linux/coding/cpstands/.env' }}
+
+jobs:
+  deploy:
+    name: Build, start, measure
+    runs-on: [self-hosted, windows, cpstands]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Remember the running image for a rollback
+        shell: pwsh
+        run: |
+          docker image inspect cpstands:latest *> $null
+          if ($LASTEXITCODE -eq 0) { docker tag cpstands:latest cpstands:previous }
+          $global:LASTEXITCODE = 0
+
+      - name: Build and start
+        shell: pwsh
+        env:
+          GIT_SHA: ${{ github.sha }}
+        run: |
+          docker compose up -d --build --remove-orphans
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Wait for readiness and measure the commit
+        shell: pwsh
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          $port = if ($env:CPSTANDS_HTTP_PORT) { $env:CPSTANDS_HTTP_PORT } else { 9180 }
+          $deadline = (Get-Date).AddSeconds(120)
+          $body = $null
+          while ((Get-Date) -lt $deadline) {
+            try {
+              $r = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:$port/readyz" -TimeoutSec 5
+              $body = $r.Content | ConvertFrom-Json
+              if ($body.ready) { break }
+            } catch { }
+            Start-Sleep -Seconds 3
+          }
+          if (-not $body -or -not $body.ready) { Write-Error "readyz never became ready"; exit 1 }
+          if ($body.commit -ne $env:EXPECTED_SHA) {
+            Write-Error "running commit $($body.commit) is not the deployed $env:EXPECTED_SHA"; exit 1
+          }
+          Write-Output "deployed commit $($body.commit); checks: $($body.checks | ConvertTo-Json -Compress)"
+
+      - name: Roll back if the new build did not come up
+        if: failure()
+        shell: pwsh
+        run: |
+          docker image inspect cpstands:previous *> $null
+          if ($LASTEXITCODE -eq 0) {
+            docker tag cpstands:previous cpstands:latest
+            docker compose up -d --no-build bot
+            Write-Warning "rolled back to the previous image"
+          }
+          exit 1

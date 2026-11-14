@@ -1,0 +1,143 @@
+# Owner decisions, 2026-11-08
+
+Answers to the open questions collected from `docs/*/OUTPUT.md`. Each row closes the question it
+names; the stage documents keep their history.
+
+| # | Question (source) | Decision |
+|---|---|---|
+| 1 | Backups and retention window (05, REQ-018) | No backups for now; risk accepted. Revisit with the database move (row 9). |
+| 2 | Next platform after Codeforces (01) | kep.uz. Check its API and terms of use before design. |
+| 3 | Alerting when the bot itself is down (06) | Healthchecks.io: the bot pings every minute, and Healthchecks notifies the owner when pings stop. |
+| 4 | Watch-list limit per chat (04) | Raise from 100 to 200 handles. |
+| 5 | Reminders on `t.me/cpstands` (04) | Yes, automatic: posts 24 h and 1 h before each Codeforces contest. The bot must be a channel admin. |
+| 6 | Mini App in the 12-month vision (01) | Start now, with production-grade design. |
+| 7 | Paid features (01) | Optional Telegram Stars donations only; nothing is gated. |
+| 8 | Real handles in test fixtures (09) | Keep them: public profiles and public results. |
+| 9 | Hosting for the Mini App (06) | Telegram Serverless hosts the front end (`app<id>.tgcloud.ai`) and JS endpoints. No Serverless update handlers: `tgcloud webhook sync` must never run, because the Python bot keeps long polling. |
+| 10 | Database | Move PostgreSQL to Supabase free (500 MB). The Python bot connects with asyncpg; Mini App endpoints use the Supabase REST API over `fetch`. |
+| 11 | Mini App front end | React + Vite + TypeScript. |
+| 12 | Mini App v1 scope | Live standings, rating charts, settings panel, contest calendar, profile and statistics, friend comparison, upsolve list, group leaderboard. |
+| 13 | Group leaderboard history | Weekly and monthly, inside the existing 30-day retention. |
+| 14 | Status page (10) | A separate status page. Assumed to be a Mini App route; not yet confirmed. |
+
+Already closed by the code: secret scanning (`gitleaks` in CI), the `user.status` fallback (upsolve
+alerts), friends versus watch lists (friends/all view).
+
+## Capacity check for Supabase free (measured)
+
+Bytes per row, including indexes. Measured by inserting 10 000 synthetic rows inside a rolled-back
+transaction:
+
+| Table | Bytes per row |
+|---|---|
+| `participant_results` | 531 |
+| `deliveries` | 500 |
+| `solve_events` | 222 |
+
+Contest data and deliveries are kept 30 days (`RETENTION_DAYS`), so size depends on active chats,
+not on age.
+
+Assumptions:
+- 14 Codeforces contests a month;
+- 40% participation per handle;
+- 4 solves per participation;
+- 20 handles per chat;
+- each handle followed by 1.5 chats on average;
+- 20% bloat;
+- 8 MB for an empty database.
+
+| Active chats | Size |
+|---|---|
+| 100 | ~50 MB |
+| 500 | ~225 MB |
+| 1 000 | ~440 MB |
+| ~1 100 | 500 MB limit |
+
+Mini App caches, such as rating history and profile statistics, live in the Serverless SQLite
+store, not in PostgreSQL.
+
+## Still open
+
+- Exact adaptive polling interval (15–120 s): decided after the live contest on 2026-11-12.
+- kep.uz terms of use.
+- Serverless limits and pricing: the official page does not state them.
+- Where the Supabase key is stored safely for the endpoints: the official page does not say how
+  secrets work.
+- Account creation: the owner creates the Supabase account and turns on Serverless in BotFather.
+
+## Done: the move to Supabase (2026-11-08)
+
+- **Project:** `cpstands` (ref `upztrvigdloqzxcgdkwi`), organization `cpstands`, Free plan,
+  Central EU (Frankfurt).
+  - "Automatically expose new tables" is off.
+  - Automatic RLS is on.
+- **Bot connection:** session pooler (IPv4), `aws-1-eu-central-1.pooler.supabase.com:5432`, with
+  `ssl=require`. The URL lives only in `.env` as `CPSTANDS_DATABASE_URL`. The local Docker
+  database stays as a fallback: remove that line and the bot uses it again.
+- **Data:** copied with `pg_dump --data-only` in one transaction. Row counts matched in all
+  eight tables.
+- **API audit:** the anon role has no table grants, RLS is on everywhere, the `private` schema is
+  closed, and only the six `app_*` functions are executable.
+  - Reading a table over REST returns 401.
+  - A forged signature returns 403.
+  - Real Telegram init data from the Mini App works for settings and friends; checked live.
+- **Mini App config:** `miniapp/.env.production` holds the URL and the publishable key (public by
+  design). `.gitleaks.toml` allows only `sb_publishable_` keys, and a negative test shows other
+  secrets are still caught.
+- **Settings left as they are:**
+  - There are no network restrictions.
+  - There are no backups (row 1).
+- **Enforce SSL turned on (2026-11-08, owner approval):**
+  - The database restart caused one moment of "database not available" errors in the bot's
+    loops (06:32:42 UTC); the bot recovered without a restart.
+  - Measured: an SSL connection works, and a non-SSL one is refused with `ESSLREQUIRED`.
+
+## Follow-up decisions (2026-11-08, later)
+
+| Topic | Decision and state |
+|---|---|
+| Backups (row 1 revised) | One every 30 days, plus manual runs. The scheduled task is `cpstands\monthly-db-backup`. Dumps leave out the bot token, and a restore into a throwaway container is checked. See `docs/runbooks/database-backup.md`. |
+| Local production database | Deleted after a final token-free dump (`~/backups/cpstands/localdb-final-*.dump`). The compose `db` service is now `profiles: ["dev"]`, used for tests only. Production needs `CPSTANDS_DATABASE_URL`, with no fallback. |
+| Secret files | Moved from the Desktop to `~/.secrets/cpstands/`. The folder ACL allows only the owner and SYSTEM. |
+| Next feature | Group mode in the Mini App. |
+| Bot-down alerting (row 3) | Done: the Healthchecks.io check `cpstands-bot` (period 2 min, grace 3 min) alerts on Telegram and by email; tested end to end. See `docs/runbooks/monitoring.md`. |
+
+## kep.uz integration (2026-11-08)
+
+| Question | Decision |
+|---|---|
+| Who gets it | Everyone, from launch. |
+| How users write it | A `kep:` prefix: `/track add kep:alice`, `/standings kep:504`, `/rating kep:alice`, `/rank kep`, `/summary kep`. kep.uz profile and contest links work too. Codeforces stays bare. |
+| Live standings | Re-read every 30 s; the Refresh button re-reads at once (at most every 5 s). |
+| Features | Reminders (also in the channel), live standings, solve alerts, rating card, summary, upsolve alerts, Mini App. |
+
+Assumption (not asked): kep.uz reminders go to channels and to the chats that follow at least one
+kep.uz handle, so Codeforces-only chats get no new messages. Evidence: EVID-022.
+
+## Live standings under a kep.uz channel post (2026-11-08)
+
+- @KEPuzChannel posts an announcement one or two days before a contest, sometimes a reminder an
+  hour before, and a post after the end; in its last 100 posts there was no post at the start.
+- Decision: the live table is a comment under the announcement post. The bot replies once to the
+  post's automatic forward in @KEPuzDiscussion when the contest starts, then edits that reply
+  every 30 s until the end (`LIVE_COMMENTS=kep:504@-1001305284030:140896`).
+- The KEP.uz admins agreed. Otherwise the group stays silent (`SILENT_CHATS`): the bot answers no
+  command or button there, and the table carries link buttons only.
+
+## Standings table style (2026-11-08)
+
+- Default (emoji): ✅ solved with the time, ⚡ and a bold time for the first solve of a problem,
+  ❌ with the number of tries, 🥇🥈🥉 for the top three, a followed handle marked in the full table.
+- Classic, chosen per chat in /settings: striped table, attempts raised (`+¹ 00:03`), the first
+  solve highlighted.
+- The first solver comes from kep.uz's own `theBest` flag (one per problem; times there are in
+  minutes). On Codeforces it is the earliest time, so equal times share it.
+- Telegram rich messages offer no text or background colours; colour comes only from custom emoji
+  and `<mark>`. Measured on Telegram Desktop with contest 502.
+
+Update (later on 2026-11-08):
+- The classic striped table is the default; the emoji style is the /settings option. Migration
+  0008 moved all 6 chats (none had picked a style yet).
+- Emoji style cells use plain 🟢 and 🔴: Telegram keeps only the first 100 custom emoji of a
+  message (measured: 201 sent, 100 kept). Medals and ⚡ stay custom; a page never carries more
+  than 100.

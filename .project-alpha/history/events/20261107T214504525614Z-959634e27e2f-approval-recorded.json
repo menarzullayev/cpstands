@@ -1,0 +1,12 @@
+{
+  "event_id": "959634e27e2f",
+  "event_type": "approval.recorded",
+  "timestamp": "2026-11-07T21:45:04+00:00",
+  "path": ".project-alpha\\approvals\\APR-011.md",
+  "stage": "07-adr",
+  "decision_id": "DEC-011",
+  "decision": "Adopt p95 data age at most 75 s (METRIC-001, REQ-N01) and poll standings just after the source cache expires (NFR-001, ADR-004)",
+  "approval_id": "APR-011",
+  "approver": "Saidakbar Narzullayev",
+  "status": "approved"
+}

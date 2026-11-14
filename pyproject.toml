@@ -13,7 +13,9 @@ dependencies = [
     "aiogram>=3.31.0",
     "alembic>=1.20.1",
     "asyncpg>=0.32.0",
+    "fluent-runtime>=0.4.0",
     "httpx>=0.28.1",
+    "ijson>=3.6.0",
     "pydantic-settings>=2.16.2",
     "sqlalchemy[asyncio]>=2.1.8",
     "structlog>=26.1.0",
@@ -46,15 +48,21 @@ select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM", "S", "ASYNC", "R
 ignore = ["S101"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S105", "S106", "S608", "E501"]
+"tests/**" = ["S105", "S106", "S608", "S311", "E501", "RUF001"]
 "migrations/**" = ["E501"]
-"scripts/**" = ["T201", "S310", "E501", "E731"]
+"src/cpstands/db/repos.py" = ["E501"]  # long SQL strings
+"src/cpstands/services/retention.py" = ["E501"]
+"scripts/**" = ["T201", "S310", "E501", "E731", "RUF001"]
 
 [tool.mypy]
 python_version = "3.13"
 strict = true
 plugins = ["pydantic.mypy"]
 files = ["src", "tests", "migrations"]
+
+[[tool.mypy.overrides]]
+module = ["ijson", "ijson.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

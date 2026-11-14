@@ -1,0 +1,7 @@
+# Default gitleaks rules, plus one allowlist entry.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Supabase publishable keys are public by design (sent to every Mini App user)"
+regexes = ['''sb_publishable_[A-Za-z0-9_-]{20,}''']

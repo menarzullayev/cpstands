@@ -1,0 +1,195 @@
+"""Reminder messages: rendering with ``tg-time`` and the sender that obeys Telegram's limits."""
+
+from __future__ import annotations
+
+from datetime import UTC, datetime
+from zoneinfo import ZoneInfo
+
+import structlog
+from aiogram import Bot
+from aiogram.exceptions import (
+    TelegramAPIError,
+    TelegramBadRequest,
+    TelegramForbiddenError,
+    TelegramNetworkError,
+    TelegramRetryAfter,
+)
+from aiogram.types import InlineKeyboardMarkup, LinkPreviewOptions
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
+from cpstands import metrics, platforms
+from cpstands.bot import keyboards
+from cpstands.bot.telemetry import record_send
+from cpstands.db import repos
+from cpstands.i18n import I18n, Markup
+from cpstands.services import timezone as tzs
+from cpstands.services.contests import PLATFORM
+from cpstands.services.ops import OpsState
+
+log = structlog.get_logger(__name__)
+
+MAX_ATTEMPTS = 3
+
+
+def tg_time(moment: datetime, zone: str | None) -> Markup:
+    """The start time as two ``tg-time`` entities: exact (in the reader's zone) and relative.
+
+    Telegram shows each reader the time in their own zone; the text inside is the fallback.
+    """
+    zone_name = zone if zone and tzs.is_valid_zone(zone) else "UTC"
+    fallback = moment.astimezone(ZoneInfo(zone_name)).strftime("%d.%m %H:%M")
+    unix = int(moment.timestamp())
+    return Markup(
+        f'<tg-time unix="{unix}" format="wDt">{fallback}</tg-time>'
+        f' · <tg-time unix="{unix}" format="r">{fallback}</tg-time>'
+    )
+
+
+def duration_text(seconds: int | None) -> str:
+    if not seconds:
+        return "-"
+    hours, minutes = divmod(seconds // 60, 60)
+    return f"{hours}:{minutes:02d}"
+
+
+def render_reminder(
+    i18n: I18n,
+    chat: repos.ChatRecord,
+    contest: repos.ContestRow,
+    offset_min: int,
+    *,
+    platform: str = PLATFORM,
+    icons: bool = True,
+) -> tuple[str, InlineKeyboardMarkup | None]:
+    """Text and buttons of one reminder, "moved" notice or "cancelled" notice."""
+    say = i18n.bound(chat.language, chat.tone)
+    site = platforms.get(platform)
+    name = contest.name if site.prefix == "" else f"{contest.name} · {site.label}"
+    if offset_min == repos.NOTICE_CANCELLED:
+        return say("reminder-cancelled", name=name), None
+    start = tg_time(contest.starts_at, chat.time_zone) if contest.starts_at else Markup("-")
+    if offset_min == repos.NOTICE_MOVED:
+        text = say("reminder-moved", name=name, start=start)
+    else:
+        left = {4320: "d3", 1440: "day", 120: "h2", 60: "hour"}.get(offset_min, "minutes")
+        text = say("reminder", name=name, start=start, left=left, minutes=offset_min)
+    markup = reminder_keyboard(
+        say, contest.contest_id, icons=icons, chat_id=chat.chat_id, platform=platform
+    )
+    return text, markup
+
+
+def reminder_keyboard(
+    say: object,
+    contest_id: int,
+    *,
+    icons: bool = True,
+    chat_id: int | None = None,
+    platform: str = PLATFORM,
+) -> InlineKeyboardMarkup:
+    from cpstands.i18n import Translator
+
+    assert isinstance(say, Translator)
+    site = platforms.get(platform)
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                keyboards.link(
+                    say("button-register"),
+                    site.register_url(contest_id),
+                    emoji="🚀",
+                    style="primary",
+                    icons=icons,
+                ),
+                keyboards.link(
+                    say("button-contest"),
+                    site.contest_url(contest_id),
+                    emoji="🏆",
+                    icons=icons,
+                ),
+            ],
+            [keyboards.app_button(say, "contests", icons=icons, chat_id=chat_id)],
+        ]
+    )
+
+
+class ReminderSender:
+    def __init__(
+        self,
+        bot: Bot,
+        sessions: async_sessionmaker[AsyncSession],
+        i18n: I18n,
+        *,
+        icons: bool = True,
+        ops: OpsState | None = None,
+        platform: str = PLATFORM,
+    ) -> None:
+        self._bot = bot
+        self._platform = platform
+        self._sessions = sessions
+        self._i18n = i18n
+        self._icons = icons
+        self._ops = ops
+
+    async def send(self, claimed: repos.ClaimedReminder) -> bool:
+        """Deliver one claimed reminder; returns whether Telegram accepted it."""
+        async with self._sessions() as session:
+            chat = await repos.get_chat(session, claimed.chat_id)
+            contest = await repos.get_contest(session, self._platform, claimed.contest_id)
+        if chat is None or contest is None or chat.status != "active":
+            return False
+        text, markup = render_reminder(
+            self._i18n,
+            chat,
+            contest,
+            claimed.offset_min,
+            platform=self._platform,
+            icons=self._icons,
+        )
+        try:
+            await self._bot.send_message(
+                claimed.chat_id,
+                text,
+                reply_markup=markup,
+                link_preview_options=LinkPreviewOptions(is_disabled=True),
+            )
+        except TelegramRetryAfter as exc:
+            log.warning("reminder_throttled", chat_id=claimed.chat_id, retry_after=exc.retry_after)
+            record_send("reminder", self._ops, error="flood")
+            await self._release(claimed)
+            return False
+        except TelegramForbiddenError:
+            record_send("reminder", self._ops, error="forbidden")
+            async with self._sessions() as session, session.begin():
+                await repos.set_status(session, claimed.chat_id, "removed")
+            return False
+        except TelegramNetworkError:
+            record_send("reminder", self._ops, error="network")
+            await self._release(claimed)
+            return False
+        except TelegramBadRequest as exc:
+            log.warning("reminder_rejected", chat_id=claimed.chat_id, reason=str(exc)[:120])
+            record_send("reminder", self._ops, error="bad_request")
+            return False
+        except TelegramAPIError:
+            log.warning("reminder_failed", chat_id=claimed.chat_id, exc_info=True)
+            record_send("reminder", self._ops, error="api")
+            await self._release(claimed)
+            return False
+        record_send("reminder", self._ops)
+        if claimed.offset_min > 0:
+            metrics.REMINDERS_SENT.inc()
+            late = (datetime.now(UTC) - claimed.due_at).total_seconds()
+            metrics.REMINDER_LATENESS.observe(max(late, 0.0))
+        return True
+
+    async def _release(self, claimed: repos.ClaimedReminder) -> None:
+        """A send that surely did not happen goes back to the queue, a few times at most."""
+        if claimed.attempts >= MAX_ATTEMPTS:
+            return
+        async with self._sessions() as session, session.begin():
+            await repos.release_reminder(session, self._platform, claimed)
+
+
+def now_utc() -> datetime:
+    return datetime.now(UTC)

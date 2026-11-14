@@ -147,6 +147,20 @@ def apply_commands(spec: dict, check_only: bool) -> int:
     return bad
 
 
+def apply_menu_button(want: dict, check_only: bool) -> int:
+    """The default menu button for every private chat (the Mini App)."""
+    got = call("getChatMenuButton").get("result")
+    if not check_only and got != want:
+        res = call("setChatMenuButton", menu_button=want)
+        if not res.get("ok"):
+            print(f"FAIL set menu_button: {res.get('description')}")
+            return 1
+        got = call("getChatMenuButton").get("result")
+    same = got == want
+    print(f"{'ok' if same else 'MISMATCH'}: menu_button = {got!r}")
+    return 0 if same else 1
+
+
 def main(check_only: bool) -> int:
     profile = json.loads((ROOT / "config" / "bot_profile.json").read_text(encoding="utf-8"))
     bad = 0
@@ -167,6 +181,8 @@ def main(check_only: bool) -> int:
             print(f"{status}: {key}[{lang or 'default'}] = {actual!r}")
     if "commands" in profile:
         bad += apply_commands(profile["commands"], check_only)
+    if "menu_button" in profile:
+        bad += apply_menu_button(profile["menu_button"], check_only)
     if "profile_photo" in profile:
         bad += apply_photo(profile["profile_photo"], "--photo" in sys.argv, check_only)
     return 1 if bad else 0

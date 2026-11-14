@@ -52,14 +52,14 @@ One image runs everywhere; configuration comes from environment variables and `.
 
 ## Data flow
 
-1. **Ingest loop** (per source): the scheduler asks `ingest` for the active contests (phase CODING, SYSTEM_TEST, or recently FINISHED) that at least one active chat watches. For each, one shared standings fetch serves all chats, with an adaptive interval (short during CODING, longer in testing and after the end) inside the rate budget (REQ-N07, EVID-012). The parser streams the response and keeps only watched handles (EVID-002 forbids server-side filtering; EVID-003 sizes the payload).
+1. **Ingest loop** (per source): the scheduler asks `ingest` for the active contests (phase CODING, SYSTEM_TEST, or recently FINISHED) that at least one active chat watches. For each, one shared standings fetch serves all chats, polled just after the source's cache expiry reported by the `Expires` header (about once a minute; longer after the end) inside the rate budget (REQ-N07, EVID-012). The parser streams the response and keeps only watched handles (EVID-002 forbids server-side filtering; EVID-003 sizes the payload).
 2. **Diff and events**: the new snapshot is compared with the stored one in one transaction; new `SolveEvent` records are inserted with unique keys, so replays create nothing (invariant 5 of the domain model).
 3. **Delivery planning**: for each event and each chat that watches the handle, a delivery job is inserted in the same transaction (transactional outbox). Standings changes mark `(chat, contest)` as dirty.
 4. **Notifier**: claims due jobs; alerts are batched per chat inside a short window; standings edits use latest-state-wins coalescing per `(chat, contest)`; sends go through per-chat, per-group and global token buckets (EVID-009); Telegram errors are classified (retry, drop, chat gone) and recorded.
 5. **Reminders**: the scheduler creates `Reminder` rows when a chat joins or a contest appears or changes; due reminders are claimed and sent with `date_time` entities (EVID-008); contest changes cancel or move pending rows.
 6. **Commands**: `bot` handles updates (long polling in dev and beta, webhook in production), reads and writes `db`, and answers from stored data; slow or remote work is queued, never done inside the handler.
 
-Standings freshness (REQ-N01) is bounded by: fetch interval, parse time, edit queueing. Alert latency (REQ-N03) is bounded by: fetch interval plus notifier batching window.
+Standings freshness (REQ-N01) is bounded by: the source cache (about 60 s), parse time and edit queueing. Alert latency (REQ-N03) is bounded by: the source cache plus the notifier batching window.
 
 ## Integrations
 

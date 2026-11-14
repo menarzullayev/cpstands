@@ -1,0 +1,34 @@
+{
+ "handle": "demo_user",
+ "rating": 1914,
+ "maxRating": 1914,
+ "title": "Master",
+ "place": 14,
+ "contests": 3,
+ "history": [
+  {
+   "contestId": 497,
+   "name": "KEP Contest #20",
+   "date": "2026-05-24",
+   "rank": 1,
+   "delta": 333,
+   "rating": 1533
+  },
+  {
+   "contestId": 498,
+   "name": "KEPPY Birthday Contest | 5 years",
+   "date": "2026-07-07",
+   "rank": 6,
+   "delta": 89,
+   "rating": 1622
+  },
+  {
+   "contestId": 502,
+   "name": "KEP Contest #22",
+   "date": "2026-09-19",
+   "rank": 5,
+   "delta": 127,
+   "rating": 1914
+  }
+ ]
+}

@@ -46,6 +46,25 @@ class Settings(BaseSettings):
     default_language: str = "uz"
     supported_languages: Annotated[list[str], NoDecode] = list(LANGUAGES)
     default_timezone: str = "Asia/Tashkent"
+    # Health and metrics endpoints; port 0 turns them off.
+    http_host: str = "127.0.0.1"
+    # The commit this build was made from (set by the image build, shown by /readyz and /metrics).
+    git_sha: str = "dev"
+    http_port: int = 9180
+    # Custom emoji in message text need Telegram Premium on the bot owner (Bot API 9.4).
+    custom_emoji: bool = True
+    # Custom-emoji icons on buttons (Bot API 9.4); verified to render in Telegram Desktop 7.4.
+    button_icons: bool = True
+    # The project channel gets contest reminders at these offsets (minutes); empty turns it off.
+    announce_channel: str = "@cpstands"
+    announce_offsets: Annotated[list[int], NoDecode] = [1440, 60]
+    # Chats the bot stays silent in: it reads nothing there and answers nothing.
+    silent_chats: Annotated[list[int], NoDecode] = []
+    # Live standings as a comment: <platform>:<contest>@<chat>:<message>, comma separated.
+    live_comments: Annotated[list[str], NoDecode] = []
+    announce_language: str = "uz"
+    # Healthchecks.io ping URL (a secret: anyone with it can fake pings). Unset turns it off.
+    healthchecks_ping_url: SecretStr | None = None
     database_url: SecretStr = SecretStr(
         "postgresql+asyncpg://cpstands:cpstands@127.0.0.1:5440/cpstands"
     )
@@ -54,7 +73,22 @@ class Settings(BaseSettings):
     cf_api_base: str = "https://codeforces.com/api"
     cf_min_request_interval_seconds: float = 2.0
     kep_api_base: str = "https://kep.uz/api"
-    kep_enabled: bool = False
+    kep_min_request_interval_seconds: float = 1.5
+    kep_enabled: bool = True  # owner decision 2026-11-08: kep.uz for everyone
+
+    @field_validator("announce_offsets", "silent_chats", mode="before")
+    @classmethod
+    def _split_offsets(cls, value: object) -> object:
+        if isinstance(value, str):
+            return [int(v) for v in value.split(",") if v.strip()]
+        return value
+
+    @field_validator("live_comments", mode="before")
+    @classmethod
+    def _split_comments(cls, value: object) -> object:
+        if isinstance(value, str):
+            return [v.strip() for v in value.split(",") if v.strip()]
+        return value
 
     @field_validator("supported_languages", mode="before")
     @classmethod

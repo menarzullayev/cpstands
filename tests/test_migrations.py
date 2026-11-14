@@ -87,7 +87,7 @@ async def test_chat_defaults(engine: AsyncEngine) -> None:
 
 @pytest.mark.parametrize(
     ("column", "value"),
-    [("chat_type", "channel"), ("language", "de"), ("tone", "rude"), ("status", "zombie")],
+    [("chat_type", "bot"), ("language", "de"), ("tone", "rude"), ("status", "zombie")],
 )
 async def test_chat_check_constraints_reject_bad_values(
     engine: AsyncEngine, column: str, value: str
@@ -215,3 +215,13 @@ async def test_due_delivery_partial_index_exists(engine: AsyncEngine) -> None:
     assert "WHERE" in definition
     assert "pending" in definition
     assert "batched" in definition
+
+
+async def test_a_channel_chat_is_allowed(migrated_database: str) -> None:
+    engine = create_async_engine(migrated_database)
+    async with engine.begin() as conn:
+        await conn.execute(
+            text("INSERT INTO chats (chat_id, chat_type) VALUES (-1004388100807, 'channel')")
+        )
+        await conn.execute(text("DELETE FROM chats WHERE chat_id = -1004388100807"))
+    await engine.dispose()

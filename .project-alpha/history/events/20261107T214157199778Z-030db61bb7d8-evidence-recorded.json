@@ -1,0 +1,14 @@
+{
+  "event_id": "030db61bb7d8",
+  "event_type": "evidence.recorded",
+  "timestamp": "2026-11-07T21:41:57+00:00",
+  "path": "docs\\evidence\\EVID-021.md",
+  "stage": "03-market-research",
+  "claim": "The ijson C backend parser reads a 8.3 MB standings body of 9743 rows in about 0.19 s and adds 2 to 7 MB of memory (20000 rows: 0.38 s, 3 to 9 MB), well inside NFR-002.",
+  "source": "docs/experiments/M1-standings-fetch.md (live measurement, 2026-11-08)",
+  "date": "2026-11-08",
+  "confidence": "high",
+  "type": "FACT",
+  "risk": "LOW",
+  "evidence_id": "EVID-021"
+}

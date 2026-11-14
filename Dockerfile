@@ -11,7 +11,13 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-editable
 
 FROM python:3.13-slim
-RUN useradd --system --uid 10001 --no-create-home --shell /usr/sbin/nologin cpstands
+# The base tag trails Debian's security updates, and it carries a pip nothing here runs: the
+# application lives in the virtual environment copied below. Docker Scout counted 8 high advisories
+# in the image on 2026-11-14 — zlib1g one revision behind, and msgpack, urllib3 and setuptools
+# vendored inside that pip.
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/* \
+    && python -m pip uninstall --yes pip \
+    && useradd --system --uid 10001 --no-create-home --shell /usr/sbin/nologin cpstands
 WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 COPY alembic.ini ./
@@ -20,6 +26,16 @@ ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     ALEMBIC_CONFIG=/app/alembic.ini
+ARG GIT_SHA=unknown
+LABEL org.opencontainers.image.source="https://github.com/menarzullayev/cpstands" \
+      org.opencontainers.image.revision="${GIT_SHA}"
+ENV GIT_SHA=${GIT_SHA} \
+    HTTP_HOST=0.0.0.0 \
+    HTTP_PORT=8080
+EXPOSE 8080
+# Liveness only: the process and its event loop answer. Readiness is /readyz.
+HEALTHCHECK --interval=15s --timeout=4s --start-period=20s --retries=4 \
+    CMD ["python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=3).status == 200 else 1)"]
 USER cpstands
 ENTRYPOINT ["python", "-m", "cpstands"]
 CMD ["version"]

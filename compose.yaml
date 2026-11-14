@@ -1,11 +1,20 @@
-# Local development stack. The database listens on 127.0.0.1 only.
-# Usage:  docker compose up -d db        (start PostgreSQL for development and tests)
-#         docker compose --profile tools run --rm migrate   (apply migrations inside the image)
+# The cpstands stack. The HTTP endpoints listen on 127.0.0.1 only.
+# Production:   docker compose up -d --build   (migrations, then the bot) against the hosted
+#               database in CPSTANDS_DATABASE_URL (Supabase, see docs/runbooks/database-backup.md).
+# Development:  docker compose --profile dev up -d db   (PostgreSQL for tests, 127.0.0.1:5440)
+#   CPSTANDS_ENV_FILE points at the secrets file (default ./.env); GIT_SHA labels the build.
 name: cpstands
 
 services:
   db:
-    image: postgres:16-alpine
+    # Development and tests only; production uses the hosted database.
+    profiles: ["dev"]
+    # The official postgres:16-alpine without gosu, started as `postgres`
+    # (the reasons are in the Dockerfile). Built on the first `up`; to pick up a
+    # new minor release: docker compose --profile dev build --pull db
+    build:
+      context: ./docker/dev-db
+    image: cpstands-dev-db:16
     restart: unless-stopped
     environment:
       POSTGRES_USER: cpstands
@@ -14,7 +23,7 @@ services:
     ports:
       - "127.0.0.1:${CPSTANDS_DB_PORT:-5440}:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata-dev:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U cpstands -d cpstands"]
       interval: 5s
@@ -22,16 +31,36 @@ services:
       retries: 10
 
   migrate:
-    profiles: ["tools"]
-    build: .
+    build: &build
+      context: .
+      args:
+        GIT_SHA: ${GIT_SHA:-unknown}
+    image: cpstands:latest
     command: ["migrate"]
+    restart: "no"
+    env_file: ${CPSTANDS_ENV_FILE:-.env}
     environment:
-      DATABASE_URL: postgresql+asyncpg://cpstands:${POSTGRES_PASSWORD:-cpstands}@db:5432/cpstands
-    depends_on:
-      db:
-        condition: service_healthy
+      # Required: the hosted database (set in .env). There is no silent fallback.
+      DATABASE_URL: ${CPSTANDS_DATABASE_URL:?set CPSTANDS_DATABASE_URL in .env}
 
-  # The application service (bot, ingest, scheduler, notifier) is added with the runtime in milestone M1 onward.
+  bot:
+    build: *build
+    image: cpstands:latest
+    command: ["run"]
+    restart: unless-stopped
+    stop_grace_period: 20s
+    env_file: ${CPSTANDS_ENV_FILE:-.env}
+    environment:
+      # Required: the hosted database (set in .env). There is no silent fallback.
+      DATABASE_URL: ${CPSTANDS_DATABASE_URL:?set CPSTANDS_DATABASE_URL in .env}
+      HTTP_HOST: 0.0.0.0
+      HTTP_PORT: "8080"
+      GIT_SHA: ${GIT_SHA:-unknown}
+    ports:
+      - "127.0.0.1:${CPSTANDS_HTTP_PORT:-9180}:8080"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
 
 volumes:
-  pgdata:
+  pgdata-dev:

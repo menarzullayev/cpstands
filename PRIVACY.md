@@ -1,52 +1,45 @@
-# Privacy Policy
+# Privacy
 
-**cpstands** (`@cpstandsbot`, `t.me/cpstands`) · Last updated: 2026-11-08
+cpstands (the Telegram bot @cpstandsbot) stores the minimum it needs to work.
 
-> Status: **pre-alpha.** The bot does not process any user data yet. This document describes how it will behave
-> once it launches, so you can review it in advance. It will be updated before the first public release.
+## What is stored
 
-## Who is responsible
+| Data | Why | How long |
+|---|---|---|
+| Telegram chat id, chat type | to know where to send messages | until the chat is deleted or removed the bot (then 30 days) |
+| language, time zone, tone, reminder and alert switches | your settings | same |
+| public Codeforces and kep.uz handles the chat follows | to follow them | same |
+| contest results of those handles (problems, times) | to detect solves | 30 days |
+| ids of the bot's own live-standings messages | to edit them in place | 30 days after the contest |
+| queued and sent reminders and alerts (no message text) | to send each one once | 30 days |
 
-The bot is operated by Saidakbar Narzullayev. Contact: open an issue at
-<https://github.com/menarzullayev/cpstands/issues> or message the channel admin via `t.me/cpstands`.
+## What is not stored
 
-## What the bot stores
+- the text of any message sent to the bot or to a chat it is in
+- names, usernames or phone numbers of Telegram users
+- full names, avatars or countries of kep.uz users: the kep.uz tables include them, the bot reads only the public username
+- Codeforces passwords or tokens (the bot never asks for them)
+- Codeforces API keys and secrets: the only exception is the optional `/import` command, see below
 
-| Data | Why |
-|---|---|
-| Telegram user ID, chat ID and chat type | to reply to you and to keep your settings |
-| Interface language and time zone | to show texts and contest times correctly |
-| Notification preferences (reminders, alerts) | to send only what you asked for |
-| Codeforces / kep.uz handles that you or your group choose to track | to build standings and alerts |
-| IDs of the bot's own messages in a chat | to edit live standings in place instead of sending new messages |
+Logs are structured, contain no message text and keep Telegram ids hashed.
 
-The bot reads public contest data (ratings, standings, submission results) from the Codeforces and kep.uz APIs
-for the handles above. It does not copy private data from those sites.
+## Importing friends with an API key (optional)
 
-## What the bot does not collect
+`/import` (private chat only) can copy the friends list of your Codeforces account. For that you
+send an API key and its secret in one message. The bot deletes that message first, uses the key
+for a single signed `user.friends` request, and drops it: the key and secret are held in memory for
+the duration of that request, never written to the database, never logged and never repeated back.
+If Telegram refuses to delete the message, the bot tells you so; delete it yourself. Afterwards,
+remove the key at https://codeforces.com/settings/api. Telegram itself and Codeforces see the key
+as they see any message or request; use a key you can revoke. The command is entirely optional:
+handles can always be added by name with `/track`.
 
-- Phone numbers, location, contacts, or profile photos.
-- Codeforces API keys or secrets. The bot never asks for them.
-- The content of group conversations. Telegram privacy mode stays on, so the bot only receives commands,
-  replies to its own messages, and mentions.
+## Deleting your data
 
-## How long data is kept
+Send `/delete` in the chat (group admins only in groups). After a confirmation, everything
+stored about that chat is erased at once. Messages the bot already sent stay in the chat;
+delete them yourself. If the bot is removed from a chat, its data is purged after 30 days.
 
-- Until you delete it with `/delete` (planned) or remove the bot from a chat.
-- Data of chats where the bot was removed is deleted within 30 days.
-- Server logs contain no message text and are kept for at most 30 days.
-- The maintainer takes backups only by hand and rarely; any such backup is stored protected and deleted within 30 days, and is never restored for a chat that asked for deletion.
+## Contact
 
-## Sharing
-
-Your data is never sold. It is not shared with third parties, except the services needed to run the bot:
-Telegram (message delivery) and the contest sites above (queried by public handle). The bot runs on the maintainer's own computer; no third-party
-hosting provider receives your data, and no analytics or advertising service is used.
-
-## Your rights
-
-You can ask what is stored about you, ask for correction, or ask for deletion at any time using the contact above.
-
-## Changes
-
-Material changes will be announced in `t.me/cpstands` and recorded in this file's git history.
+Open an issue at https://github.com/menarzullayev/cpstands or write to the maintainer, @menarzullayev.

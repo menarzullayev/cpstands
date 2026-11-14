@@ -1,0 +1,47 @@
+{
+ "period": "month",
+ "rows": [
+  {
+   "handle": "jiangly",
+   "rating": 3640,
+   "delta": -170,
+   "contests": 2,
+   "best": 3,
+   "solved": 63
+  },
+  {
+   "handle": "tourist",
+   "rating": 3408,
+   "delta": 23,
+   "contests": 3,
+   "best": 2,
+   "solved": 21
+  },
+  {
+   "handle": "Benq",
+   "rating": 3676,
+   "delta": 0,
+   "contests": 0,
+   "best": null,
+   "solved": 13
+  },
+  {
+   "handle": "ksun48",
+   "rating": 2860,
+   "delta": -206,
+   "contests": 2,
+   "best": 19,
+   "solved": 10
+  },
+  {
+   "handle": "Petr",
+   "rating": 2770,
+   "delta": -61,
+   "contests": 1,
+   "best": 68,
+   "solved": 4
+  }
+ ],
+ "pending": 0,
+ "me": "tourist"
+}

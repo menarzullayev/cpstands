@@ -40,6 +40,7 @@ chats = Table(
     metadata,
     Column("chat_id", BigInteger, primary_key=True, autoincrement=False),
     Column("chat_type", Text, nullable=False),
+    Column("title", Text),
     Column("language", Text),
     Column("time_zone", Text),
     Column("tone", Text, nullable=False, server_default="playful"),
@@ -51,14 +52,23 @@ chats = Table(
         server_default=text("'{1440,60,10}'::integer[]"),
     ),
     Column("status", Text, nullable=False, server_default="onboarding"),
+    Column("notify_level", Integer, nullable=False, server_default=text("4")),
+    Column("table_cols", Integer, nullable=False, server_default=text("16")),
+    Column("summary_enabled", Boolean, nullable=False, server_default=text("true")),
+    Column("table_style", Text, nullable=False, server_default="classic"),
     _ts("created_at", nullable=False, default_now=True),
     _ts("updated_at", nullable=False, default_now=True),
-    CheckConstraint("chat_type IN ('private','group','supergroup')", name="chats_chat_type_check"),
+    CheckConstraint(
+        "chat_type IN ('private','group','supergroup','channel')", name="chats_chat_type_check"
+    ),
     CheckConstraint("language IN ('uz','ru','en')", name="chats_language_check"),
     CheckConstraint("tone IN ('playful','neutral')", name="chats_tone_check"),
     CheckConstraint(
         "status IN ('onboarding','active','paused','removed','deleted')", name="chats_status_check"
     ),
+    CheckConstraint("notify_level BETWEEN 0 AND 4", name="chats_notify_level_check"),
+    CheckConstraint("table_cols IN (8, 12, 16)", name="chats_table_cols_check"),
+    CheckConstraint("table_style IN ('emoji', 'classic')", name="chats_table_style_check"),
 )
 
 watched_handles = Table(
@@ -70,6 +80,10 @@ watched_handles = Table(
     Column("platform", Text, primary_key=True),
     Column("handle_key", Text, primary_key=True),
     Column("handle_display", Text, nullable=False),
+    Column("show_in_list", Boolean, nullable=False, server_default=text("true")),
+    Column("notify_solve", Boolean, nullable=False, server_default=text("true")),
+    Column("notify_systest", Boolean, nullable=False, server_default=text("true")),
+    Column("notify_upsolve", Boolean, nullable=False, server_default=text("true")),
     _ts("added_at", nullable=False, default_now=True),
 )
 
@@ -148,9 +162,13 @@ standings_messages = Table(
     Column("last_hash", Text),
     _ts("last_edit_at"),
     Column("dirty", Boolean, nullable=False, server_default=text("false")),
+    Column("row_page", Integer, nullable=False, server_default=text("0")),
+    Column("col_page", Integer, nullable=False, server_default=text("0")),
+    Column("view", Text, nullable=False, server_default="auto"),
     CheckConstraint(
         "state IN ('active','frozen','orphaned')", name="standings_messages_state_check"
     ),
+    CheckConstraint("view IN ('auto', 'friends', 'all')", name="standings_messages_view_check"),
 )
 
 deliveries = Table(
