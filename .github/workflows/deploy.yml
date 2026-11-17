@@ -35,11 +35,11 @@ jobs:
         with:
           ref: ${{ github.sha }}
 
-      - name: Remember the running image for a rollback
+      - name: Drop any leftover rollback copy
         shell: pwsh
         run: |
-          docker image inspect cpstands:latest *> $null
-          if ($LASTEXITCODE -eq 0) { docker tag cpstands:latest cpstands:previous }
+          # Rollback copies are OFF: a deploy never keeps the previous image (disk space).
+          docker image rm cpstands:previous *> $null
           $global:LASTEXITCODE = 0
 
       - name: Build and start
@@ -71,15 +71,3 @@ jobs:
             Write-Error "running commit $($body.commit) is not the deployed $env:EXPECTED_SHA"; exit 1
           }
           Write-Output "deployed commit $($body.commit); checks: $($body.checks | ConvertTo-Json -Compress)"
-
-      - name: Roll back if the new build did not come up
-        if: failure()
-        shell: pwsh
-        run: |
-          docker image inspect cpstands:previous *> $null
-          if ($LASTEXITCODE -eq 0) {
-            docker tag cpstands:previous cpstands:latest
-            docker compose up -d --no-build bot
-            Write-Warning "rolled back to the previous image"
-          }
-          exit 1
